@@ -24,13 +24,9 @@
       gap: 12px;
     }
 
-    header h1 {
-      font-size: 1.4rem;
-      font-weight: 600;
-      letter-spacing: 0.5px;
-    }
+    header h1 { font-size: 1.4rem; font-weight: 600; letter-spacing: 0.5px; }
 
-    header span.badge {
+    header .badge {
       background: #4f8ef7;
       color: #fff;
       font-size: 0.7rem;
@@ -41,11 +37,102 @@
       text-transform: uppercase;
     }
 
+    header .ai-badge {
+      background: linear-gradient(135deg, #7c3aed, #4f8ef7);
+      color: #fff;
+      font-size: 0.7rem;
+      padding: 2px 8px;
+      border-radius: 20px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    /* API key bar */
+    .api-bar {
+      background: #fff;
+      border-bottom: 1px solid #e5e7eb;
+      padding: 12px 40px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .api-bar label {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: #6b7280;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .api-key-wrap {
+      position: relative;
+      flex: 1;
+      min-width: 240px;
+      max-width: 420px;
+    }
+
+    .api-key-wrap input {
+      width: 100%;
+      padding: 8px 36px 8px 12px;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      font-size: 0.88rem;
+      font-family: monospace;
+      color: #1a1a2e;
+    }
+
+    .api-key-wrap input:focus {
+      outline: none;
+      border-color: #7c3aed;
+      box-shadow: 0 0 0 3px rgba(124,58,237,0.12);
+    }
+
+    .toggle-key {
+      position: absolute;
+      right: 8px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: #9ca3af;
+      padding: 2px;
+      display: flex;
+      align-items: center;
+    }
+
+    .toggle-key:hover { color: #4b5563; }
+
+    .api-status {
+      font-size: 0.8rem;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .api-status .dot { width: 7px; height: 7px; border-radius: 50%; }
+    .api-status.ok   { color: #16a34a; }
+    .api-status.ok .dot { background: #22c55e; }
+    .api-status.none { color: #9ca3af; }
+    .api-status.none .dot { background: #d1d5db; }
+
+    .api-hint {
+      font-size: 0.76rem;
+      color: #9ca3af;
+      margin-left: auto;
+    }
+
+    /* Upload */
     .upload-row {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 24px;
-      padding: 32px 40px 0;
+      padding: 28px 40px 0;
     }
 
     .upload-card {
@@ -63,11 +150,7 @@
       box-shadow: 0 0 0 4px rgba(79,142,247,0.12);
     }
 
-    .upload-card.loaded {
-      border-style: solid;
-      border-color: #22c55e;
-      cursor: default;
-    }
+    .upload-card.loaded { border-style: solid; border-color: #22c55e; cursor: default; }
 
     .upload-card .year-label {
       font-size: 0.72rem;
@@ -78,12 +161,7 @@
       margin-bottom: 8px;
     }
 
-    .upload-card h2 {
-      font-size: 1.05rem;
-      font-weight: 600;
-      margin-bottom: 18px;
-      color: #1a1a2e;
-    }
+    .upload-card h2 { font-size: 1.05rem; font-weight: 600; margin-bottom: 18px; color: #1a1a2e; }
 
     .drop-zone {
       display: flex;
@@ -96,29 +174,12 @@
       background: #f8fafc;
     }
 
-    .drop-zone svg {
-      color: #9ca3af;
-    }
+    .drop-zone svg { color: #9ca3af; }
+    .drop-zone p { font-size: 0.9rem; color: #6b7280; text-align: center; }
+    .drop-zone p strong { color: #4f8ef7; cursor: pointer; }
+    .drop-zone .file-types { font-size: 0.75rem; color: #9ca3af; }
 
-    .drop-zone p {
-      font-size: 0.9rem;
-      color: #6b7280;
-      text-align: center;
-    }
-
-    .drop-zone p strong {
-      color: #4f8ef7;
-      cursor: pointer;
-    }
-
-    .drop-zone .file-types {
-      font-size: 0.75rem;
-      color: #9ca3af;
-    }
-
-    input[type="file"] {
-      display: none;
-    }
+    input[type="file"] { display: none; }
 
     .file-info {
       display: flex;
@@ -131,20 +192,8 @@
     }
 
     .file-info svg { color: #22c55e; flex-shrink: 0; }
-
-    .file-info .fname {
-      font-size: 0.85rem;
-      font-weight: 500;
-      color: #166534;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .file-info .fmeta {
-      font-size: 0.75rem;
-      color: #6b7280;
-    }
+    .file-info .fname { font-size: 0.85rem; font-weight: 500; color: #166534; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .file-info .fmeta { font-size: 0.75rem; color: #6b7280; }
 
     .clear-btn {
       margin-left: auto;
@@ -160,9 +209,7 @@
 
     .clear-btn:hover { color: #ef4444; background: #fee2e2; }
 
-    .column-select {
-      margin-top: 16px;
-    }
+    .column-select { margin-top: 16px; }
 
     .column-select label {
       font-size: 0.78rem;
@@ -195,11 +242,13 @@
       box-shadow: 0 0 0 3px rgba(79,142,247,0.15);
     }
 
+    /* Actions */
     .actions {
       display: flex;
       justify-content: center;
-      padding: 28px 40px 0;
+      padding: 24px 40px 0;
       gap: 12px;
+      flex-wrap: wrap;
     }
 
     .btn-reconcile {
@@ -222,6 +271,26 @@
     .btn-reconcile:active:not(:disabled) { transform: scale(0.98); }
     .btn-reconcile:disabled { opacity: 0.4; cursor: not-allowed; }
 
+    .btn-ai {
+      background: linear-gradient(135deg, #7c3aed, #4f8ef7);
+      color: #fff;
+      border: none;
+      padding: 13px 36px;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      letter-spacing: 0.3px;
+      transition: opacity 0.2s, transform 0.1s;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-ai:hover:not(:disabled) { opacity: 0.9; }
+    .btn-ai:active:not(:disabled) { transform: scale(0.98); }
+    .btn-ai:disabled { opacity: 0.35; cursor: not-allowed; }
+
     .btn-reset {
       background: #fff;
       color: #6b7280;
@@ -236,9 +305,79 @@
 
     .btn-reset:hover { background: #f9fafb; color: #1a1a2e; }
 
-    .results {
-      padding: 32px 40px 48px;
+    /* Progress */
+    .ai-progress {
+      margin: 20px 40px 0;
+      background: #fff;
+      border-radius: 10px;
+      border: 1px solid #ede9fe;
+      padding: 18px 24px;
+      display: none;
     }
+
+    .ai-progress .prog-title {
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: #7c3aed;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .prog-steps { display: flex; flex-direction: column; gap: 8px; }
+
+    .prog-step {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.84rem;
+      color: #6b7280;
+    }
+
+    .prog-step .step-icon {
+      width: 20px; height: 20px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      font-size: 0.7rem;
+      background: #f3f4f6;
+    }
+
+    .prog-step.done   { color: #16a34a; }
+    .prog-step.done .step-icon   { background: #dcfce7; color: #16a34a; }
+    .prog-step.active { color: #7c3aed; font-weight: 500; }
+    .prog-step.active .step-icon { background: #ede9fe; color: #7c3aed; }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .spinning { animation: spin 0.8s linear infinite; display: inline-block; }
+
+    /* AI insight box */
+    .ai-insight {
+      background: linear-gradient(135deg, #faf5ff, #eff6ff);
+      border: 1px solid #ddd6fe;
+      border-radius: 10px;
+      padding: 16px 20px;
+      margin-bottom: 20px;
+      font-size: 0.88rem;
+      color: #3730a3;
+      line-height: 1.6;
+    }
+
+    .ai-insight .insight-label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: #7c3aed;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* Results */
+    .results { padding: 28px 40px 48px; }
 
     .results-header {
       display: flex;
@@ -247,10 +386,7 @@
       margin-bottom: 20px;
     }
 
-    .results-header h2 {
-      font-size: 1.1rem;
-      font-weight: 700;
-    }
+    .results-header h2 { font-size: 1.1rem; font-weight: 700; }
 
     .export-btn {
       background: #fff;
@@ -272,7 +408,7 @@
     .summary-chips {
       display: flex;
       gap: 12px;
-      margin-bottom: 28px;
+      margin-bottom: 24px;
       flex-wrap: wrap;
     }
 
@@ -289,13 +425,32 @@
     .chip.added   { background: #dcfce7; color: #166534; }
     .chip.removed { background: #fee2e2; color: #991b1b; }
     .chip.matched { background: #eff6ff; color: #1e40af; }
-
-    .chip .dot {
-      width: 8px; height: 8px; border-radius: 50%;
-    }
+    .chip .dot { width: 8px; height: 8px; border-radius: 50%; }
     .chip.added .dot   { background: #22c55e; }
     .chip.removed .dot { background: #ef4444; }
     .chip.matched .dot { background: #4f8ef7; }
+
+    .analysis-bar {
+      display: flex;
+      background: #fff;
+      border-radius: 10px;
+      border: 1px solid #e5e7eb;
+      overflow: hidden;
+      margin-bottom: 20px;
+    }
+
+    .analysis-item {
+      flex: 1;
+      padding: 14px 20px;
+      border-right: 1px solid #e5e7eb;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .analysis-item:last-child { border-right: none; }
+    .alabel { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase; color: #9ca3af; }
+    .aval   { font-size: 0.92rem; font-weight: 600; color: #1a1a2e; }
 
     .section-title {
       font-size: 0.78rem;
@@ -309,12 +464,7 @@
       gap: 8px;
     }
 
-    .section-title::after {
-      content: '';
-      flex: 1;
-      height: 1px;
-      background: #e5e7eb;
-    }
+    .section-title::after { content: ''; flex: 1; height: 1px; background: #e5e7eb; }
 
     .account-list {
       display: grid;
@@ -348,50 +498,7 @@
 
     .account-item.added   .icon { background: #dcfce7; color: #16a34a; }
     .account-item.removed .icon { background: #fee2e2; color: #dc2626; }
-
     .account-item .name { font-weight: 500; color: #1a1a2e; }
-
-    .empty-state {
-      text-align: center;
-      padding: 60px 20px;
-      color: #9ca3af;
-      font-size: 0.9rem;
-    }
-
-    .analysis-bar {
-      display: flex;
-      gap: 0;
-      background: #fff;
-      border-radius: 10px;
-      border: 1px solid #e5e7eb;
-      overflow: hidden;
-      margin-bottom: 20px;
-    }
-
-    .analysis-item {
-      flex: 1;
-      padding: 14px 20px;
-      border-right: 1px solid #e5e7eb;
-      display: flex;
-      flex-direction: column;
-      gap: 3px;
-    }
-
-    .analysis-item:last-child { border-right: none; }
-
-    .alabel {
-      font-size: 0.72rem;
-      font-weight: 700;
-      letter-spacing: 0.8px;
-      text-transform: uppercase;
-      color: #9ca3af;
-    }
-
-    .aval {
-      font-size: 0.92rem;
-      font-weight: 600;
-      color: #1a1a2e;
-    }
 
     .error-banner {
       background: #fef2f2;
@@ -400,15 +507,20 @@
       padding: 12px 16px;
       border-radius: 8px;
       font-size: 0.88rem;
-      margin: 0 40px 16px;
+      margin: 12px 40px 0;
     }
 
     @media (max-width: 700px) {
-      .upload-row { grid-template-columns: 1fr; padding: 16px; }
-      .actions { padding: 16px; }
-      .results { padding: 16px 16px 40px; }
-      header { padding: 16px; }
+      .upload-row  { grid-template-columns: 1fr; padding: 16px; }
+      .actions     { padding: 16px; }
+      .results     { padding: 16px 16px 40px; }
+      header       { padding: 16px; }
+      .api-bar     { padding: 12px 16px; }
+      .ai-progress { margin: 12px 16px 0; }
       .account-list { grid-template-columns: 1fr; }
+      .analysis-bar { flex-direction: column; }
+      .analysis-item { border-right: none; border-bottom: 1px solid #e5e7eb; }
+      .analysis-item:last-child { border-bottom: none; }
     }
   </style>
 </head>
@@ -420,12 +532,32 @@
   </svg>
   <h1>Reconcile Tool</h1>
   <span class="badge">Financial</span>
+  <span class="ai-badge">AI</span>
 </header>
+
+<!-- API Key Bar -->
+<div class="api-bar">
+  <label>Anthropic API Key</label>
+  <div class="api-key-wrap">
+    <input type="password" id="api-key" placeholder="sk-ant-..." oninput="onApiKeyChange()" autocomplete="off" />
+    <button class="toggle-key" onclick="toggleKeyVisibility()" title="Show/hide key">
+      <svg id="eye-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+        <circle cx="12" cy="12" r="3"/>
+      </svg>
+    </button>
+  </div>
+  <div class="api-status none" id="api-status">
+    <div class="dot"></div>
+    <span id="api-status-text">No key entered</span>
+  </div>
+  <span class="api-hint">Your key is never sent anywhere except Anthropic's API</span>
+</div>
 
 <div id="error-container"></div>
 
+<!-- Upload Row -->
 <div class="upload-row">
-  <!-- Previous Year -->
   <div class="upload-card" id="card-prev" ondragover="handleDragOver(event,'prev')" ondragleave="handleDragLeave('prev')" ondrop="handleDrop(event,'prev')">
     <div class="year-label">Left / Prior Period</div>
     <h2>Previous Year</h2>
@@ -446,7 +578,6 @@
     </div>
   </div>
 
-  <!-- Current Year -->
   <div class="upload-card" id="card-curr" ondragover="handleDragOver(event,'curr')" ondragleave="handleDragLeave('curr')" ondrop="handleDrop(event,'curr')">
     <div class="year-label">Right / Current Period</div>
     <h2>Current Year</h2>
@@ -468,15 +599,33 @@
   </div>
 </div>
 
+<!-- Actions -->
 <div class="actions">
-  <button class="btn-reconcile" id="btn-reconcile" onclick="reconcile()" disabled>
+  <button class="btn-ai" id="btn-ai" onclick="runWithAI()" disabled>
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+      <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+      <path d="M2 17l10 5 10-5"/>
+      <path d="M2 12l10 5 10-5"/>
+    </svg>
+    Run with AI
+  </button>
+  <button class="btn-reconcile" id="btn-reconcile" onclick="runBasic()" disabled>
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
       <polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/>
       <polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/>
     </svg>
-    Run Reconciliation
+    Run Basic
   </button>
   <button class="btn-reset" onclick="resetAll()">Reset</button>
+</div>
+
+<!-- AI Progress -->
+<div class="ai-progress" id="ai-progress">
+  <div class="prog-title">
+    <span class="spinning">✦</span>
+    AI is analyzing your data…
+  </div>
+  <div class="prog-steps" id="prog-steps"></div>
 </div>
 
 <div class="results" id="results" style="display:none"></div>
@@ -487,39 +636,47 @@
     curr: { rows: null, headers: [], accountCol: null, fileName: '' }
   };
 
+  /* ── API Key ─────────────────────────────────────────────────────── */
+
+  function onApiKeyChange() {
+    const key = document.getElementById('api-key').value.trim();
+    const statusEl = document.getElementById('api-status');
+    const textEl   = document.getElementById('api-status-text');
+    const aiBtn    = document.getElementById('btn-ai');
+
+    const hasKey = key.startsWith('sk-ant-') && key.length > 20;
+    statusEl.className = 'api-status ' + (hasKey ? 'ok' : 'none');
+    textEl.textContent  = hasKey ? 'Key ready' : 'No key entered';
+
+    checkReady();
+  }
+
+  function toggleKeyVisibility() {
+    const inp = document.getElementById('api-key');
+    inp.type = inp.type === 'password' ? 'text' : 'password';
+  }
+
+  /* ── File handling ───────────────────────────────────────────────── */
+
   function showError(msg) {
     document.getElementById('error-container').innerHTML =
       `<div class="error-banner">${msg}</div>`;
-    setTimeout(() => document.getElementById('error-container').innerHTML = '', 5000);
+    setTimeout(() => document.getElementById('error-container').innerHTML = '', 7000);
   }
 
-  function handleDragOver(e, side) {
-    e.preventDefault();
-    document.getElementById('card-' + side).classList.add('dragover');
-  }
-
-  function handleDragLeave(side) {
-    document.getElementById('card-' + side).classList.remove('dragover');
-  }
+  function handleDragOver(e, side) { e.preventDefault(); document.getElementById('card-'+side).classList.add('dragover'); }
+  function handleDragLeave(side)   { document.getElementById('card-'+side).classList.remove('dragover'); }
 
   function handleDrop(e, side) {
-    e.preventDefault();
-    handleDragLeave(side);
-    const file = e.dataTransfer.files[0];
-    if (file) processFile(file, side);
+    e.preventDefault(); handleDragLeave(side);
+    const f = e.dataTransfer.files[0]; if (f) processFile(f, side);
   }
 
-  function handleFile(e, side) {
-    const file = e.target.files[0];
-    if (file) processFile(file, side);
-  }
+  function handleFile(e, side) { const f = e.target.files[0]; if (f) processFile(f, side); }
 
   function processFile(file, side) {
     const ext = file.name.split('.').pop().toLowerCase();
-    if (!['csv', 'xlsx', 'xls'].includes(ext)) {
-      showError('Unsupported file type. Please upload CSV, XLSX, or XLS.');
-      return;
-    }
+    if (!['csv','xlsx','xls'].includes(ext)) { showError('Unsupported file type. Please upload CSV, XLSX, or XLS.'); return; }
     const reader = new FileReader();
     reader.onload = function(e) {
       try {
@@ -534,12 +691,9 @@
         rows = rows.filter(r => r.some(c => String(c).trim() !== ''));
         if (rows.length < 2) { showError('File appears empty or has no data rows.'); return; }
         loadSide(side, rows, file.name);
-      } catch(err) {
-        showError('Could not parse file: ' + err.message);
-      }
+      } catch(err) { showError('Could not parse file: ' + err.message); }
     };
-    if (ext === 'csv') reader.readAsText(file);
-    else reader.readAsArrayBuffer(file);
+    if (ext === 'csv') reader.readAsText(file); else reader.readAsArrayBuffer(file);
   }
 
   function parseCSV(text) {
@@ -556,9 +710,7 @@
     });
   }
 
-  function cleanValue(v) {
-    return String(v).trim().replace(/\s+/g, ' ').toLowerCase();
-  }
+  function cleanValue(v) { return String(v).trim().replace(/\s+/g, ' ').toLowerCase(); }
 
   function loadSide(side, rows, fileName) {
     const headers = rows[0].map(h => String(h).trim());
@@ -566,7 +718,6 @@
     state[side].headers = headers;
     state[side].fileName = fileName;
 
-    // Auto-detect account column
     const accountKeywords = ['account', 'acct', 'name', 'description', 'desc', 'gl', 'code'];
     let bestCol = headers[0];
     for (const kw of accountKeywords) {
@@ -581,7 +732,7 @@
   }
 
   function renderFileInfo(side, name, count) {
-    const el = document.getElementById('info-' + side);
+    const el = document.getElementById('info-'+side);
     el.style.display = 'block';
     el.innerHTML = `
       <div class="file-info">
@@ -590,7 +741,7 @@
           <polyline points="14 2 14 8 20 8"/>
         </svg>
         <div>
-          <div class="fname">${name}</div>
+          <div class="fname">${escHtml(name)}</div>
           <div class="fmeta">${count.toLocaleString()} rows</div>
         </div>
         <button class="clear-btn" onclick="clearSide('${side}')" title="Remove">
@@ -599,107 +750,226 @@
           </svg>
         </button>
       </div>`;
-    document.getElementById('drop-' + side).style.display = 'none';
-    document.getElementById('card-' + side).classList.add('loaded');
+    document.getElementById('drop-'+side).style.display = 'none';
+    document.getElementById('card-'+side).classList.add('loaded');
   }
 
   function renderColSelect(side, headers, selected) {
-    const wrap = document.getElementById('col-select-' + side);
-    const sel = document.getElementById('col-' + side);
+    const wrap = document.getElementById('col-select-'+side);
+    const sel  = document.getElementById('col-'+side);
     wrap.style.display = 'block';
     sel.innerHTML = headers.map(h =>
-      `<option value="${h}" ${h === selected ? 'selected' : ''}>${h}</option>`
+      `<option value="${escHtml(h)}" ${h===selected?'selected':''}>${escHtml(h)}</option>`
     ).join('');
   }
 
   function clearSide(side) {
     state[side] = { rows: null, headers: [], accountCol: null, fileName: '' };
-    document.getElementById('info-' + side).style.display = 'none';
-    document.getElementById('col-select-' + side).style.display = 'none';
-    document.getElementById('drop-' + side).style.display = 'flex';
-    document.getElementById('card-' + side).classList.remove('loaded');
-    document.getElementById('file-' + side).value = '';
+    document.getElementById('info-'+side).style.display = 'none';
+    document.getElementById('col-select-'+side).style.display = 'none';
+    document.getElementById('drop-'+side).style.display = 'flex';
+    document.getElementById('card-'+side).classList.remove('loaded');
+    document.getElementById('file-'+side).value = '';
     checkReady();
     document.getElementById('results').style.display = 'none';
   }
 
   function checkReady() {
-    const ready = state.prev.rows && state.curr.rows;
-    document.getElementById('btn-reconcile').disabled = !ready;
+    const filesReady = state.prev.rows && state.curr.rows;
+    const keyReady   = document.getElementById('api-key').value.trim().startsWith('sk-ant-');
+    document.getElementById('btn-reconcile').disabled = !filesReady;
+    document.getElementById('btn-ai').disabled = !(filesReady && keyReady);
   }
 
-  function analyzeAndSort(rows, colIdx) {
-    const raw = rows.map(r => cleanValue(r[colIdx])).filter(v => v !== '');
+  /* ── Basic reconcile (no AI) ─────────────────────────────────────── */
 
-    // Deduplicate
+  function extractAccounts(side) {
+    const col = document.getElementById('col-'+side).value || state[side].accountCol;
+    const idx = state[side].headers.indexOf(col);
+    if (idx === -1) return null;
+    const raw = state[side].rows.map(r => cleanValue(r[idx])).filter(v => v !== '');
     const unique = [...new Set(raw)];
+    unique.sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
+    return { accounts: unique, dupCount: raw.length - unique.length };
+  }
 
-    // Detect if values look like numeric account codes (e.g. "1000", "4200-01")
-    const looksNumeric = unique.filter(v => /^[\d\-\.]+$/.test(v)).length / unique.length > 0.5;
+  function runBasic() {
+    const prev = extractAccounts('prev');
+    const curr = extractAccounts('curr');
+    if (!prev || !curr) { showError('Could not find the selected account column.'); return; }
 
-    // Sort: numeric codes numerically, otherwise alphabetically
-    unique.sort((a, b) => {
-      if (looksNumeric) {
-        const na = parseFloat(a.replace(/[^0-9.]/g, ''));
-        const nb = parseFloat(b.replace(/[^0-9.]/g, ''));
-        if (!isNaN(na) && !isNaN(nb)) return na - nb;
-      }
-      return a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' });
+    const prevSet = new Set(prev.accounts);
+    const currSet = new Set(curr.accounts);
+
+    const added   = curr.accounts.filter(a => !prevSet.has(a));
+    const removed = prev.accounts.filter(a => !currSet.has(a));
+    const matched = prev.accounts.filter(a => currSet.has(a));
+
+    renderResults({ added, removed, matched, prevCount: prev.accounts.length, currCount: curr.accounts.length,
+                    prevDups: prev.dupCount, currDups: curr.dupCount, sortLabel: 'alphabetical', aiInsight: null });
+  }
+
+  /* ── AI reconcile ────────────────────────────────────────────────── */
+
+  const STEPS = [
+    { id: 'extract', label: 'Extracting account lists from both files' },
+    { id: 'clean',   label: 'AI cleaning & normalizing previous year accounts' },
+    { id: 'clean2',  label: 'AI cleaning & normalizing current year accounts' },
+    { id: 'sort',    label: 'AI sorting both lists' },
+    { id: 'compare', label: 'AI comparing and generating insights' },
+  ];
+
+  function setStep(activeId) {
+    const container = document.getElementById('prog-steps');
+    container.innerHTML = STEPS.map(s => {
+      const doneIdx   = STEPS.findIndex(x => x.id === activeId);
+      const thisIdx   = STEPS.findIndex(x => x.id === s.id);
+      const isDone   = thisIdx < doneIdx;
+      const isActive = s.id === activeId;
+      const cls = isDone ? 'done' : isActive ? 'active' : '';
+      const icon = isDone ? '✓' : isActive ? '<span class="spinning">↻</span>' : '○';
+      return `<div class="prog-step ${cls}"><div class="step-icon">${icon}</div><span>${s.label}</span></div>`;
+    }).join('');
+  }
+
+  async function callClaude(apiKey, prompt) {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true',
+        'content-type': 'application/json'
+      },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 4096,
+        messages: [{ role: 'user', content: prompt }]
+      })
     });
-
-    return { accounts: unique, isNumeric: looksNumeric, rawCount: raw.length, dupCount: raw.length - unique.length };
-  }
-
-  function reconcile() {
-    const prevCol = document.getElementById('col-prev').value || state.prev.accountCol;
-    const currCol = document.getElementById('col-curr').value || state.curr.accountCol;
-
-    const prevIdx = state.prev.headers.indexOf(prevCol);
-    const currIdx = state.curr.headers.indexOf(currCol);
-
-    if (prevIdx === -1 || currIdx === -1) {
-      showError('Could not find the selected account column. Please check your column selection.');
-      return;
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error?.message || `API error ${res.status}`);
     }
-
-    const prevAnalysis = analyzeAndSort(state.prev.rows, prevIdx);
-    const currAnalysis = analyzeAndSort(state.curr.rows, currIdx);
-
-    const prevSet = new Set(prevAnalysis.accounts);
-    const currSet = new Set(currAnalysis.accounts);
-
-    // Sorted added / removed / matched
-    const added   = currAnalysis.accounts.filter(a => !prevSet.has(a));
-    const removed = prevAnalysis.accounts.filter(a => !currSet.has(a));
-    const matched = prevAnalysis.accounts.filter(a => currSet.has(a));
-
-    renderResults(added, removed, matched, prevAnalysis, currAnalysis, prevCol, currCol);
+    const data = await res.json();
+    return data.content[0].text;
   }
 
-  function renderResults(added, removed, matched, prevAnalysis, currAnalysis, prevCol, currCol) {
+  async function aiCleanAndSort(apiKey, accounts, label) {
+    const list = accounts.join('\n');
+    const prompt = `You are a financial data analyst. Below is a raw list of account names from a financial report (${label}).
+
+Your tasks:
+1. Clean each account name: fix spacing, capitalization, remove junk characters, expand obvious abbreviations (e.g. "A/R" → "Accounts Receivable").
+2. Remove exact duplicates.
+3. Sort the list in standard financial statement order (assets before liabilities, revenue before expenses, etc.). If the accounts look like numeric GL codes, sort numerically.
+4. Return ONLY the cleaned, sorted list — one account per line, no numbering, no extra text, no markdown.
+
+Account list:
+${list}`;
+
+    const response = await callClaude(apiKey, prompt);
+    return response.trim().split('\n').map(l => l.trim()).filter(l => l.length > 0);
+  }
+
+  async function aiInsights(apiKey, added, removed, matched) {
+    if (added.length === 0 && removed.length === 0) return 'No account changes detected between the two periods.';
+    const prompt = `You are a financial analyst reviewing a year-over-year account reconciliation.
+
+Added accounts (new in current year): ${added.length > 0 ? added.join(', ') : 'none'}
+Removed accounts (dropped from current year): ${removed.length > 0 ? removed.join(', ') : 'none'}
+Unchanged accounts: ${matched.length}
+
+Write 2-3 sentences summarizing what these changes suggest about the business (e.g. new cost centers, discontinued operations, restructuring, etc.). Be concise and professional. No bullet points.`;
+
+    return await callClaude(apiKey, prompt);
+  }
+
+  async function runWithAI() {
+    const apiKey = document.getElementById('api-key').value.trim();
+    if (!apiKey) { showError('Please enter your Anthropic API key above.'); return; }
+
+    const prevRaw = extractAccounts('prev');
+    const currRaw = extractAccounts('curr');
+    if (!prevRaw || !currRaw) { showError('Could not find the selected account column.'); return; }
+
+    const progEl = document.getElementById('ai-progress');
+    progEl.style.display = 'block';
+    document.getElementById('results').style.display = 'none';
+    document.getElementById('btn-ai').disabled = true;
+    document.getElementById('btn-reconcile').disabled = true;
+
+    try {
+      setStep('extract');
+      await sleep(300);
+
+      setStep('clean');
+      const cleanedPrev = await aiCleanAndSort(apiKey, prevRaw.accounts, 'previous year');
+
+      setStep('clean2');
+      const cleanedCurr = await aiCleanAndSort(apiKey, currRaw.accounts, 'current year');
+
+      setStep('sort');
+      await sleep(200);
+
+      setStep('compare');
+      const prevLower = cleanedPrev.map(a => a.toLowerCase());
+      const currLower = cleanedCurr.map(a => a.toLowerCase());
+      const prevSet   = new Set(prevLower);
+      const currSet   = new Set(currLower);
+
+      const added   = cleanedCurr.filter((_, i) => !prevSet.has(currLower[i]));
+      const removed = cleanedPrev.filter((_, i) => !currSet.has(prevLower[i]));
+      const matched = cleanedPrev.filter((_, i) => currSet.has(prevLower[i]));
+
+      const insight = await aiInsights(apiKey, added, removed, matched);
+
+      progEl.style.display = 'none';
+
+      renderResults({
+        added, removed, matched,
+        prevCount: cleanedPrev.length, currCount: cleanedCurr.length,
+        prevDups: prevRaw.dupCount, currDups: currRaw.dupCount,
+        sortLabel: 'AI financial order', aiInsight: insight
+      });
+
+    } catch(err) {
+      progEl.style.display = 'none';
+      showError('AI error: ' + err.message);
+    } finally {
+      checkReady();
+    }
+  }
+
+  function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+  /* ── Render results ──────────────────────────────────────────────── */
+
+  function renderResults({ added, removed, matched, prevCount, currCount, prevDups, currDups, sortLabel, aiInsight }) {
     const el = document.getElementById('results');
     el.style.display = 'block';
 
-    const sortLabel = (prevAnalysis.isNumeric || currAnalysis.isNumeric) ? 'numeric' : 'alphabetical';
-
-    const dupWarning = (side, analysis) => analysis.dupCount > 0
-      ? `<span style="color:#b45309;font-size:0.78rem;margin-left:8px;">⚠ ${analysis.dupCount} duplicate${analysis.dupCount > 1 ? 's' : ''} removed (${side})</span>`
+    const dupWarn = (label, n) => n > 0
+      ? `<span style="color:#b45309;font-size:0.78rem;margin-left:6px;">⚠ ${n} dup${n>1?'s':''} removed</span>`
       : '';
 
+    const insightHTML = aiInsight ? `
+      <div class="ai-insight">
+        <div class="insight-label">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>
+          </svg>
+          AI Insight
+        </div>
+        ${escHtml(aiInsight)}
+      </div>` : '';
+
     const addedHTML = added.length
-      ? added.map(a => `
-        <div class="account-item added">
-          <div class="icon">+</div>
-          <span class="name">${escHtml(titleCase(a))}</span>
-        </div>`).join('')
+      ? added.map(a => `<div class="account-item added"><div class="icon">+</div><span class="name">${escHtml(a)}</span></div>`).join('')
       : '<p style="color:#6b7280;font-size:0.88rem;padding:8px 0">No new accounts added.</p>';
 
     const removedHTML = removed.length
-      ? removed.map(a => `
-        <div class="account-item removed">
-          <div class="icon">−</div>
-          <span class="name">${escHtml(titleCase(a))}</span>
-        </div>`).join('')
+      ? removed.map(a => `<div class="account-item removed"><div class="icon">−</div><span class="name">${escHtml(a)}</span></div>`).join('')
       : '<p style="color:#6b7280;font-size:0.88rem;padding:8px 0">No accounts removed.</p>';
 
     el.innerHTML = `
@@ -717,13 +987,11 @@
       <div class="analysis-bar">
         <div class="analysis-item">
           <span class="alabel">Previous Year</span>
-          <span class="aval">${prevAnalysis.accounts.length.toLocaleString()} unique accounts</span>
-          ${dupWarning('prev', prevAnalysis)}
+          <span class="aval">${prevCount.toLocaleString()} accounts ${dupWarn('prev', prevDups)}</span>
         </div>
         <div class="analysis-item">
           <span class="alabel">Current Year</span>
-          <span class="aval">${currAnalysis.accounts.length.toLocaleString()} unique accounts</span>
-          ${dupWarning('curr', currAnalysis)}
+          <span class="aval">${currCount.toLocaleString()} accounts ${dupWarn('curr', currDups)}</span>
         </div>
         <div class="analysis-item">
           <span class="alabel">Sort Order</span>
@@ -731,11 +999,14 @@
         </div>
       </div>
 
+      ${insightHTML}
+
       <div class="summary-chips">
         <div class="chip added"><div class="dot"></div>${added.length} Added</div>
         <div class="chip removed"><div class="dot"></div>${removed.length} Removed</div>
         <div class="chip matched"><div class="dot"></div>${matched.length} Matched</div>
       </div>
+
       <div class="section-title">Accounts Added in Current Year (${added.length})</div>
       <div class="account-list">${addedHTML}</div>
       <div class="section-title">Accounts Removed from Current Year (${removed.length})</div>
@@ -744,11 +1015,13 @@
     el.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
+  /* ── Export ──────────────────────────────────────────────────────── */
+
   function exportResults(added, removed) {
     const rows = [['Status', 'Account Name']];
-    added.forEach(a => rows.push(['Added', titleCase(a)]));
-    removed.forEach(a => rows.push(['Removed', titleCase(a)]));
-    const csv = rows.map(r => r.map(c => `"${c}"`).join(',')).join('\n');
+    added.forEach(a => rows.push(['Added', a]));
+    removed.forEach(a => rows.push(['Removed', a]));
+    const csv = rows.map(r => r.map(c => `"${c.replace(/"/g,'""')}"`).join(',')).join('\n');
     const blob = new Blob([csv], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -759,15 +1032,12 @@
   function resetAll() {
     clearSide('prev'); clearSide('curr');
     document.getElementById('results').style.display = 'none';
+    document.getElementById('ai-progress').style.display = 'none';
     document.getElementById('error-container').innerHTML = '';
   }
 
-  function titleCase(str) {
-    return str.replace(/\w\S*/g, t => t.charAt(0).toUpperCase() + t.substr(1));
-  }
-
   function escHtml(str) {
-    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   }
 </script>
 </body>
