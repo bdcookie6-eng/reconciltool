@@ -7,35 +7,16 @@
   <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f0f2f5; color: #1a1a2e; min-height: 100vh; }
 
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      background: #f0f2f5;
-      color: #1a1a2e;
-      min-height: 100vh;
-    }
-
-    header {
-      background: #1a1a2e;
-      color: #fff;
-      padding: 20px 40px;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-    header h1 { font-size: 1.4rem; font-weight: 600; letter-spacing: 0.5px; }
-    .badge    { background: #4f8ef7; color: #fff; font-size: 0.7rem; padding: 2px 8px; border-radius: 20px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; }
-    .ai-badge { background: linear-gradient(135deg,#7c3aed,#4f8ef7); color: #fff; font-size: 0.7rem; padding: 2px 8px; border-radius: 20px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; }
+    header { background: #1a1a2e; color: #fff; padding: 20px 40px; display: flex; align-items: center; gap: 12px; }
+    header h1 { font-size: 1.4rem; font-weight: 600; letter-spacing: .5px; }
+    .badge    { background: #4f8ef7; color: #fff; font-size: .7rem; padding: 2px 8px; border-radius: 20px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; }
+    .ai-badge { background: linear-gradient(135deg,#7c3aed,#4f8ef7); color: #fff; font-size: .7rem; padding: 2px 8px; border-radius: 20px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; }
 
     /* Upload */
     .upload-row { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; padding: 28px 40px 0; }
-
-    .upload-card {
-      background: #fff; border-radius: 12px; padding: 28px;
-      border: 2px dashed #d0d7e3;
-      transition: border-color .2s, box-shadow .2s;
-      cursor: pointer; position: relative;
-    }
+    .upload-card { background: #fff; border-radius: 12px; padding: 28px; border: 2px dashed #d0d7e3; transition: border-color .2s, box-shadow .2s; cursor: pointer; }
     .upload-card.dragover { border-color: #4f8ef7; box-shadow: 0 0 0 4px rgba(79,142,247,.12); }
     .upload-card.loaded   { border-style: solid; border-color: #22c55e; cursor: default; }
     .upload-card .year-label { font-size: .72rem; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; color: #6b7280; margin-bottom: 8px; }
@@ -46,7 +27,6 @@
     .drop-zone p { font-size: .9rem; color: #6b7280; text-align: center; }
     .drop-zone p strong { color: #4f8ef7; cursor: pointer; }
     .drop-zone .file-types { font-size: .75rem; color: #9ca3af; }
-
     input[type="file"] { display: none; }
 
     .file-info { display: flex; align-items: center; gap: 10px; padding: 10px 14px; background: #f0fdf4; border-radius: 8px; margin-top: 12px; }
@@ -56,25 +36,19 @@
     .clear-btn { margin-left: auto; background: none; border: none; cursor: pointer; color: #9ca3af; padding: 4px; border-radius: 4px; display: flex; align-items: center; }
     .clear-btn:hover { color: #ef4444; background: #fee2e2; }
 
-    .column-select { margin-top: 16px; }
-    .column-select label { font-size: .78rem; font-weight: 600; color: #6b7280; letter-spacing: .5px; text-transform: uppercase; display: block; margin-bottom: 6px; }
-    .column-select select { width: 100%; padding: 8px 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: .88rem; color: #1a1a2e; background: #fff; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; cursor: pointer; }
-    .column-select select:focus { outline: none; border-color: #4f8ef7; box-shadow: 0 0 0 3px rgba(79,142,247,.15); }
+    .col-selects { margin-top: 16px; display: flex; flex-direction: column; gap: 10px; }
+    .col-selects label { font-size: .75rem; font-weight: 700; color: #6b7280; letter-spacing: .5px; text-transform: uppercase; display: block; margin-bottom: 4px; }
+    .col-selects select { width: 100%; padding: 7px 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: .85rem; color: #1a1a2e; background: #fff; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; cursor: pointer; }
+    .col-selects select:focus { outline: none; border-color: #4f8ef7; box-shadow: 0 0 0 3px rgba(79,142,247,.15); }
+    .col-selects .optional { font-size: .68rem; color: #9ca3af; font-weight: 400; margin-left: 4px; }
 
     /* Actions */
     .actions { display: flex; justify-content: center; padding: 24px 40px 0; gap: 12px; flex-wrap: wrap; }
-
     .btn-ai { background: linear-gradient(135deg,#7c3aed,#4f8ef7); color: #fff; border: none; padding: 13px 36px; border-radius: 8px; font-size: .95rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: opacity .2s, transform .1s; }
-    .btn-ai:hover:not(:disabled) { opacity: .9; }
-    .btn-ai:active:not(:disabled) { transform: scale(.98); }
-    .btn-ai:disabled { opacity: .35; cursor: not-allowed; }
-
+    .btn-ai:hover:not(:disabled) { opacity: .9; } .btn-ai:active:not(:disabled) { transform: scale(.98); } .btn-ai:disabled { opacity: .35; cursor: not-allowed; }
     .btn-reconcile { background: #1a1a2e; color: #fff; border: none; padding: 13px 40px; border-radius: 8px; font-size: .95rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: background .2s, transform .1s; }
-    .btn-reconcile:hover:not(:disabled) { background: #2d2d50; }
-    .btn-reconcile:active:not(:disabled) { transform: scale(.98); }
-    .btn-reconcile:disabled { opacity: .4; cursor: not-allowed; }
-
-    .btn-reset { background: #fff; color: #6b7280; border: 1px solid #d1d5db; padding: 13px 24px; border-radius: 8px; font-size: .95rem; font-weight: 500; cursor: pointer; transition: background .2s; }
+    .btn-reconcile:hover:not(:disabled) { background: #2d2d50; } .btn-reconcile:active:not(:disabled) { transform: scale(.98); } .btn-reconcile:disabled { opacity: .4; cursor: not-allowed; }
+    .btn-reset { background: #fff; color: #6b7280; border: 1px solid #d1d5db; padding: 13px 24px; border-radius: 8px; font-size: .95rem; font-weight: 500; cursor: pointer; }
     .btn-reset:hover { background: #f9fafb; color: #1a1a2e; }
 
     /* Progress */
@@ -83,135 +57,123 @@
     .prog-steps { display: flex; flex-direction: column; gap: 8px; }
     .prog-step { display: flex; align-items: center; gap: 10px; font-size: .84rem; color: #6b7280; }
     .prog-step .step-icon { width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: .7rem; background: #f3f4f6; }
-    .prog-step.done   { color: #16a34a; } .prog-step.done .step-icon   { background: #dcfce7; color: #16a34a; }
+    .prog-step.done { color: #16a34a; } .prog-step.done .step-icon { background: #dcfce7; color: #16a34a; }
     .prog-step.active { color: #7c3aed; font-weight: 500; } .prog-step.active .step-icon { background: #ede9fe; color: #7c3aed; }
-
     @keyframes spin { to { transform: rotate(360deg); } }
     .spinning { animation: spin .8s linear infinite; display: inline-block; }
 
-    /* Error */
     .error-banner { background: #fef2f2; border: 1px solid #fca5a5; color: #991b1b; padding: 12px 16px; border-radius: 8px; font-size: .88rem; margin: 12px 40px 0; }
 
-    /* Results wrapper */
+    /* Results */
     .results { padding: 28px 40px 48px; }
-
     .results-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; flex-wrap: wrap; gap: 10px; }
     .results-header h2 { font-size: 1.1rem; font-weight: 700; }
-
-    .results-actions { display: flex; gap: 8px; }
-
-    .export-btn { background: #fff; border: 1px solid #d1d5db; padding: 8px 14px; border-radius: 6px; font-size: .82rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px; color: #374151; transition: background .2s; }
+    .export-btn { background: #fff; border: 1px solid #d1d5db; padding: 8px 14px; border-radius: 6px; font-size: .82rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px; color: #374151; }
     .export-btn:hover { background: #f3f4f6; }
 
-    /* Summary row */
-    .summary-row { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; align-items: center; }
+    .summary-row { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
     .chip { display: flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: 8px; font-size: .84rem; font-weight: 600; }
-    .chip.added   { background: #dcfce7; color: #166534; }
-    .chip.removed { background: #fee2e2; color: #991b1b; }
-    .chip.matched { background: #eff6ff; color: #1e40af; }
+    .chip.added   { background: #dcfce7; color: #166534; } .chip.added .dot   { background: #22c55e; }
+    .chip.removed { background: #fee2e2; color: #991b1b; } .chip.removed .dot { background: #ef4444; }
+    .chip.matched { background: #eff6ff; color: #1e40af; } .chip.matched .dot { background: #4f8ef7; }
     .chip .dot { width: 7px; height: 7px; border-radius: 50%; }
-    .chip.added .dot   { background: #22c55e; }
-    .chip.removed .dot { background: #ef4444; }
-    .chip.matched .dot { background: #4f8ef7; }
 
-    /* AI insight */
     .ai-insight { background: linear-gradient(135deg,#faf5ff,#eff6ff); border: 1px solid #ddd6fe; border-radius: 10px; padding: 14px 18px; margin-bottom: 20px; font-size: .88rem; color: #3730a3; line-height: 1.6; }
     .ai-insight .insight-label { font-size: .72rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: #7c3aed; margin-bottom: 5px; display: flex; align-items: center; gap: 6px; }
 
-    /* ── Side-by-side ledger ── */
+    .legend { display: flex; gap: 16px; align-items: center; margin-bottom: 14px; flex-wrap: wrap; }
+    .legend-item { display: flex; align-items: center; gap: 6px; font-size: .78rem; color: #6b7280; }
+    .legend-swatch { width: 14px; height: 14px; border-radius: 3px; }
+    .legend-swatch.added   { background: rgba(34,197,94,.2);  border: 1px solid #86efac; }
+    .legend-swatch.removed { background: rgba(239,68,68,.15); border: 1px solid #fca5a5; }
+
+    /* ── Ledger ── */
     .ledger-wrap { border-radius: 10px; overflow: hidden; border: 1px solid #e5e7eb; background: #fff; }
 
-    .ledger-cols-header {
+    /* Top header: two halves */
+    .ledger-top-header {
       display: grid;
       grid-template-columns: 1fr 1fr;
       background: #1a1a2e;
       color: #fff;
     }
-    .ledger-cols-header .lch {
-      padding: 12px 18px;
-      font-size: .78rem;
-      font-weight: 700;
-      letter-spacing: 1px;
-      text-transform: uppercase;
-      display: flex;
-      align-items: center;
-      gap: 8px;
+    .lth {
+      padding: 11px 14px;
+      font-size: .75rem; font-weight: 700; letter-spacing: .8px; text-transform: uppercase;
+      display: flex; align-items: center; gap: 7px;
     }
-    .ledger-cols-header .lch:first-child { border-right: 1px solid rgba(255,255,255,.12); }
+    .lth:first-child { border-right: 1px solid rgba(255,255,255,.12); }
 
-    /* Category header row */
+    /* Sub-header: # | Name | Balance per side */
+    .ledger-sub-header {
+      display: grid;
+      grid-template-columns: 90px 1fr 120px 1px 90px 1fr 120px;
+      background: #f1f5f9;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    .lsh {
+      padding: 7px 10px;
+      font-size: .68rem; font-weight: 700; letter-spacing: .8px; text-transform: uppercase; color: #64748b;
+    }
+    .lsh.num  { }
+    .lsh.name { }
+    .lsh.bal  { text-align: right; }
+    .lsh.div  { background: #e2e8f0; }
+
+    /* Category header */
     .cat-header {
       display: grid;
-      grid-template-columns: 1fr 1fr;
-      background: #f1f5f9;
-      border-top: 2px solid #e2e8f0;
+      grid-template-columns: 1fr 1px 1fr;
+      background: #e8edf5;
+      border-top: 2px solid #cbd5e1;
     }
-    .cat-header:first-of-type { border-top: none; }
     .cat-label {
-      padding: 9px 18px;
-      font-size: .72rem;
-      font-weight: 800;
-      letter-spacing: 1.2px;
-      text-transform: uppercase;
-      color: #475569;
-      display: flex;
-      align-items: center;
-      gap: 7px;
+      padding: 8px 14px;
+      font-size: .7rem; font-weight: 800; letter-spacing: 1.2px; text-transform: uppercase; color: #475569;
+      grid-column: span 1;
     }
-    .cat-label:first-child { border-right: 1px solid #e2e8f0; }
+    .cat-div { background: #cbd5e1; }
 
     /* Account row */
     .acct-row {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: 90px 1fr 120px 1px 90px 1fr 120px;
       border-top: 1px solid #f1f5f9;
-      transition: background .12s;
     }
     .acct-row:hover { background: #f8fafc; }
 
-    .acct-cell {
-      padding: 9px 18px;
-      font-size: .86rem;
-      color: #1a1a2e;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      min-height: 38px;
-    }
-    .acct-cell:first-child { border-right: 1px solid #f1f5f9; }
+    .acct-num  { padding: 8px 10px; font-size: .78rem; color: #94a3b8; font-family: monospace; }
+    .acct-name { padding: 8px 10px; font-size: .84rem; color: #1a1a2e; display: flex; align-items: center; gap: 6px; }
+    .acct-bal  { padding: 8px 10px; font-size: .82rem; color: #374151; text-align: right; font-family: monospace; white-space: nowrap; }
+    .acct-div  { background: #f1f5f9; }
 
-    /* Added / Removed tints */
-    .acct-cell.added   { background: rgba(34,197,94,.10); color: #14532d; }
-    .acct-cell.removed { background: rgba(239,68,68,.09);  color: #7f1d1d; }
-    .acct-cell.empty   { background: #fafafa; }
+    /* Tints */
+    .added-row   .acct-num,
+    .added-row   .acct-name,
+    .added-row   .acct-bal  { background: rgba(34,197,94,.09); color: #14532d; }
+    .added-row   .acct-name { color: #14532d; }
+    .added-row   .acct-num  { color: #4ade80; }
 
-    .acct-badge {
-      font-size: .68rem;
-      font-weight: 700;
-      padding: 1px 6px;
-      border-radius: 4px;
-      flex-shrink: 0;
-      letter-spacing: .4px;
-      text-transform: uppercase;
-    }
+    .removed-row .acct-num,
+    .removed-row .acct-name,
+    .removed-row .acct-bal  { background: rgba(239,68,68,.08); color: #7f1d1d; }
+    .removed-row .acct-name { color: #7f1d1d; }
+    .removed-row .acct-num  { color: #f87171; }
+
+    .empty-cell { background: #fafafa; }
+
+    .acct-badge { font-size: .65rem; font-weight: 700; padding: 1px 5px; border-radius: 3px; flex-shrink: 0; text-transform: uppercase; letter-spacing: .3px; }
     .acct-badge.new { background: #bbf7d0; color: #14532d; }
     .acct-badge.del { background: #fecaca; color: #7f1d1d; }
 
-    /* Legend */
-    .legend { display: flex; gap: 16px; align-items: center; margin-bottom: 14px; flex-wrap: wrap; }
-    .legend-item { display: flex; align-items: center; gap: 6px; font-size: .78rem; color: #6b7280; }
-    .legend-swatch { width: 14px; height: 14px; border-radius: 3px; }
-    .legend-swatch.added   { background: rgba(34,197,94,.25); border: 1px solid #86efac; }
-    .legend-swatch.removed { background: rgba(239,68,68,.18); border: 1px solid #fca5a5; }
-
-    @media (max-width: 700px) {
+    @media (max-width: 900px) {
       .upload-row { grid-template-columns: 1fr; padding: 16px; }
       .actions    { padding: 16px; }
       .results    { padding: 16px 16px 40px; }
       header      { padding: 16px; }
       .ai-progress { margin: 12px 16px 0; }
-      .ledger-cols-header, .cat-header, .acct-row { grid-template-columns: 1fr; }
-      .acct-cell:first-child, .cat-label:first-child, .ledger-cols-header .lch:first-child { border-right: none; border-bottom: 1px solid rgba(255,255,255,.1); }
+      .ledger-sub-header,
+      .acct-row { grid-template-columns: 60px 1fr 90px 1px 60px 1fr 90px; }
     }
   </style>
 </head>
@@ -229,6 +191,7 @@
 <div id="error-container"></div>
 
 <div class="upload-row">
+  <!-- Previous Year -->
   <div class="upload-card" id="card-prev" ondragover="handleDragOver(event,'prev')" ondragleave="handleDragLeave('prev')" ondrop="handleDrop(event,'prev')">
     <div class="year-label">Left / Prior Period</div>
     <h2>Previous Year</h2>
@@ -241,12 +204,23 @@
       <span class="file-types">CSV, XLSX, XLS</span>
     </div>
     <div id="info-prev" style="display:none"></div>
-    <div class="column-select" id="col-select-prev" style="display:none">
-      <label>Account Name Column</label>
-      <select id="col-prev" onchange="state.prev.accountCol=this.value"></select>
+    <div class="col-selects" id="col-selects-prev" style="display:none">
+      <div>
+        <label>Account Number Column <span class="optional">(optional)</span></label>
+        <select id="col-prev-num"></select>
+      </div>
+      <div>
+        <label>Account Name Column</label>
+        <select id="col-prev-name"></select>
+      </div>
+      <div>
+        <label>Balance Column <span class="optional">(optional)</span></label>
+        <select id="col-prev-bal"></select>
+      </div>
     </div>
   </div>
 
+  <!-- Current Year -->
   <div class="upload-card" id="card-curr" ondragover="handleDragOver(event,'curr')" ondragleave="handleDragLeave('curr')" ondrop="handleDrop(event,'curr')">
     <div class="year-label">Right / Current Period</div>
     <h2>Current Year</h2>
@@ -259,9 +233,19 @@
       <span class="file-types">CSV, XLSX, XLS</span>
     </div>
     <div id="info-curr" style="display:none"></div>
-    <div class="column-select" id="col-select-curr" style="display:none">
-      <label>Account Name Column</label>
-      <select id="col-curr" onchange="state.curr.accountCol=this.value"></select>
+    <div class="col-selects" id="col-selects-curr" style="display:none">
+      <div>
+        <label>Account Number Column <span class="optional">(optional)</span></label>
+        <select id="col-curr-num"></select>
+      </div>
+      <div>
+        <label>Account Name Column</label>
+        <select id="col-curr-name"></select>
+      </div>
+      <div>
+        <label>Balance Column <span class="optional">(optional)</span></label>
+        <select id="col-curr-bal"></select>
+      </div>
     </div>
   </div>
 </div>
@@ -292,11 +276,12 @@
 
 <script>
   const state = {
-    prev: { rows: null, headers: [], accountCol: null, fileName: '' },
-    curr: { rows: null, headers: [], accountCol: null, fileName: '' }
+    prev: { rows: null, headers: [], fileName: '' },
+    curr: { rows: null, headers: [], fileName: '' }
   };
 
   const ANTHROPIC_API_KEY = '__ANTHROPIC_API_KEY__';
+  const NONE_OPT = '— None —';
 
   /* ── File handling ─────────────────────────────────────────────── */
 
@@ -342,19 +327,31 @@
     });
   }
 
-  function cleanValue(v) { return String(v).trim().replace(/\s+/g,' ').toLowerCase(); }
-
   function loadSide(side, rows, fileName) {
     const headers = rows[0].map(h => String(h).trim());
     state[side].rows = rows.slice(1);
     state[side].headers = headers;
     state[side].fileName = fileName;
-    const kws = ['account','acct','name','description','desc','gl','code'];
-    let best = headers[0];
-    for (const kw of kws) { const m = headers.find(h => h.toLowerCase().includes(kw)); if(m){best=m;break;} }
-    state[side].accountCol = best;
-    renderFileInfo(side, fileName, rows.length-1);
-    renderColSelect(side, headers, best);
+
+    // Auto-detect columns
+    const numKws  = ['gl','code','number','num','acct #','account #','id'];
+    const nameKws = ['account name','account','name','description','desc'];
+    const balKws  = ['balance','amount','total','debit','credit','ytd','value'];
+
+    function best(kws) {
+      for (const kw of kws) {
+        const m = headers.find(h => h.toLowerCase().includes(kw));
+        if (m) return m;
+      }
+      return null;
+    }
+
+    const autoNum  = best(numKws);
+    const autoName = best(nameKws) || headers[0];
+    const autoBal  = best(balKws);
+
+    renderFileInfo(side, fileName, rows.length - 1);
+    renderColSelects(side, headers, autoNum, autoName, autoBal);
     checkReady();
   }
 
@@ -371,16 +368,23 @@
     document.getElementById('card-'+side).classList.add('loaded');
   }
 
-  function renderColSelect(side, headers, selected) {
-    const wrap = document.getElementById('col-select-'+side);
-    wrap.style.display = 'block';
-    document.getElementById('col-'+side).innerHTML = headers.map(h =>
-      `<option value="${escHtml(h)}" ${h===selected?'selected':''}>${escHtml(h)}</option>`).join('');
+  function renderColSelects(side, headers, autoNum, autoName, autoBal) {
+    document.getElementById('col-selects-'+side).style.display = 'block';
+    const noneOpt = `<option value="">${NONE_OPT}</option>`;
+
+    const numOpts  = noneOpt + headers.map(h => `<option value="${escHtml(h)}" ${h===autoNum?'selected':''}>${escHtml(h)}</option>`).join('');
+    const nameOpts = headers.map(h => `<option value="${escHtml(h)}" ${h===autoName?'selected':''}>${escHtml(h)}</option>`).join('');
+    const balOpts  = noneOpt + headers.map(h => `<option value="${escHtml(h)}" ${h===autoBal?'selected':''}>${escHtml(h)}</option>`).join('');
+
+    document.getElementById('col-'+side+'-num').innerHTML  = numOpts;
+    document.getElementById('col-'+side+'-name').innerHTML = nameOpts;
+    document.getElementById('col-'+side+'-bal').innerHTML  = balOpts;
   }
 
   function clearSide(side) {
-    state[side] = { rows:null, headers:[], accountCol:null, fileName:'' };
-    ['info-','col-select-'].forEach(p => document.getElementById(p+side).style.display='none');
+    state[side] = { rows:null, headers:[], fileName:'' };
+    document.getElementById('info-'+side).style.display = 'none';
+    document.getElementById('col-selects-'+side).style.display = 'none';
     document.getElementById('drop-'+side).style.display = 'flex';
     document.getElementById('card-'+side).classList.remove('loaded');
     document.getElementById('file-'+side).value = '';
@@ -394,91 +398,110 @@
     document.getElementById('btn-ai').disabled = !ok;
   }
 
-  /* ── Extract raw accounts ────────────────────────────────────────── */
+  /* ── Extract rows ───────────────────────────────────────────────── */
 
-  function extractAccounts(side) {
-    const col = document.getElementById('col-'+side).value || state[side].accountCol;
-    const idx = state[side].headers.indexOf(col);
-    if (idx === -1) return null;
-    const raw = state[side].rows.map(r => cleanValue(r[idx])).filter(v => v !== '');
-    const unique = [...new Set(raw)];
-    return { accounts: unique, dupCount: raw.length - unique.length };
+  function extractRows(side) {
+    const numCol  = document.getElementById('col-'+side+'-num').value;
+    const nameCol = document.getElementById('col-'+side+'-name').value;
+    const balCol  = document.getElementById('col-'+side+'-bal').value;
+
+    const headers = state[side].headers;
+    const numIdx  = numCol  ? headers.indexOf(numCol)  : -1;
+    const nameIdx = headers.indexOf(nameCol);
+    const balIdx  = balCol  ? headers.indexOf(balCol)  : -1;
+
+    if (nameIdx === -1) return null;
+
+    const seen = new Set();
+    const rows = [];
+    for (const r of state[side].rows) {
+      const name = String(r[nameIdx] ?? '').trim();
+      if (!name) continue;
+      const key = name.toLowerCase();
+      if (seen.has(key)) continue;
+      seen.add(key);
+      rows.push({
+        num:  numIdx  >= 0 ? String(r[numIdx]  ?? '').trim() : '',
+        name: name,
+        bal:  balIdx  >= 0 ? r[balIdx] : ''
+      });
+    }
+    return rows;
   }
 
-  /* ── Basic (no AI) ───────────────────────────────────────────────── */
+  function formatBal(val) {
+    if (val === '' || val === null || val === undefined) return '';
+    const n = parseFloat(String(val).replace(/[^0-9.\-]/g,''));
+    if (isNaN(n)) return String(val);
+    return n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+
+  /* ── Basic run ─────────────────────────────────────────────────── */
 
   function runBasic() {
-    const prev = extractAccounts('prev');
-    const curr = extractAccounts('curr');
-    if (!prev || !curr) { showError('Could not find the selected account column.'); return; }
+    const prevRows = extractRows('prev');
+    const currRows = extractRows('curr');
+    if (!prevRows || !currRows) { showError('Could not find the account name column.'); return; }
 
-    prev.accounts.sort((a,b) => a.localeCompare(b,undefined,{numeric:true,sensitivity:'base'}));
-    curr.accounts.sort((a,b) => a.localeCompare(b,undefined,{numeric:true,sensitivity:'base'}));
+    prevRows.sort((a,b) => a.name.localeCompare(b.name, undefined, { numeric:true, sensitivity:'base' }));
+    currRows.sort((a,b) => a.name.localeCompare(b.name, undefined, { numeric:true, sensitivity:'base' }));
 
-    const prevSet = new Set(prev.accounts);
-    const currSet = new Set(curr.accounts);
+    const prevMap = new Map(prevRows.map(r => [r.name.toLowerCase(), r]));
+    const currMap = new Map(currRows.map(r => [r.name.toLowerCase(), r]));
 
-    // Build a single "Accounts" category with matched, removed, added
-    const rows = [];
-    const allNames = new Set([...prev.accounts, ...curr.accounts]);
-    allNames.forEach(name => {
-      const inPrev = prevSet.has(name);
-      const inCurr = currSet.has(name);
-      if (inPrev && inCurr)      rows.push({ prev: name, curr: name, status: 'matched' });
-      else if (inPrev && !inCurr) rows.push({ prev: name, curr: null,  status: 'removed' });
-      else                        rows.push({ prev: null,  curr: name,  status: 'added'   });
+    const tableRows = [];
+    const allKeys = new Set([...prevMap.keys(), ...currMap.keys()]);
+    allKeys.forEach(k => {
+      const p = prevMap.get(k) || null;
+      const c = currMap.get(k) || null;
+      const status = p && c ? 'matched' : p ? 'removed' : 'added';
+      tableRows.push({ prev: p, curr: c, status });
     });
 
-    const categories = [{ name: 'Accounts', rows }];
-    const added   = rows.filter(r=>r.status==='added').map(r=>r.curr);
-    const removed = rows.filter(r=>r.status==='removed').map(r=>r.prev);
-    const matched = rows.filter(r=>r.status==='matched').length;
-
-    renderResults({ categories, added, removed, matchedCount: matched,
+    const categories = [{ name: 'All Accounts', rows: tableRows }];
+    const added   = tableRows.filter(r=>r.status==='added').map(r=>r.curr.name);
+    const removed = tableRows.filter(r=>r.status==='removed').map(r=>r.prev.name);
+    renderResults({ categories, added, removed,
+                    matchedCount: tableRows.filter(r=>r.status==='matched').length,
                     prevFile: state.prev.fileName, currFile: state.curr.fileName, aiInsight: null });
   }
 
-  /* ── AI run ──────────────────────────────────────────────────────── */
+  /* ── AI run ─────────────────────────────────────────────────────── */
 
   const STEPS = [
-    { id: 'extract',  label: 'Extracting account lists from both files' },
-    { id: 'analyze',  label: 'AI categorizing and cleaning both account lists' },
-    { id: 'compare',  label: 'AI aligning accounts side by side' },
-    { id: 'insight',  label: 'AI generating financial insights' },
+    { id:'extract',  label:'Extracting account data from both files' },
+    { id:'analyze',  label:'AI categorizing, cleaning and aligning accounts' },
+    { id:'insight',  label:'AI generating financial insights' },
   ];
 
   function setStep(id) {
     document.getElementById('prog-steps').innerHTML = STEPS.map(s => {
-      const di = STEPS.findIndex(x=>x.id===id), ti = STEPS.findIndex(x=>x.id===s.id);
-      const cls = ti<di?'done':s.id===id?'active':'';
-      const icon = ti<di?'✓':s.id===id?'<span class="spinning">↻</span>':'○';
+      const di=STEPS.findIndex(x=>x.id===id), ti=STEPS.findIndex(x=>x.id===s.id);
+      const cls=ti<di?'done':s.id===id?'active':'';
+      const icon=ti<di?'✓':s.id===id?'<span class="spinning">↻</span>':'○';
       return `<div class="prog-step ${cls}"><div class="step-icon">${icon}</div><span>${s.label}</span></div>`;
     }).join('');
   }
 
   async function callClaude(prompt, maxTokens=8192) {
     const res = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
+      method:'POST',
+      headers:{
         'x-api-key': ANTHROPIC_API_KEY,
-        'anthropic-version': '2023-06-01',
-        'anthropic-dangerous-direct-browser-access': 'true',
-        'content-type': 'application/json'
+        'anthropic-version':'2023-06-01',
+        'anthropic-dangerous-direct-browser-access':'true',
+        'content-type':'application/json'
       },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-6',
-        max_tokens: maxTokens,
-        messages: [{ role: 'user', content: prompt }]
-      })
+      body: JSON.stringify({ model:'claude-sonnet-4-6', max_tokens:maxTokens, messages:[{role:'user',content:prompt}] })
     });
     if (!res.ok) { const e=await res.json().catch(()=>({})); throw new Error(e.error?.message||`API ${res.status}`); }
     return (await res.json()).content[0].text;
   }
 
   async function runWithAI() {
-    const prev = extractAccounts('prev');
-    const curr = extractAccounts('curr');
-    if (!prev || !curr) { showError('Could not find the selected account column.'); return; }
+    const prevRows = extractRows('prev');
+    const currRows = extractRows('curr');
+    if (!prevRows || !currRows) { showError('Could not find the account name column.'); return; }
 
     const progEl = document.getElementById('ai-progress');
     progEl.style.display = 'block';
@@ -492,46 +515,52 @@
 
       setStep('analyze');
 
-      // Single AI call: categorize, clean, and compare both lists at once
-      const aiPrompt = `You are a financial data analyst. I have two lists of account names from a company's financial records — Previous Year and Current Year.
+      const fmtList = rows => rows.map(r =>
+        `${r.num ? r.num+' | ' : ''}${r.name}${r.bal !== '' ? ' | '+r.bal : ''}`
+      ).join('\n');
+
+      const aiPrompt = `You are a financial data analyst performing a year-over-year account reconciliation.
+
+Each account entry is formatted as: [Account Number | ] Account Name [ | Balance]
+Account number and balance may be absent.
 
 Your job:
-1. Clean each account name (fix capitalization, spacing, expand abbreviations like A/R → Accounts Receivable).
-2. Group ALL accounts (from both lists combined) into standard financial statement categories: Assets, Liabilities, Equity, Revenue, Cost of Revenue, Operating Expenses, Other Income/Expense.
-3. Within each category, sort accounts in standard financial statement order.
-4. For each account in each category, determine if it appears in Previous Year only (removed), Current Year only (added), or both (matched).
-5. For matched accounts that have slightly different names (e.g. "Prop Plant Equip" vs "Property, Plant and Equipment"), treat them as the SAME account and use the cleaner name for both sides.
+1. Clean each account name (fix capitalization, spacing, expand abbreviations like A/R → Accounts Receivable, PP&E → Property, Plant & Equipment).
+2. Group ALL accounts from BOTH years into standard financial statement categories: Assets, Liabilities, Equity, Revenue, Cost of Revenue, Operating Expenses, Other Income/Expense.
+3. Within each category, sort by account number if present, otherwise by standard financial statement order.
+4. Match accounts that appear in both years (even if names differ slightly — use the cleaner name for both sides).
+5. Matched accounts go on the SAME row. Removed accounts (prev only) go at the bottom of their category. Added accounts (curr only) go at the bottom of their category.
 
-Return a JSON object ONLY — no markdown, no explanation, just raw JSON:
+Return ONLY a raw JSON object — no markdown fences, no explanation:
 {
   "categories": [
     {
       "name": "Category Name",
       "rows": [
-        { "prev": "Account Name or null", "curr": "Account Name or null", "status": "matched|added|removed" }
+        {
+          "status": "matched|added|removed",
+          "prev": { "num": "1000", "name": "Cash", "bal": "50000.00" } or null,
+          "curr": { "num": "1000", "name": "Cash", "bal": "72000.00" } or null
+        }
       ]
     }
   ]
 }
 
 Rules:
-- "prev" is null if the account only exists in current year (status: "added")
-- "curr" is null if the account only exists in previous year (status: "removed")
-- Both sides are filled if the account exists in both (status: "matched")
-- Keep matched accounts on the SAME row so they align side by side
-- At the bottom of each category, list removed accounts first, then added accounts
+- prev is null when status is "added"
+- curr is null when status is "removed"
+- Include all accounts — do not drop any
 - Do not include empty categories
 
-Previous Year accounts:
-${prev.accounts.join('\n')}
+PREVIOUS YEAR accounts:
+${fmtList(prevRows)}
 
-Current Year accounts:
-${curr.accounts.join('\n')}`;
+CURRENT YEAR accounts:
+${fmtList(currRows)}`;
 
-      setStep('compare');
       const raw = await callClaude(aiPrompt, 8192);
 
-      // Parse JSON — strip any accidental markdown fences
       let parsed;
       try {
         const clean = raw.replace(/^```[a-z]*\n?/,'').replace(/\n?```$/,'').trim();
@@ -541,19 +570,18 @@ ${curr.accounts.join('\n')}`;
       }
 
       const categories = parsed.categories || [];
-      const added   = categories.flatMap(c=>c.rows.filter(r=>r.status==='added').map(r=>r.curr));
-      const removed = categories.flatMap(c=>c.rows.filter(r=>r.status==='removed').map(r=>r.prev));
+      const added   = categories.flatMap(c=>c.rows.filter(r=>r.status==='added').map(r=>r.curr?.name).filter(Boolean));
+      const removed = categories.flatMap(c=>c.rows.filter(r=>r.status==='removed').map(r=>r.prev?.name).filter(Boolean));
       const matchedCount = categories.flatMap(c=>c.rows.filter(r=>r.status==='matched')).length;
 
       setStep('insight');
       let insight = '';
       if (added.length > 0 || removed.length > 0) {
         insight = await callClaude(
-          `You are a financial analyst. Summarize in 2-3 professional sentences what the following year-over-year account changes suggest about the business.
-Added accounts: ${added.slice(0,20).join(', ')}${added.length>20?'...':''}
-Removed accounts: ${removed.slice(0,20).join(', ')}${removed.length>20?'...':''}
-Matched accounts: ${matchedCount}
-No bullet points. Be concise.`, 512);
+          `You are a financial analyst. Summarize in 2-3 professional sentences what the following year-over-year account changes suggest about the business. No bullet points.
+Added: ${added.slice(0,20).join(', ')}${added.length>20?'…':''}
+Removed: ${removed.slice(0,20).join(', ')}${removed.length>20?'…':''}
+Matched: ${matchedCount}`, 512);
       }
 
       progEl.style.display = 'none';
@@ -570,7 +598,7 @@ No bullet points. Be concise.`, 512);
 
   function sleep(ms) { return new Promise(r=>setTimeout(r,ms)); }
 
-  /* ── Render side-by-side ledger ──────────────────────────────────── */
+  /* ── Render ledger ──────────────────────────────────────────────── */
 
   function renderResults({ categories, added, removed, matchedCount, prevFile, currFile, aiInsight }) {
     const el = document.getElementById('results');
@@ -585,28 +613,31 @@ No bullet points. Be concise.`, 512);
         </div>${escHtml(aiInsight)}
       </div>` : '';
 
-    // Build ledger rows HTML
     let ledgerHTML = '';
     for (const cat of categories) {
-      // Category header
-      ledgerHTML += `<div class="cat-header">
-        <div class="cat-label"><span>${escHtml(cat.name)}</span></div>
-        <div class="cat-label"></div>
-      </div>`;
+      ledgerHTML += `
+        <div class="cat-header">
+          <div class="cat-label">${escHtml(cat.name)}</div>
+          <div class="cat-div"></div>
+          <div class="cat-label"></div>
+        </div>`;
 
       for (const row of cat.rows) {
-        const prevCls = row.status==='removed' ? 'removed' : row.prev ? '' : 'empty';
-        const currCls = row.status==='added'   ? 'added'   : row.curr ? '' : 'empty';
-
+        const rowCls = row.status==='added' ? 'added-row' : row.status==='removed' ? 'removed-row' : '';
         const prevBadge = row.status==='removed' ? '<span class="acct-badge del">Removed</span>' : '';
         const currBadge = row.status==='added'   ? '<span class="acct-badge new">New</span>'     : '';
 
-        const prevContent = row.prev ? `${prevBadge}${escHtml(row.prev)}` : '';
-        const currContent = row.curr ? `${currBadge}${escHtml(row.curr)}` : '';
+        const p = row.prev;
+        const c = row.curr;
 
-        ledgerHTML += `<div class="acct-row">
-          <div class="acct-cell ${prevCls}">${prevContent}</div>
-          <div class="acct-cell ${currCls}">${currContent}</div>
+        ledgerHTML += `<div class="acct-row ${rowCls}">
+          <div class="acct-num">${p ? escHtml(p.num||'') : '<span class="empty-cell">&nbsp;</span>'}</div>
+          <div class="acct-name">${p ? prevBadge+escHtml(p.name||'') : '<span class="empty-cell">&nbsp;</span>'}</div>
+          <div class="acct-bal">${p ? escHtml(formatBal(p.bal)) : '<span class="empty-cell">&nbsp;</span>'}</div>
+          <div class="acct-div"></div>
+          <div class="acct-num">${c ? escHtml(c.num||'') : '<span class="empty-cell">&nbsp;</span>'}</div>
+          <div class="acct-name">${c ? currBadge+escHtml(c.name||'') : '<span class="empty-cell">&nbsp;</span>'}</div>
+          <div class="acct-bal">${c ? escHtml(formatBal(c.bal)) : '<span class="empty-cell">&nbsp;</span>'}</div>
         </div>`;
       }
     }
@@ -614,14 +645,12 @@ No bullet points. Be concise.`, 512);
     el.innerHTML = `
       <div class="results-header">
         <h2>Reconciliation Results</h2>
-        <div class="results-actions">
-          <button class="export-btn" onclick="exportResults(${JSON.stringify(added)}, ${JSON.stringify(removed)})">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-              <polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
-            </svg>Export CSV
-          </button>
-        </div>
+        <button class="export-btn" onclick="exportResults(${JSON.stringify(added)}, ${JSON.stringify(removed)})">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+          </svg>Export CSV
+        </button>
       </div>
 
       <div class="summary-row">
@@ -638,15 +667,24 @@ No bullet points. Be concise.`, 512);
       </div>
 
       <div class="ledger-wrap">
-        <div class="ledger-cols-header">
-          <div class="lch">
+        <div class="ledger-top-header">
+          <div class="lth">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
             Previous Year &mdash; ${escHtml(prevFile)}
           </div>
-          <div class="lch">
+          <div class="lth">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
             Current Year &mdash; ${escHtml(currFile)}
           </div>
+        </div>
+        <div class="ledger-sub-header">
+          <div class="lsh num">Acct #</div>
+          <div class="lsh name">Account Name</div>
+          <div class="lsh bal">Balance</div>
+          <div class="lsh div"></div>
+          <div class="lsh num">Acct #</div>
+          <div class="lsh name">Account Name</div>
+          <div class="lsh bal">Balance</div>
         </div>
         ${ledgerHTML}
       </div>`;
@@ -654,14 +692,14 @@ No bullet points. Be concise.`, 512);
     el.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
-  /* ── Export ──────────────────────────────────────────────────────── */
+  /* ── Export ─────────────────────────────────────────────────────── */
 
   function exportResults(added, removed) {
     const rows = [['Status','Account Name']];
     added.forEach(a => rows.push(['Added', a]));
     removed.forEach(a => rows.push(['Removed', a]));
-    const csv = rows.map(r => r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
-    const blob = new Blob([csv], { type: 'text/csv' });
+    const csv = rows.map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+    const blob = new Blob([csv],{type:'text/csv'});
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href=url; a.download='reconciliation_results.csv'; a.click();
