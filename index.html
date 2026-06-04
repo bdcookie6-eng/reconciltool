@@ -358,6 +358,41 @@
       font-size: 0.9rem;
     }
 
+    .analysis-bar {
+      display: flex;
+      gap: 0;
+      background: #fff;
+      border-radius: 10px;
+      border: 1px solid #e5e7eb;
+      overflow: hidden;
+      margin-bottom: 20px;
+    }
+
+    .analysis-item {
+      flex: 1;
+      padding: 14px 20px;
+      border-right: 1px solid #e5e7eb;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .analysis-item:last-child { border-right: none; }
+
+    .alabel {
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      color: #9ca3af;
+    }
+
+    .aval {
+      font-size: 0.92rem;
+      font-weight: 600;
+      color: #1a1a2e;
+    }
+
     .error-banner {
       background: #fef2f2;
       border: 1px solid #fca5a5;
@@ -593,6 +628,28 @@
     document.getElementById('btn-reconcile').disabled = !ready;
   }
 
+  function analyzeAndSort(rows, colIdx) {
+    const raw = rows.map(r => cleanValue(r[colIdx])).filter(v => v !== '');
+
+    // Deduplicate
+    const unique = [...new Set(raw)];
+
+    // Detect if values look like numeric account codes (e.g. "1000", "4200-01")
+    const looksNumeric = unique.filter(v => /^[\d\-\.]+$/.test(v)).length / unique.length > 0.5;
+
+    // Sort: numeric codes numerically, otherwise alphabetically
+    unique.sort((a, b) => {
+      if (looksNumeric) {
+        const na = parseFloat(a.replace(/[^0-9.]/g, ''));
+        const nb = parseFloat(b.replace(/[^0-9.]/g, ''));
+        if (!isNaN(na) && !isNaN(nb)) return na - nb;
+      }
+      return a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' });
+    });
+
+    return { accounts: unique, isNumeric: looksNumeric, rawCount: raw.length, dupCount: raw.length - unique.length };
+  }
+
   function reconcile() {
     const prevCol = document.getElementById('col-prev').value || state.prev.accountCol;
     const currCol = document.getElementById('col-curr').value || state.curr.accountCol;
@@ -605,23 +662,29 @@
       return;
     }
 
-    const prevAccounts = new Set(
-      state.prev.rows.map(r => cleanValue(r[prevIdx])).filter(v => v !== '')
-    );
-    const currAccounts = new Set(
-      state.curr.rows.map(r => cleanValue(r[currIdx])).filter(v => v !== '')
-    );
+    const prevAnalysis = analyzeAndSort(state.prev.rows, prevIdx);
+    const currAnalysis = analyzeAndSort(state.curr.rows, currIdx);
 
-    const added   = [...currAccounts].filter(a => !prevAccounts.has(a));
-    const removed = [...prevAccounts].filter(a => !currAccounts.has(a));
-    const matched = [...prevAccounts].filter(a => currAccounts.has(a));
+    const prevSet = new Set(prevAnalysis.accounts);
+    const currSet = new Set(currAnalysis.accounts);
 
-    renderResults(added, removed, matched, prevCol, currCol);
+    // Sorted added / removed / matched
+    const added   = currAnalysis.accounts.filter(a => !prevSet.has(a));
+    const removed = prevAnalysis.accounts.filter(a => !currSet.has(a));
+    const matched = prevAnalysis.accounts.filter(a => currSet.has(a));
+
+    renderResults(added, removed, matched, prevAnalysis, currAnalysis, prevCol, currCol);
   }
 
-  function renderResults(added, removed, matched, prevCol, currCol) {
+  function renderResults(added, removed, matched, prevAnalysis, currAnalysis, prevCol, currCol) {
     const el = document.getElementById('results');
     el.style.display = 'block';
+
+    const sortLabel = (prevAnalysis.isNumeric || currAnalysis.isNumeric) ? 'numeric' : 'alphabetical';
+
+    const dupWarning = (side, analysis) => analysis.dupCount > 0
+      ? `<span style="color:#b45309;font-size:0.78rem;margin-left:8px;">⚠ ${analysis.dupCount} duplicate${analysis.dupCount > 1 ? 's' : ''} removed (${side})</span>`
+      : '';
 
     const addedHTML = added.length
       ? added.map(a => `
@@ -650,6 +713,24 @@
           Export CSV
         </button>
       </div>
+
+      <div class="analysis-bar">
+        <div class="analysis-item">
+          <span class="alabel">Previous Year</span>
+          <span class="aval">${prevAnalysis.accounts.length.toLocaleString()} unique accounts</span>
+          ${dupWarning('prev', prevAnalysis)}
+        </div>
+        <div class="analysis-item">
+          <span class="alabel">Current Year</span>
+          <span class="aval">${currAnalysis.accounts.length.toLocaleString()} unique accounts</span>
+          ${dupWarning('curr', currAnalysis)}
+        </div>
+        <div class="analysis-item">
+          <span class="alabel">Sort Order</span>
+          <span class="aval">${sortLabel}</span>
+        </div>
+      </div>
+
       <div class="summary-chips">
         <div class="chip added"><div class="dot"></div>${added.length} Added</div>
         <div class="chip removed"><div class="dot"></div>${removed.length} Removed</div>
