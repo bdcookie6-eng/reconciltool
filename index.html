@@ -48,84 +48,6 @@
       text-transform: uppercase;
     }
 
-    /* API key bar */
-    .api-bar {
-      background: #fff;
-      border-bottom: 1px solid #e5e7eb;
-      padding: 12px 40px;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      flex-wrap: wrap;
-    }
-
-    .api-bar label {
-      font-size: 0.8rem;
-      font-weight: 700;
-      color: #6b7280;
-      letter-spacing: 0.5px;
-      text-transform: uppercase;
-      white-space: nowrap;
-    }
-
-    .api-key-wrap {
-      position: relative;
-      flex: 1;
-      min-width: 240px;
-      max-width: 420px;
-    }
-
-    .api-key-wrap input {
-      width: 100%;
-      padding: 8px 36px 8px 12px;
-      border: 1px solid #d1d5db;
-      border-radius: 6px;
-      font-size: 0.88rem;
-      font-family: monospace;
-      color: #1a1a2e;
-    }
-
-    .api-key-wrap input:focus {
-      outline: none;
-      border-color: #7c3aed;
-      box-shadow: 0 0 0 3px rgba(124,58,237,0.12);
-    }
-
-    .toggle-key {
-      position: absolute;
-      right: 8px;
-      top: 50%;
-      transform: translateY(-50%);
-      background: none;
-      border: none;
-      cursor: pointer;
-      color: #9ca3af;
-      padding: 2px;
-      display: flex;
-      align-items: center;
-    }
-
-    .toggle-key:hover { color: #4b5563; }
-
-    .api-status {
-      font-size: 0.8rem;
-      font-weight: 500;
-      display: flex;
-      align-items: center;
-      gap: 5px;
-    }
-
-    .api-status .dot { width: 7px; height: 7px; border-radius: 50%; }
-    .api-status.ok   { color: #16a34a; }
-    .api-status.ok .dot { background: #22c55e; }
-    .api-status.none { color: #9ca3af; }
-    .api-status.none .dot { background: #d1d5db; }
-
-    .api-hint {
-      font-size: 0.76rem;
-      color: #9ca3af;
-      margin-left: auto;
-    }
 
     /* Upload */
     .upload-row {
@@ -535,24 +457,6 @@
   <span class="ai-badge">AI</span>
 </header>
 
-<!-- API Key Bar -->
-<div class="api-bar">
-  <label>Anthropic API Key</label>
-  <div class="api-key-wrap">
-    <input type="password" id="api-key" placeholder="sk-ant-..." oninput="onApiKeyChange()" autocomplete="off" />
-    <button class="toggle-key" onclick="toggleKeyVisibility()" title="Show/hide key">
-      <svg id="eye-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-        <circle cx="12" cy="12" r="3"/>
-      </svg>
-    </button>
-  </div>
-  <div class="api-status none" id="api-status">
-    <div class="dot"></div>
-    <span id="api-status-text">No key entered</span>
-  </div>
-  <span class="api-hint">Your key is never sent anywhere except Anthropic's API</span>
-</div>
 
 <div id="error-container"></div>
 
@@ -636,25 +540,7 @@
     curr: { rows: null, headers: [], accountCol: null, fileName: '' }
   };
 
-  /* ── API Key ─────────────────────────────────────────────────────── */
-
-  function onApiKeyChange() {
-    const key = document.getElementById('api-key').value.trim();
-    const statusEl = document.getElementById('api-status');
-    const textEl   = document.getElementById('api-status-text');
-    const aiBtn    = document.getElementById('btn-ai');
-
-    const hasKey = key.startsWith('sk-ant-') && key.length > 20;
-    statusEl.className = 'api-status ' + (hasKey ? 'ok' : 'none');
-    textEl.textContent  = hasKey ? 'Key ready' : 'No key entered';
-
-    checkReady();
-  }
-
-  function toggleKeyVisibility() {
-    const inp = document.getElementById('api-key');
-    inp.type = inp.type === 'password' ? 'text' : 'password';
-  }
+  const ANTHROPIC_API_KEY = '__ANTHROPIC_API_KEY__';
 
   /* ── File handling ───────────────────────────────────────────────── */
 
@@ -776,9 +662,8 @@
 
   function checkReady() {
     const filesReady = state.prev.rows && state.curr.rows;
-    const keyReady   = document.getElementById('api-key').value.trim().startsWith('sk-ant-');
     document.getElementById('btn-reconcile').disabled = !filesReady;
-    document.getElementById('btn-ai').disabled = !(filesReady && keyReady);
+    document.getElementById('btn-ai').disabled = !filesReady;
   }
 
   /* ── Basic reconcile (no AI) ─────────────────────────────────────── */
@@ -886,8 +771,7 @@ Write 2-3 sentences summarizing what these changes suggest about the business (e
   }
 
   async function runWithAI() {
-    const apiKey = document.getElementById('api-key').value.trim();
-    if (!apiKey) { showError('Please enter your Anthropic API key above.'); return; }
+    const apiKey = ANTHROPIC_API_KEY;
 
     const prevRaw = extractAccounts('prev');
     const currRaw = extractAccounts('curr');
