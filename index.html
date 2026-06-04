@@ -14,39 +14,44 @@
     .badge    { background: #4f8ef7; color: #fff; font-size: .7rem; padding: 2px 8px; border-radius: 20px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; }
     .ai-badge { background: linear-gradient(135deg,#7c3aed,#4f8ef7); color: #fff; font-size: .7rem; padding: 2px 8px; border-radius: 20px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; }
 
-    /* Upload */
+    /* Upload panels */
     .upload-row { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; padding: 28px 40px 0; }
-    .upload-card { background: #fff; border-radius: 12px; padding: 28px; border: 2px dashed #d0d7e3; transition: border-color .2s, box-shadow .2s; cursor: pointer; }
+
+    .upload-card {
+      background: #fff; border-radius: 12px; padding: 28px;
+      border: 2px dashed #d0d7e3;
+      transition: border-color .2s, box-shadow .2s;
+      cursor: pointer;
+    }
     .upload-card.dragover { border-color: #4f8ef7; box-shadow: 0 0 0 4px rgba(79,142,247,.12); }
     .upload-card.loaded   { border-style: solid; border-color: #22c55e; cursor: default; }
     .upload-card .year-label { font-size: .72rem; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; color: #6b7280; margin-bottom: 8px; }
     .upload-card h2 { font-size: 1.05rem; font-weight: 600; margin-bottom: 18px; color: #1a1a2e; }
 
-    .drop-zone { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; padding: 32px 20px; border-radius: 8px; background: #f8fafc; }
+    .drop-zone { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; padding: 36px 20px; border-radius: 8px; background: #f8fafc; }
     .drop-zone svg { color: #9ca3af; }
     .drop-zone p { font-size: .9rem; color: #6b7280; text-align: center; }
     .drop-zone p strong { color: #4f8ef7; cursor: pointer; }
     .drop-zone .file-types { font-size: .75rem; color: #9ca3af; }
     input[type="file"] { display: none; }
 
-    .file-info { display: flex; align-items: center; gap: 10px; padding: 10px 14px; background: #f0fdf4; border-radius: 8px; margin-top: 12px; }
+    .file-info { display: flex; align-items: center; gap: 10px; padding: 12px 14px; background: #f0fdf4; border-radius: 8px; margin-top: 4px; }
     .file-info svg { color: #22c55e; flex-shrink: 0; }
     .file-info .fname { font-size: .85rem; font-weight: 500; color: #166534; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .file-info .fmeta { font-size: .75rem; color: #6b7280; }
-    .clear-btn { margin-left: auto; background: none; border: none; cursor: pointer; color: #9ca3af; padding: 4px; border-radius: 4px; display: flex; align-items: center; }
+    .clear-btn { margin-left: auto; background: none; border: none; cursor: pointer; color: #9ca3af; padding: 4px; border-radius: 4px; display: flex; align-items: center; flex-shrink: 0; }
     .clear-btn:hover { color: #ef4444; background: #fee2e2; }
 
-    .col-selects { margin-top: 16px; display: flex; flex-direction: column; gap: 10px; }
-    .col-selects label { font-size: .75rem; font-weight: 700; color: #6b7280; letter-spacing: .5px; text-transform: uppercase; display: block; margin-bottom: 4px; }
-    .col-selects select { width: 100%; padding: 7px 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: .85rem; color: #1a1a2e; background: #fff; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; cursor: pointer; }
-    .col-selects select:focus { outline: none; border-color: #4f8ef7; box-shadow: 0 0 0 3px rgba(79,142,247,.15); }
-    .col-selects .optional { font-size: .68rem; color: #9ca3af; font-weight: 400; margin-left: 4px; }
+    /* Detected columns pill strip */
+    .detected-cols { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; }
+    .col-pill { font-size: .7rem; font-weight: 600; padding: 3px 8px; border-radius: 20px; background: #eff6ff; color: #1e40af; border: 1px solid #bfdbfe; }
+    .col-pill.warn { background: #fffbeb; color: #92400e; border-color: #fde68a; }
 
     /* Actions */
     .actions { display: flex; justify-content: center; padding: 24px 40px 0; gap: 12px; flex-wrap: wrap; }
     .btn-ai { background: linear-gradient(135deg,#7c3aed,#4f8ef7); color: #fff; border: none; padding: 13px 36px; border-radius: 8px; font-size: .95rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: opacity .2s, transform .1s; }
     .btn-ai:hover:not(:disabled) { opacity: .9; } .btn-ai:active:not(:disabled) { transform: scale(.98); } .btn-ai:disabled { opacity: .35; cursor: not-allowed; }
-    .btn-reconcile { background: #1a1a2e; color: #fff; border: none; padding: 13px 40px; border-radius: 8px; font-size: .95rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: background .2s, transform .1s; }
+    .btn-reconcile { background: #1a1a2e; color: #fff; border: none; padding: 13px 36px; border-radius: 8px; font-size: .95rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: background .2s, transform .1s; }
     .btn-reconcile:hover:not(:disabled) { background: #2d2d50; } .btn-reconcile:active:not(:disabled) { transform: scale(.98); } .btn-reconcile:disabled { opacity: .4; cursor: not-allowed; }
     .btn-reset { background: #fff; color: #6b7280; border: 1px solid #d1d5db; padding: 13px 24px; border-radius: 8px; font-size: .95rem; font-weight: 500; cursor: pointer; }
     .btn-reset:hover { background: #f9fafb; color: #1a1a2e; }
@@ -57,7 +62,7 @@
     .prog-steps { display: flex; flex-direction: column; gap: 8px; }
     .prog-step { display: flex; align-items: center; gap: 10px; font-size: .84rem; color: #6b7280; }
     .prog-step .step-icon { width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: .7rem; background: #f3f4f6; }
-    .prog-step.done { color: #16a34a; } .prog-step.done .step-icon { background: #dcfce7; color: #16a34a; }
+    .prog-step.done   { color: #16a34a; } .prog-step.done .step-icon   { background: #dcfce7; color: #16a34a; }
     .prog-step.active { color: #7c3aed; font-weight: 500; } .prog-step.active .step-icon { background: #ede9fe; color: #7c3aed; }
     @keyframes spin { to { transform: rotate(360deg); } }
     .spinning { animation: spin .8s linear infinite; display: inline-block; }
@@ -84,106 +89,78 @@
     .legend { display: flex; gap: 16px; align-items: center; margin-bottom: 14px; flex-wrap: wrap; }
     .legend-item { display: flex; align-items: center; gap: 6px; font-size: .78rem; color: #6b7280; }
     .legend-swatch { width: 14px; height: 14px; border-radius: 3px; }
-    .legend-swatch.added   { background: rgba(34,197,94,.2);  border: 1px solid #86efac; }
-    .legend-swatch.removed { background: rgba(239,68,68,.15); border: 1px solid #fca5a5; }
+    .legend-swatch.added-s   { background: rgba(34,197,94,.2);  border: 1px solid #86efac; }
+    .legend-swatch.removed-s { background: rgba(239,68,68,.15); border: 1px solid #fca5a5; }
+    .legend-swatch.dr-s      { background: #dcfce7; border: 1px solid #86efac; }
+    .legend-swatch.cr-s      { background: #fee2e2; border: 1px solid #fca5a5; }
 
     /* ── Ledger ── */
     .ledger-wrap { border-radius: 10px; overflow: hidden; border: 1px solid #e5e7eb; background: #fff; }
 
-    /* Top header: two halves */
-    .ledger-top-header {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      background: #1a1a2e;
-      color: #fff;
-    }
-    .lth {
-      padding: 11px 14px;
-      font-size: .75rem; font-weight: 700; letter-spacing: .8px; text-transform: uppercase;
-      display: flex; align-items: center; gap: 7px;
-    }
+    .ledger-top-header { display: grid; grid-template-columns: 1fr 1fr; background: #1a1a2e; color: #fff; }
+    .lth { padding: 11px 14px; font-size: .75rem; font-weight: 700; letter-spacing: .8px; text-transform: uppercase; display: flex; align-items: center; gap: 7px; }
     .lth:first-child { border-right: 1px solid rgba(255,255,255,.12); }
 
-    /* Sub-header: # | Name | Debit | Credit per side */
-    /* columns: num name debit credit | divider | num name debit credit */
-    .ledger-sub-header {
-      display: grid;
-      grid-template-columns: 80px 1fr 110px 110px 1px 80px 1fr 110px 110px;
-      background: #f1f5f9;
-      border-bottom: 1px solid #e2e8f0;
-    }
-    .lsh {
-      padding: 7px 10px;
-      font-size: .68rem; font-weight: 700; letter-spacing: .8px; text-transform: uppercase; color: #64748b;
-    }
-    .lsh.dr  { text-align: right; color: #2563eb; }
-    .lsh.cr  { text-align: right; color: #7c3aed; }
+    /* 9-col grid: num | name | dr | cr | divider | num | name | dr | cr */
+    .ledger-sub-header,
+    .acct-row { display: grid; grid-template-columns: 80px 1fr 110px 110px 2px 80px 1fr 110px 110px; }
+
+    .ledger-sub-header { background: #f1f5f9; border-bottom: 2px solid #e2e8f0; }
+    .lsh { padding: 7px 10px; font-size: .68rem; font-weight: 700; letter-spacing: .8px; text-transform: uppercase; color: #64748b; }
+    .lsh.dr  { text-align: right; color: #15803d; }
+    .lsh.cr  { text-align: right; color: #dc2626; }
     .lsh.div { background: #e2e8f0; }
 
-    /* Category header */
-    .cat-header {
-      display: grid;
-      grid-template-columns: 1fr 1px 1fr;
-      background: #e8edf5;
-      border-top: 2px solid #cbd5e1;
-    }
-    .cat-label {
-      padding: 8px 14px;
-      font-size: .7rem; font-weight: 800; letter-spacing: 1.2px; text-transform: uppercase; color: #475569;
-    }
-    .cat-div { background: #cbd5e1; }
+    .cat-header { display: grid; grid-template-columns: 1fr 2px 1fr; background: #e8edf5; border-top: 2px solid #cbd5e1; }
+    .cat-label  { padding: 8px 14px; font-size: .7rem; font-weight: 800; letter-spacing: 1.2px; text-transform: uppercase; color: #475569; }
+    .cat-div    { background: #cbd5e1; }
 
-    /* Account row */
-    .acct-row {
-      display: grid;
-      grid-template-columns: 80px 1fr 110px 110px 1px 80px 1fr 110px 110px;
-      border-top: 1px solid #f1f5f9;
-    }
-    .acct-row:hover { background: #f8fafc; }
+    .acct-row { border-top: 1px solid #f1f5f9; }
+    .acct-row:hover .acct-num,
+    .acct-row:hover .acct-name,
+    .acct-row:hover .acct-dr,
+    .acct-row:hover .acct-cr { filter: brightness(.96); }
 
-    .acct-num  { padding: 8px 10px; font-size: .78rem; color: #94a3b8; font-family: monospace; }
-    .acct-name { padding: 8px 10px; font-size: .84rem; color: #1a1a2e; display: flex; align-items: center; gap: 6px; }
-    .acct-dr   { padding: 8px 10px; font-size: .82rem; color: #1e40af; text-align: right; font-family: monospace; white-space: nowrap; }
-    .acct-cr   { padding: 8px 10px; font-size: .82rem; color: #6d28d9; text-align: right; font-family: monospace; white-space: nowrap; }
-    .acct-div  { background: #f1f5f9; }
+    .acct-num  { padding: 8px 10px; font-size: .78rem; color: #94a3b8; font-family: monospace; background: #fff; }
+    .acct-name { padding: 8px 10px; font-size: .84rem; color: #1a1a2e; display: flex; align-items: center; gap: 6px; background: #fff; }
+    .acct-dr   { padding: 8px 10px; font-size: .82rem; color: #15803d; font-weight: 600; text-align: right; font-family: monospace; white-space: nowrap; background: #fff; }
+    .acct-cr   { padding: 8px 10px; font-size: .82rem; color: #dc2626; font-weight: 600; text-align: right; font-family: monospace; white-space: nowrap; background: #fff; }
+    .acct-div  { background: #e2e8f0; }
 
-    /* Tints */
-    .added-row   .acct-num,
-    .added-row   .acct-name,
-    .added-row   .acct-dr,
-    .added-row   .acct-cr   { background: rgba(34,197,94,.09); }
-    .added-row   .acct-name { color: #14532d; }
-    .added-row   .acct-num  { color: #4ade80; }
-    .added-row   .acct-dr   { color: #166534; }
-    .added-row   .acct-cr   { color: #166534; }
+    /* Added row — green tint on current year side (cols 6-9) */
+    .acct-row .curr-num.added-cell,
+    .acct-row .curr-name.added-cell,
+    .acct-row .curr-dr.added-cell,
+    .acct-row .curr-cr.added-cell { background: rgba(34,197,94,.08); }
+    .acct-row .curr-name.added-cell { color: #14532d; }
 
-    .removed-row .acct-num,
-    .removed-row .acct-name,
-    .removed-row .acct-dr,
-    .removed-row .acct-cr   { background: rgba(239,68,68,.08); }
-    .removed-row .acct-name { color: #7f1d1d; }
-    .removed-row .acct-num  { color: #f87171; }
-    .removed-row .acct-dr   { color: #7f1d1d; }
-    .removed-row .acct-cr   { color: #7f1d1d; }
+    /* Removed row — red tint on previous year side (cols 1-4) */
+    .acct-row .prev-num.removed-cell,
+    .acct-row .prev-name.removed-cell,
+    .acct-row .prev-dr.removed-cell,
+    .acct-row .prev-cr.removed-cell { background: rgba(239,68,68,.07); }
+    .acct-row .prev-name.removed-cell { color: #7f1d1d; }
 
-    .empty-cell { background: #fafafa; }
+    /* Empty cells */
+    .empty-cell { background: #fafafa !important; color: transparent !important; }
 
     .acct-badge { font-size: .65rem; font-weight: 700; padding: 1px 5px; border-radius: 3px; flex-shrink: 0; text-transform: uppercase; letter-spacing: .3px; }
     .acct-badge.new { background: #bbf7d0; color: #14532d; }
     .acct-badge.del { background: #fecaca; color: #7f1d1d; }
 
-    @media (max-width: 1100px) {
-      .ledger-sub-header,
-      .acct-row { grid-template-columns: 70px 1fr 90px 90px 1px 70px 1fr 90px 90px; }
+    @media (max-width: 1200px) {
+      .ledger-sub-header, .acct-row { grid-template-columns: 70px 1fr 95px 95px 2px 70px 1fr 95px 95px; }
     }
-    @media (max-width: 900px) {
+    @media (max-width: 960px) {
+      .ledger-sub-header, .acct-row { grid-template-columns: 55px 1fr 80px 80px 2px 55px 1fr 80px 80px; }
+      .acct-num { font-size: .72rem; } .acct-dr, .acct-cr { font-size: .76rem; }
+    }
+    @media (max-width: 700px) {
       .upload-row  { grid-template-columns: 1fr; padding: 16px; }
       .actions     { padding: 16px; }
       .results     { padding: 16px 16px 40px; }
       header       { padding: 16px; }
       .ai-progress { margin: 12px 16px 0; }
-      .ledger-sub-header,
-      .acct-row { grid-template-columns: 55px 1fr 75px 75px 1px 55px 1fr 75px 75px; }
     }
   </style>
 </head>
@@ -201,70 +178,32 @@
 <div id="error-container"></div>
 
 <div class="upload-row">
-  <!-- Previous Year -->
   <div class="upload-card" id="card-prev" ondragover="handleDragOver(event,'prev')" ondragleave="handleDragLeave('prev')" ondrop="handleDrop(event,'prev')">
     <div class="year-label">Left / Prior Period</div>
     <h2>Previous Year</h2>
     <input type="file" id="file-prev" accept=".csv,.xlsx,.xls" onchange="handleFile(event,'prev')" />
     <div class="drop-zone" id="drop-prev" onclick="document.getElementById('file-prev').click()">
-      <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+      <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4">
         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
       </svg>
       <p>Drop your file here or <strong>browse</strong></p>
-      <span class="file-types">CSV, XLSX, XLS</span>
+      <span class="file-types">CSV · XLSX · XLS</span>
     </div>
     <div id="info-prev" style="display:none"></div>
-    <div class="col-selects" id="col-selects-prev" style="display:none">
-      <div>
-        <label>Account Number Column <span class="optional">(optional)</span></label>
-        <select id="col-prev-num"></select>
-      </div>
-      <div>
-        <label>Account Name Column</label>
-        <select id="col-prev-name"></select>
-      </div>
-      <div>
-        <label>Debit Column <span class="optional">(optional)</span></label>
-        <select id="col-prev-dr"></select>
-      </div>
-      <div>
-        <label>Credit Column <span class="optional">(optional)</span></label>
-        <select id="col-prev-cr"></select>
-      </div>
-    </div>
   </div>
 
-  <!-- Current Year -->
   <div class="upload-card" id="card-curr" ondragover="handleDragOver(event,'curr')" ondragleave="handleDragLeave('curr')" ondrop="handleDrop(event,'curr')">
     <div class="year-label">Right / Current Period</div>
     <h2>Current Year</h2>
     <input type="file" id="file-curr" accept=".csv,.xlsx,.xls" onchange="handleFile(event,'curr')" />
     <div class="drop-zone" id="drop-curr" onclick="document.getElementById('file-curr').click()">
-      <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+      <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4">
         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
       </svg>
       <p>Drop your file here or <strong>browse</strong></p>
-      <span class="file-types">CSV, XLSX, XLS</span>
+      <span class="file-types">CSV · XLSX · XLS</span>
     </div>
     <div id="info-curr" style="display:none"></div>
-    <div class="col-selects" id="col-selects-curr" style="display:none">
-      <div>
-        <label>Account Number Column <span class="optional">(optional)</span></label>
-        <select id="col-curr-num"></select>
-      </div>
-      <div>
-        <label>Account Name Column</label>
-        <select id="col-curr-name"></select>
-      </div>
-      <div>
-        <label>Debit Column <span class="optional">(optional)</span></label>
-        <select id="col-curr-dr"></select>
-      </div>
-      <div>
-        <label>Credit Column <span class="optional">(optional)</span></label>
-        <select id="col-curr-cr"></select>
-      </div>
-    </div>
   </div>
 </div>
 
@@ -294,12 +233,39 @@
 
 <script>
   const state = {
-    prev: { rows: null, headers: [], fileName: '' },
-    curr: { rows: null, headers: [], fileName: '' }
+    prev: { rows: null, headers: [], cols: null, fileName: '' },
+    curr: { rows: null, headers: [], cols: null, fileName: '' }
   };
 
   const ANTHROPIC_API_KEY = '__ANTHROPIC_API_KEY__';
-  const NONE_OPT = '— None —';
+
+  /* ── Column auto-detection ──────────────────────────────────────── */
+
+  function detectCols(headers) {
+    const h = headers.map(x => x.toLowerCase());
+
+    function find(kws) {
+      for (const kw of kws) {
+        const i = h.findIndex(x => x.includes(kw));
+        if (i !== -1) return i;
+      }
+      return -1;
+    }
+
+    const numIdx  = find(['gl code','gl #','acct #','account #','account no','acct no','acct number','account number','gl','code','num']);
+    const nameIdx = find(['account name','account desc','description','account','name','desc']);
+    const drIdx   = find(['debit','dr ','dr$',' dr']);
+    const crIdx   = find(['credit','cr ','cr$',' cr']);
+    const balIdx  = find(['balance','amount','total','ytd','net']);
+
+    return {
+      num:  numIdx  >= 0 ? numIdx  : -1,
+      name: nameIdx >= 0 ? nameIdx : 0,   // fallback to first col
+      dr:   drIdx   >= 0 ? drIdx   : -1,
+      cr:   crIdx   >= 0 ? crIdx   : -1,
+      bal:  balIdx  >= 0 ? balIdx  : -1,
+    };
+  }
 
   /* ── File handling ─────────────────────────────────────────────── */
 
@@ -310,12 +276,12 @@
 
   function handleDragOver(e, s) { e.preventDefault(); document.getElementById('card-'+s).classList.add('dragover'); }
   function handleDragLeave(s)   { document.getElementById('card-'+s).classList.remove('dragover'); }
-  function handleDrop(e, s)     { e.preventDefault(); handleDragLeave(s); const f=e.dataTransfer.files[0]; if(f) processFile(f,s); }
-  function handleFile(e, s)     { const f=e.target.files[0]; if(f) processFile(f,s); }
+  function handleDrop(e, s)     { e.preventDefault(); handleDragLeave(s); const f = e.dataTransfer.files[0]; if (f) processFile(f, s); }
+  function handleFile(e, s)     { const f = e.target.files[0]; if (f) processFile(f, s); }
 
   function processFile(file, side) {
     const ext = file.name.split('.').pop().toLowerCase();
-    if (!['csv','xlsx','xls'].includes(ext)) { showError('Unsupported file type.'); return; }
+    if (!['csv','xlsx','xls'].includes(ext)) { showError('Unsupported file type — use CSV, XLSX, or XLS.'); return; }
     const reader = new FileReader();
     reader.onload = e => {
       try {
@@ -327,7 +293,11 @@
         }
         rows = rows.filter(r => r.some(c => String(c).trim() !== ''));
         if (rows.length < 2) { showError('File appears empty.'); return; }
-        loadSide(side, rows, file.name);
+        const headers = rows[0].map(h => String(h).trim());
+        const cols = detectCols(headers);
+        state[side] = { rows: rows.slice(1), headers, cols, fileName: file.name };
+        renderFileInfo(side, file.name, rows.length - 1, headers, cols);
+        checkReady();
       } catch(err) { showError('Could not parse file: ' + err.message); }
     };
     if (ext === 'csv') reader.readAsText(file); else reader.readAsArrayBuffer(file);
@@ -345,65 +315,34 @@
     });
   }
 
-  function loadSide(side, rows, fileName) {
-    const headers = rows[0].map(h => String(h).trim());
-    state[side].rows = rows.slice(1);
-    state[side].headers = headers;
-    state[side].fileName = fileName;
-
-    // Auto-detect columns
-    const numKws  = ['gl','code','number','num','acct #','account #','id'];
-    const nameKws = ['account name','account','name','description','desc'];
-    const drKws   = ['debit','dr','debit amount','debit balance'];
-    const crKws   = ['credit','cr','credit amount','credit balance'];
-
-    function best(kws) {
-      for (const kw of kws) {
-        const m = headers.find(h => h.toLowerCase().includes(kw));
-        if (m) return m;
-      }
-      return null;
-    }
-
-    const autoNum  = best(numKws);
-    const autoName = best(nameKws) || headers[0];
-    const autoDr   = best(drKws);
-    const autoCr   = best(crKws);
-
-    renderFileInfo(side, fileName, rows.length - 1);
-    renderColSelects(side, headers, autoNum, autoName, autoDr, autoCr);
-    checkReady();
-  }
-
-  function renderFileInfo(side, name, count) {
+  function renderFileInfo(side, name, count, headers, cols) {
     const el = document.getElementById('info-'+side);
     el.style.display = 'block';
-    el.innerHTML = `<div class="file-info">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-      <div><div class="fname">${escHtml(name)}</div><div class="fmeta">${count.toLocaleString()} rows</div></div>
-      <button class="clear-btn" onclick="clearSide('${side}')">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-      </button></div>`;
+
+    const pills = [];
+    if (cols.num  >= 0) pills.push(`# → ${headers[cols.num]}`);
+    pills.push(`Name → ${headers[cols.name]}`);
+    if (cols.dr   >= 0) pills.push(`Debit → ${headers[cols.dr]}`);
+    if (cols.cr   >= 0) pills.push(`Credit → ${headers[cols.cr]}`);
+    if (cols.bal  >= 0 && cols.dr < 0) pills.push(`Balance → ${headers[cols.bal]}`);
+
+    el.innerHTML = `
+      <div class="file-info">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        <div><div class="fname">${escHtml(name)}</div><div class="fmeta">${count.toLocaleString()} rows detected</div></div>
+        <button class="clear-btn" onclick="clearSide('${side}')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="detected-cols">${pills.map(p=>`<span class="col-pill">${escHtml(p)}</span>`).join('')}</div>`;
+
     document.getElementById('drop-'+side).style.display = 'none';
     document.getElementById('card-'+side).classList.add('loaded');
   }
 
-  function renderColSelects(side, headers, autoNum, autoName, autoDr, autoCr) {
-    document.getElementById('col-selects-'+side).style.display = 'block';
-    const noneOpt = `<option value="">${NONE_OPT}</option>`;
-    const opts = (auto) => noneOpt + headers.map(h => `<option value="${escHtml(h)}" ${h===auto?'selected':''}>${escHtml(h)}</option>`).join('');
-    const nameOpts = headers.map(h => `<option value="${escHtml(h)}" ${h===autoName?'selected':''}>${escHtml(h)}</option>`).join('');
-
-    document.getElementById('col-'+side+'-num').innerHTML  = opts(autoNum);
-    document.getElementById('col-'+side+'-name').innerHTML = nameOpts;
-    document.getElementById('col-'+side+'-dr').innerHTML   = opts(autoDr);
-    document.getElementById('col-'+side+'-cr').innerHTML   = opts(autoCr);
-  }
-
   function clearSide(side) {
-    state[side] = { rows:null, headers:[], fileName:'' };
+    state[side] = { rows:null, headers:[], cols:null, fileName:'' };
     document.getElementById('info-'+side).style.display = 'none';
-    document.getElementById('col-selects-'+side).style.display = 'none';
     document.getElementById('drop-'+side).style.display = 'flex';
     document.getElementById('card-'+side).classList.remove('loaded');
     document.getElementById('file-'+side).value = '';
@@ -420,42 +359,53 @@
   /* ── Extract rows ───────────────────────────────────────────────── */
 
   function extractRows(side) {
-    const numCol  = document.getElementById('col-'+side+'-num').value;
-    const nameCol = document.getElementById('col-'+side+'-name').value;
-    const drCol   = document.getElementById('col-'+side+'-dr').value;
-    const crCol   = document.getElementById('col-'+side+'-cr').value;
-
-    const headers = state[side].headers;
-    const numIdx  = numCol  ? headers.indexOf(numCol)  : -1;
-    const nameIdx = headers.indexOf(nameCol);
-    const drIdx   = drCol   ? headers.indexOf(drCol)   : -1;
-    const crIdx   = crCol   ? headers.indexOf(crCol)   : -1;
-
-    if (nameIdx === -1) return null;
-
+    const { rows, cols } = state[side];
     const seen = new Set();
-    const rows = [];
-    for (const r of state[side].rows) {
-      const name = String(r[nameIdx] ?? '').trim();
+    const out  = [];
+
+    for (const r of rows) {
+      const name = String(r[cols.name] ?? '').trim();
       if (!name) continue;
       const key = name.toLowerCase();
       if (seen.has(key)) continue;
       seen.add(key);
-      rows.push({
-        num: numIdx >= 0 ? String(r[numIdx] ?? '').trim() : '',
+
+      let dr = '', cr = '';
+
+      if (cols.dr >= 0 || cols.cr >= 0) {
+        // File has explicit debit/credit columns
+        const rawDr = parseNum(r[cols.dr]);
+        const rawCr = parseNum(r[cols.cr]);
+        dr = rawDr !== 0 ? rawDr : '';
+        cr = rawCr !== 0 ? rawCr : '';
+      } else if (cols.bal >= 0) {
+        // Single balance column — positive = debit, negative = credit
+        const bal = parseNum(r[cols.bal]);
+        if (bal > 0)      dr = bal;
+        else if (bal < 0) cr = Math.abs(bal);
+      }
+
+      out.push({
+        num:  cols.num >= 0 ? String(r[cols.num] ?? '').trim() : '',
         name,
-        dr:  drIdx  >= 0 ? r[drIdx]  : '',
-        cr:  crIdx  >= 0 ? r[crIdx]  : ''
+        dr,
+        cr,
       });
     }
-    return rows;
+    return out;
   }
 
-  function formatAmt(val) {
-    if (val === '' || val === null || val === undefined) return '';
-    const n = parseFloat(String(val).replace(/[^0-9.\-]/g,''));
-    if (isNaN(n) || n === 0) return '';
-    return n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  function parseNum(v) {
+    if (v === '' || v === null || v === undefined) return 0;
+    const n = parseFloat(String(v).replace(/[^0-9.\-]/g,''));
+    return isNaN(n) ? 0 : n;
+  }
+
+  function fmtAmt(v) {
+    if (v === '' || v === null || v === undefined || v === 0) return '';
+    const n = typeof v === 'number' ? v : parseNum(v);
+    if (n === 0) return '';
+    return Math.abs(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   }
 
   /* ── Basic run ─────────────────────────────────────────────────── */
@@ -463,39 +413,41 @@
   function runBasic() {
     const prevRows = extractRows('prev');
     const currRows = extractRows('curr');
-    if (!prevRows || !currRows) { showError('Could not find the account name column.'); return; }
 
-    prevRows.sort((a,b) => a.name.localeCompare(b.name, undefined, { numeric:true, sensitivity:'base' }));
-    currRows.sort((a,b) => a.name.localeCompare(b.name, undefined, { numeric:true, sensitivity:'base' }));
+    prevRows.sort((a,b) => (a.num && b.num)
+      ? a.num.localeCompare(b.num, undefined, {numeric:true})
+      : a.name.localeCompare(b.name));
+    currRows.sort((a,b) => (a.num && b.num)
+      ? a.num.localeCompare(b.num, undefined, {numeric:true})
+      : a.name.localeCompare(b.name));
 
     const prevMap = new Map(prevRows.map(r => [r.name.toLowerCase(), r]));
     const currMap = new Map(currRows.map(r => [r.name.toLowerCase(), r]));
 
     const tableRows = [];
-    // matched first, then removed, then added
     prevRows.forEach(p => {
       const c = currMap.get(p.name.toLowerCase()) || null;
-      tableRows.push({ prev: p, curr: c, status: c ? 'matched' : 'removed' });
+      tableRows.push({ prev:p, curr:c, status: c ? 'matched' : 'removed' });
     });
     currRows.forEach(c => {
       if (!prevMap.has(c.name.toLowerCase()))
-        tableRows.push({ prev: null, curr: c, status: 'added' });
+        tableRows.push({ prev:null, curr:c, status:'added' });
     });
 
-    const categories = [{ name: 'All Accounts', rows: tableRows }];
+    const categories = [{ name:'All Accounts', rows:tableRows }];
     const added   = tableRows.filter(r=>r.status==='added').map(r=>r.curr.name);
     const removed = tableRows.filter(r=>r.status==='removed').map(r=>r.prev.name);
     renderResults({ categories, added, removed,
-                    matchedCount: tableRows.filter(r=>r.status==='matched').length,
-                    prevFile: state.prev.fileName, currFile: state.curr.fileName, aiInsight: null });
+      matchedCount: tableRows.filter(r=>r.status==='matched').length,
+      prevFile: state.prev.fileName, currFile: state.curr.fileName, aiInsight: null });
   }
 
   /* ── AI run ─────────────────────────────────────────────────────── */
 
   const STEPS = [
-    { id:'extract',  label:'Extracting account data from both files' },
-    { id:'analyze',  label:'AI categorizing, cleaning and aligning accounts' },
-    { id:'insight',  label:'AI generating financial insights' },
+    { id:'extract', label:'Reading and parsing both files' },
+    { id:'analyze', label:'AI categorizing, cleaning and aligning accounts' },
+    { id:'insight', label:'AI generating financial insights' },
   ];
 
   function setStep(id) {
@@ -525,7 +477,6 @@
   async function runWithAI() {
     const prevRows = extractRows('prev');
     const currRows = extractRows('curr');
-    if (!prevRows || !currRows) { showError('Could not find the account name column.'); return; }
 
     const progEl = document.getElementById('ai-progress');
     progEl.style.display = 'block';
@@ -540,59 +491,42 @@
       setStep('analyze');
 
       const fmtList = rows => rows.map(r =>
-        [r.num, r.name, r.dr !== '' ? 'DR:'+r.dr : '', r.cr !== '' ? 'CR:'+r.cr : '']
-          .filter(Boolean).join(' | ')
+        [r.num, r.name,
+         r.dr !== '' ? `DR:${r.dr}` : '',
+         r.cr !== '' ? `CR:${r.cr}` : '']
+        .filter(Boolean).join(' | ')
       ).join('\n');
 
-      const aiPrompt = `You are a financial data analyst performing a year-over-year account reconciliation.
+      const prompt = `You are a financial data analyst performing a year-over-year account reconciliation.
 
-Each account entry is formatted as: [Account# | ] Account Name [ | DR:debit_amount] [ | CR:credit_amount]
-Account number and debit/credit amounts may be absent.
+Each account entry: [Account# | ] Account Name [ | DR:debit] [ | CR:credit]
 
-Your job:
-1. Clean each account name (fix capitalization, spacing, expand abbreviations like A/R → Accounts Receivable, PP&E → Property, Plant & Equipment).
-2. Group ALL accounts from BOTH years into standard financial statement categories: Assets, Liabilities, Equity, Revenue, Cost of Revenue, Operating Expenses, Other Income/Expense.
-3. Within each category, sort by account number if present, otherwise by standard financial statement order.
-4. Match accounts that appear in both years (even if names differ slightly — use the cleaner name for both sides).
-5. Matched accounts go on the SAME row. Removed accounts (prev only) go at the bottom of their category. Added accounts (curr only) go at the bottom of their category.
+Tasks:
+1. Clean account names (fix caps/spacing, expand abbreviations: A/R→Accounts Receivable, PP&E→Property Plant & Equipment).
+2. Group all accounts from BOTH years into: Assets, Liabilities, Equity, Revenue, Cost of Revenue, Operating Expenses, Other Income/Expense.
+3. Sort within each category by account number if present, else standard financial order.
+4. Match accounts that appear in both years (fuzzy name match OK — use the cleaner name).
+5. Layout: matched accounts on same row. Removed (prev only) at bottom of category. Added (curr only) at bottom of category.
 
-Return ONLY a raw JSON object — no markdown fences, no explanation:
-{
-  "categories": [
-    {
-      "name": "Category Name",
-      "rows": [
-        {
-          "status": "matched|added|removed",
-          "prev": { "num": "1000", "name": "Cash", "dr": "50000.00", "cr": "" } or null,
-          "curr": { "num": "1000", "name": "Cash", "dr": "72000.00", "cr": "" } or null
-        }
-      ]
-    }
-  ]
-}
+Return ONLY raw JSON, no markdown:
+{"categories":[{"name":"Category","rows":[{"status":"matched|added|removed","prev":{"num":"1000","name":"Cash","dr":50000,"cr":0},"curr":{"num":"1000","name":"Cash","dr":72000,"cr":0}}]}]}
 
-Rules:
-- prev is null when status is "added"
-- curr is null when status is "removed"
-- Include all accounts — do not drop any
-- Do not include empty categories
+- prev is null when status="added", curr is null when status="removed"
+- dr and cr are numbers (0 if empty)
+- Include every account
 
-PREVIOUS YEAR accounts:
+PREVIOUS YEAR:
 ${fmtList(prevRows)}
 
-CURRENT YEAR accounts:
+CURRENT YEAR:
 ${fmtList(currRows)}`;
 
-      const raw = await callClaude(aiPrompt, 8192);
-
+      const raw = await callClaude(prompt, 8192);
       let parsed;
       try {
         const clean = raw.replace(/^```[a-z]*\n?/,'').replace(/\n?```$/,'').trim();
         parsed = JSON.parse(clean);
-      } catch(e) {
-        throw new Error('AI returned unexpected format. Please try again.');
-      }
+      } catch(e) { throw new Error('AI returned unexpected format. Please try again.'); }
 
       const categories = parsed.categories || [];
       const added   = categories.flatMap(c=>c.rows.filter(r=>r.status==='added').map(r=>r.curr?.name).filter(Boolean));
@@ -603,7 +537,7 @@ ${fmtList(currRows)}`;
       let insight = '';
       if (added.length > 0 || removed.length > 0) {
         insight = await callClaude(
-          `You are a financial analyst. Summarize in 2-3 professional sentences what the following year-over-year account changes suggest about the business. No bullet points.
+          `Financial analyst: summarize in 2-3 professional sentences what these year-over-year account changes suggest about the business. No bullets.
 Added: ${added.slice(0,20).join(', ')}${added.length>20?'…':''}
 Removed: ${removed.slice(0,20).join(', ')}${removed.length>20?'…':''}
 Matched: ${matchedCount}`, 512);
@@ -611,7 +545,7 @@ Matched: ${matchedCount}`, 512);
 
       progEl.style.display = 'none';
       renderResults({ categories, added, removed, matchedCount,
-                      prevFile: state.prev.fileName, currFile: state.curr.fileName, aiInsight: insight });
+        prevFile: state.prev.fileName, currFile: state.curr.fileName, aiInsight: insight });
 
     } catch(err) {
       progEl.style.display = 'none';
@@ -623,7 +557,7 @@ Matched: ${matchedCount}`, 512);
 
   function sleep(ms) { return new Promise(r=>setTimeout(r,ms)); }
 
-  /* ── Render ledger ──────────────────────────────────────────────── */
+  /* ── Render ─────────────────────────────────────────────────────── */
 
   function renderResults({ categories, added, removed, matchedCount, prevFile, currFile, aiInsight }) {
     const el = document.getElementById('results');
@@ -648,24 +582,33 @@ Matched: ${matchedCount}`, 512);
         </div>`;
 
       for (const row of cat.rows) {
-        const rowCls = row.status==='added' ? 'added-row' : row.status==='removed' ? 'removed-row' : '';
-        const prevBadge = row.status==='removed' ? '<span class="acct-badge del">Removed</span>' : '';
-        const currBadge = row.status==='added'   ? '<span class="acct-badge new">New</span>'     : '';
+        const isAdded   = row.status === 'added';
+        const isRemoved = row.status === 'removed';
+
+        const pCls = isRemoved ? 'removed-cell' : '';
+        const cCls = isAdded   ? 'added-cell'   : '';
 
         const p = row.prev;
         const c = row.curr;
 
-        const e = (v) => `<span class="empty-cell">&nbsp;</span>`;
-        ledgerHTML += `<div class="acct-row ${rowCls}">
-          <div class="acct-num">${p  ? escHtml(p.num||'')              : e()}</div>
-          <div class="acct-name">${p ? prevBadge+escHtml(p.name||'')   : e()}</div>
-          <div class="acct-dr">${p   ? escHtml(formatAmt(p.dr))        : e()}</div>
-          <div class="acct-cr">${p   ? escHtml(formatAmt(p.cr))        : e()}</div>
+        const prevBadge = isRemoved ? '<span class="acct-badge del">Removed</span>' : '';
+        const currBadge = isAdded   ? '<span class="acct-badge new">New</span>'     : '';
+
+        const pDr = p ? fmtAmt(p.dr) : '';
+        const pCr = p ? fmtAmt(p.cr) : '';
+        const cDr = c ? fmtAmt(c.dr) : '';
+        const cCr = c ? fmtAmt(c.cr) : '';
+
+        ledgerHTML += `<div class="acct-row">
+          <div class="acct-num prev-num ${pCls}${!p?' empty-cell':''}">${p ? escHtml(p.num||'') : ''}</div>
+          <div class="acct-name prev-name ${pCls}${!p?' empty-cell':''}">${p ? prevBadge+escHtml(p.name||'') : ''}</div>
+          <div class="acct-dr prev-dr ${pCls}${!p?' empty-cell':''}">${pDr}</div>
+          <div class="acct-cr prev-cr ${pCls}${!p?' empty-cell':''}">${pCr}</div>
           <div class="acct-div"></div>
-          <div class="acct-num">${c  ? escHtml(c.num||'')              : e()}</div>
-          <div class="acct-name">${c ? currBadge+escHtml(c.name||'')   : e()}</div>
-          <div class="acct-dr">${c   ? escHtml(formatAmt(c.dr))        : e()}</div>
-          <div class="acct-cr">${c   ? escHtml(formatAmt(c.cr))        : e()}</div>
+          <div class="acct-num curr-num ${cCls}${!c?' empty-cell':''}">${c ? escHtml(c.num||'') : ''}</div>
+          <div class="acct-name curr-name ${cCls}${!c?' empty-cell':''}">${c ? currBadge+escHtml(c.name||'') : ''}</div>
+          <div class="acct-dr curr-dr ${cCls}${!c?' empty-cell':''}">${cDr}</div>
+          <div class="acct-cr curr-cr ${cCls}${!c?' empty-cell':''}">${cCr}</div>
         </div>`;
       }
     }
@@ -690,8 +633,10 @@ Matched: ${matchedCount}`, 512);
       ${insightHTML}
 
       <div class="legend">
-        <div class="legend-item"><div class="legend-swatch added"></div>New account (current year)</div>
-        <div class="legend-item"><div class="legend-swatch removed"></div>Removed account (previous year)</div>
+        <div class="legend-item"><div class="legend-swatch dr-s"></div>Debit (positive)</div>
+        <div class="legend-item"><div class="legend-swatch cr-s"></div>Credit (negative)</div>
+        <div class="legend-item"><div class="legend-swatch added-s"></div>New account</div>
+        <div class="legend-item"><div class="legend-swatch removed-s"></div>Removed account</div>
       </div>
 
       <div class="ledger-wrap">
@@ -706,20 +651,20 @@ Matched: ${matchedCount}`, 512);
           </div>
         </div>
         <div class="ledger-sub-header">
-          <div class="lsh num">Acct #</div>
-          <div class="lsh name">Account Name</div>
+          <div class="lsh">Acct #</div>
+          <div class="lsh">Account Name</div>
           <div class="lsh dr">Debit</div>
           <div class="lsh cr">Credit</div>
           <div class="lsh div"></div>
-          <div class="lsh num">Acct #</div>
-          <div class="lsh name">Account Name</div>
+          <div class="lsh">Acct #</div>
+          <div class="lsh">Account Name</div>
           <div class="lsh dr">Debit</div>
           <div class="lsh cr">Credit</div>
         </div>
         ${ledgerHTML}
       </div>`;
 
-    el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    el.scrollIntoView({ behavior:'smooth', block:'start' });
   }
 
   /* ── Export ─────────────────────────────────────────────────────── */
