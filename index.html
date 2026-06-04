@@ -104,10 +104,11 @@
     }
     .lth:first-child { border-right: 1px solid rgba(255,255,255,.12); }
 
-    /* Sub-header: # | Name | Balance per side */
+    /* Sub-header: # | Name | Debit | Credit per side */
+    /* columns: num name debit credit | divider | num name debit credit */
     .ledger-sub-header {
       display: grid;
-      grid-template-columns: 90px 1fr 120px 1px 90px 1fr 120px;
+      grid-template-columns: 80px 1fr 110px 110px 1px 80px 1fr 110px 110px;
       background: #f1f5f9;
       border-bottom: 1px solid #e2e8f0;
     }
@@ -115,10 +116,9 @@
       padding: 7px 10px;
       font-size: .68rem; font-weight: 700; letter-spacing: .8px; text-transform: uppercase; color: #64748b;
     }
-    .lsh.num  { }
-    .lsh.name { }
-    .lsh.bal  { text-align: right; }
-    .lsh.div  { background: #e2e8f0; }
+    .lsh.dr  { text-align: right; color: #2563eb; }
+    .lsh.cr  { text-align: right; color: #7c3aed; }
+    .lsh.div { background: #e2e8f0; }
 
     /* Category header */
     .cat-header {
@@ -130,35 +130,41 @@
     .cat-label {
       padding: 8px 14px;
       font-size: .7rem; font-weight: 800; letter-spacing: 1.2px; text-transform: uppercase; color: #475569;
-      grid-column: span 1;
     }
     .cat-div { background: #cbd5e1; }
 
     /* Account row */
     .acct-row {
       display: grid;
-      grid-template-columns: 90px 1fr 120px 1px 90px 1fr 120px;
+      grid-template-columns: 80px 1fr 110px 110px 1px 80px 1fr 110px 110px;
       border-top: 1px solid #f1f5f9;
     }
     .acct-row:hover { background: #f8fafc; }
 
     .acct-num  { padding: 8px 10px; font-size: .78rem; color: #94a3b8; font-family: monospace; }
     .acct-name { padding: 8px 10px; font-size: .84rem; color: #1a1a2e; display: flex; align-items: center; gap: 6px; }
-    .acct-bal  { padding: 8px 10px; font-size: .82rem; color: #374151; text-align: right; font-family: monospace; white-space: nowrap; }
+    .acct-dr   { padding: 8px 10px; font-size: .82rem; color: #1e40af; text-align: right; font-family: monospace; white-space: nowrap; }
+    .acct-cr   { padding: 8px 10px; font-size: .82rem; color: #6d28d9; text-align: right; font-family: monospace; white-space: nowrap; }
     .acct-div  { background: #f1f5f9; }
 
     /* Tints */
     .added-row   .acct-num,
     .added-row   .acct-name,
-    .added-row   .acct-bal  { background: rgba(34,197,94,.09); color: #14532d; }
+    .added-row   .acct-dr,
+    .added-row   .acct-cr   { background: rgba(34,197,94,.09); }
     .added-row   .acct-name { color: #14532d; }
     .added-row   .acct-num  { color: #4ade80; }
+    .added-row   .acct-dr   { color: #166534; }
+    .added-row   .acct-cr   { color: #166534; }
 
     .removed-row .acct-num,
     .removed-row .acct-name,
-    .removed-row .acct-bal  { background: rgba(239,68,68,.08); color: #7f1d1d; }
+    .removed-row .acct-dr,
+    .removed-row .acct-cr   { background: rgba(239,68,68,.08); }
     .removed-row .acct-name { color: #7f1d1d; }
     .removed-row .acct-num  { color: #f87171; }
+    .removed-row .acct-dr   { color: #7f1d1d; }
+    .removed-row .acct-cr   { color: #7f1d1d; }
 
     .empty-cell { background: #fafafa; }
 
@@ -166,14 +172,18 @@
     .acct-badge.new { background: #bbf7d0; color: #14532d; }
     .acct-badge.del { background: #fecaca; color: #7f1d1d; }
 
+    @media (max-width: 1100px) {
+      .ledger-sub-header,
+      .acct-row { grid-template-columns: 70px 1fr 90px 90px 1px 70px 1fr 90px 90px; }
+    }
     @media (max-width: 900px) {
-      .upload-row { grid-template-columns: 1fr; padding: 16px; }
-      .actions    { padding: 16px; }
-      .results    { padding: 16px 16px 40px; }
-      header      { padding: 16px; }
+      .upload-row  { grid-template-columns: 1fr; padding: 16px; }
+      .actions     { padding: 16px; }
+      .results     { padding: 16px 16px 40px; }
+      header       { padding: 16px; }
       .ai-progress { margin: 12px 16px 0; }
       .ledger-sub-header,
-      .acct-row { grid-template-columns: 60px 1fr 90px 1px 60px 1fr 90px; }
+      .acct-row { grid-template-columns: 55px 1fr 75px 75px 1px 55px 1fr 75px 75px; }
     }
   </style>
 </head>
@@ -214,8 +224,12 @@
         <select id="col-prev-name"></select>
       </div>
       <div>
-        <label>Balance Column <span class="optional">(optional)</span></label>
-        <select id="col-prev-bal"></select>
+        <label>Debit Column <span class="optional">(optional)</span></label>
+        <select id="col-prev-dr"></select>
+      </div>
+      <div>
+        <label>Credit Column <span class="optional">(optional)</span></label>
+        <select id="col-prev-cr"></select>
       </div>
     </div>
   </div>
@@ -243,8 +257,12 @@
         <select id="col-curr-name"></select>
       </div>
       <div>
-        <label>Balance Column <span class="optional">(optional)</span></label>
-        <select id="col-curr-bal"></select>
+        <label>Debit Column <span class="optional">(optional)</span></label>
+        <select id="col-curr-dr"></select>
+      </div>
+      <div>
+        <label>Credit Column <span class="optional">(optional)</span></label>
+        <select id="col-curr-cr"></select>
       </div>
     </div>
   </div>
@@ -336,7 +354,8 @@
     // Auto-detect columns
     const numKws  = ['gl','code','number','num','acct #','account #','id'];
     const nameKws = ['account name','account','name','description','desc'];
-    const balKws  = ['balance','amount','total','debit','credit','ytd','value'];
+    const drKws   = ['debit','dr','debit amount','debit balance'];
+    const crKws   = ['credit','cr','credit amount','credit balance'];
 
     function best(kws) {
       for (const kw of kws) {
@@ -348,10 +367,11 @@
 
     const autoNum  = best(numKws);
     const autoName = best(nameKws) || headers[0];
-    const autoBal  = best(balKws);
+    const autoDr   = best(drKws);
+    const autoCr   = best(crKws);
 
     renderFileInfo(side, fileName, rows.length - 1);
-    renderColSelects(side, headers, autoNum, autoName, autoBal);
+    renderColSelects(side, headers, autoNum, autoName, autoDr, autoCr);
     checkReady();
   }
 
@@ -368,17 +388,16 @@
     document.getElementById('card-'+side).classList.add('loaded');
   }
 
-  function renderColSelects(side, headers, autoNum, autoName, autoBal) {
+  function renderColSelects(side, headers, autoNum, autoName, autoDr, autoCr) {
     document.getElementById('col-selects-'+side).style.display = 'block';
     const noneOpt = `<option value="">${NONE_OPT}</option>`;
-
-    const numOpts  = noneOpt + headers.map(h => `<option value="${escHtml(h)}" ${h===autoNum?'selected':''}>${escHtml(h)}</option>`).join('');
+    const opts = (auto) => noneOpt + headers.map(h => `<option value="${escHtml(h)}" ${h===auto?'selected':''}>${escHtml(h)}</option>`).join('');
     const nameOpts = headers.map(h => `<option value="${escHtml(h)}" ${h===autoName?'selected':''}>${escHtml(h)}</option>`).join('');
-    const balOpts  = noneOpt + headers.map(h => `<option value="${escHtml(h)}" ${h===autoBal?'selected':''}>${escHtml(h)}</option>`).join('');
 
-    document.getElementById('col-'+side+'-num').innerHTML  = numOpts;
+    document.getElementById('col-'+side+'-num').innerHTML  = opts(autoNum);
     document.getElementById('col-'+side+'-name').innerHTML = nameOpts;
-    document.getElementById('col-'+side+'-bal').innerHTML  = balOpts;
+    document.getElementById('col-'+side+'-dr').innerHTML   = opts(autoDr);
+    document.getElementById('col-'+side+'-cr').innerHTML   = opts(autoCr);
   }
 
   function clearSide(side) {
@@ -403,12 +422,14 @@
   function extractRows(side) {
     const numCol  = document.getElementById('col-'+side+'-num').value;
     const nameCol = document.getElementById('col-'+side+'-name').value;
-    const balCol  = document.getElementById('col-'+side+'-bal').value;
+    const drCol   = document.getElementById('col-'+side+'-dr').value;
+    const crCol   = document.getElementById('col-'+side+'-cr').value;
 
     const headers = state[side].headers;
     const numIdx  = numCol  ? headers.indexOf(numCol)  : -1;
     const nameIdx = headers.indexOf(nameCol);
-    const balIdx  = balCol  ? headers.indexOf(balCol)  : -1;
+    const drIdx   = drCol   ? headers.indexOf(drCol)   : -1;
+    const crIdx   = crCol   ? headers.indexOf(crCol)   : -1;
 
     if (nameIdx === -1) return null;
 
@@ -421,18 +442,19 @@
       if (seen.has(key)) continue;
       seen.add(key);
       rows.push({
-        num:  numIdx  >= 0 ? String(r[numIdx]  ?? '').trim() : '',
-        name: name,
-        bal:  balIdx  >= 0 ? r[balIdx] : ''
+        num: numIdx >= 0 ? String(r[numIdx] ?? '').trim() : '',
+        name,
+        dr:  drIdx  >= 0 ? r[drIdx]  : '',
+        cr:  crIdx  >= 0 ? r[crIdx]  : ''
       });
     }
     return rows;
   }
 
-  function formatBal(val) {
+  function formatAmt(val) {
     if (val === '' || val === null || val === undefined) return '';
     const n = parseFloat(String(val).replace(/[^0-9.\-]/g,''));
-    if (isNaN(n)) return String(val);
+    if (isNaN(n) || n === 0) return '';
     return n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   }
 
@@ -450,12 +472,14 @@
     const currMap = new Map(currRows.map(r => [r.name.toLowerCase(), r]));
 
     const tableRows = [];
-    const allKeys = new Set([...prevMap.keys(), ...currMap.keys()]);
-    allKeys.forEach(k => {
-      const p = prevMap.get(k) || null;
-      const c = currMap.get(k) || null;
-      const status = p && c ? 'matched' : p ? 'removed' : 'added';
-      tableRows.push({ prev: p, curr: c, status });
+    // matched first, then removed, then added
+    prevRows.forEach(p => {
+      const c = currMap.get(p.name.toLowerCase()) || null;
+      tableRows.push({ prev: p, curr: c, status: c ? 'matched' : 'removed' });
+    });
+    currRows.forEach(c => {
+      if (!prevMap.has(c.name.toLowerCase()))
+        tableRows.push({ prev: null, curr: c, status: 'added' });
     });
 
     const categories = [{ name: 'All Accounts', rows: tableRows }];
@@ -516,13 +540,14 @@
       setStep('analyze');
 
       const fmtList = rows => rows.map(r =>
-        `${r.num ? r.num+' | ' : ''}${r.name}${r.bal !== '' ? ' | '+r.bal : ''}`
+        [r.num, r.name, r.dr !== '' ? 'DR:'+r.dr : '', r.cr !== '' ? 'CR:'+r.cr : '']
+          .filter(Boolean).join(' | ')
       ).join('\n');
 
       const aiPrompt = `You are a financial data analyst performing a year-over-year account reconciliation.
 
-Each account entry is formatted as: [Account Number | ] Account Name [ | Balance]
-Account number and balance may be absent.
+Each account entry is formatted as: [Account# | ] Account Name [ | DR:debit_amount] [ | CR:credit_amount]
+Account number and debit/credit amounts may be absent.
 
 Your job:
 1. Clean each account name (fix capitalization, spacing, expand abbreviations like A/R → Accounts Receivable, PP&E → Property, Plant & Equipment).
@@ -539,8 +564,8 @@ Return ONLY a raw JSON object — no markdown fences, no explanation:
       "rows": [
         {
           "status": "matched|added|removed",
-          "prev": { "num": "1000", "name": "Cash", "bal": "50000.00" } or null,
-          "curr": { "num": "1000", "name": "Cash", "bal": "72000.00" } or null
+          "prev": { "num": "1000", "name": "Cash", "dr": "50000.00", "cr": "" } or null,
+          "curr": { "num": "1000", "name": "Cash", "dr": "72000.00", "cr": "" } or null
         }
       ]
     }
@@ -630,14 +655,17 @@ Matched: ${matchedCount}`, 512);
         const p = row.prev;
         const c = row.curr;
 
+        const e = (v) => `<span class="empty-cell">&nbsp;</span>`;
         ledgerHTML += `<div class="acct-row ${rowCls}">
-          <div class="acct-num">${p ? escHtml(p.num||'') : '<span class="empty-cell">&nbsp;</span>'}</div>
-          <div class="acct-name">${p ? prevBadge+escHtml(p.name||'') : '<span class="empty-cell">&nbsp;</span>'}</div>
-          <div class="acct-bal">${p ? escHtml(formatBal(p.bal)) : '<span class="empty-cell">&nbsp;</span>'}</div>
+          <div class="acct-num">${p  ? escHtml(p.num||'')              : e()}</div>
+          <div class="acct-name">${p ? prevBadge+escHtml(p.name||'')   : e()}</div>
+          <div class="acct-dr">${p   ? escHtml(formatAmt(p.dr))        : e()}</div>
+          <div class="acct-cr">${p   ? escHtml(formatAmt(p.cr))        : e()}</div>
           <div class="acct-div"></div>
-          <div class="acct-num">${c ? escHtml(c.num||'') : '<span class="empty-cell">&nbsp;</span>'}</div>
-          <div class="acct-name">${c ? currBadge+escHtml(c.name||'') : '<span class="empty-cell">&nbsp;</span>'}</div>
-          <div class="acct-bal">${c ? escHtml(formatBal(c.bal)) : '<span class="empty-cell">&nbsp;</span>'}</div>
+          <div class="acct-num">${c  ? escHtml(c.num||'')              : e()}</div>
+          <div class="acct-name">${c ? currBadge+escHtml(c.name||'')   : e()}</div>
+          <div class="acct-dr">${c   ? escHtml(formatAmt(c.dr))        : e()}</div>
+          <div class="acct-cr">${c   ? escHtml(formatAmt(c.cr))        : e()}</div>
         </div>`;
       }
     }
@@ -680,11 +708,13 @@ Matched: ${matchedCount}`, 512);
         <div class="ledger-sub-header">
           <div class="lsh num">Acct #</div>
           <div class="lsh name">Account Name</div>
-          <div class="lsh bal">Balance</div>
+          <div class="lsh dr">Debit</div>
+          <div class="lsh cr">Credit</div>
           <div class="lsh div"></div>
           <div class="lsh num">Acct #</div>
           <div class="lsh name">Account Name</div>
-          <div class="lsh bal">Balance</div>
+          <div class="lsh dr">Debit</div>
+          <div class="lsh cr">Credit</div>
         </div>
         ${ledgerHTML}
       </div>`;
