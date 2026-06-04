@@ -148,12 +148,68 @@
     .acct-badge.new { background: #bbf7d0; color: #14532d; }
     .acct-badge.del { background: #fecaca; color: #7f1d1d; }
 
+    /* Trial balance footer */
+    .tb-footer {
+      display: grid;
+      grid-template-columns: 1fr 2px 1fr;
+      border-top: 2px solid #1a1a2e;
+      background: #f8fafc;
+    }
+    .tb-side {
+      padding: 14px 0;
+      display: grid;
+      grid-template-columns: 80px 1fr 110px 110px;
+    }
+    .tb-div { background: #1a1a2e; }
+    .tb-label {
+      grid-column: 1 / 3;
+      padding: 4px 14px;
+      font-size: .78rem;
+      font-weight: 700;
+      color: #374151;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .tb-label.total-row { color: #1a1a2e; font-size: .8rem; border-top: 1px solid #e2e8f0; padding-top: 8px; margin-top: 4px; }
+    .tb-total-dr {
+      padding: 4px 10px;
+      font-size: .82rem;
+      font-weight: 700;
+      color: #15803d;
+      text-align: right;
+      font-family: monospace;
+    }
+    .tb-total-cr {
+      padding: 4px 10px;
+      font-size: .82rem;
+      font-weight: 700;
+      color: #dc2626;
+      text-align: right;
+      font-family: monospace;
+    }
+    .tb-status {
+      grid-column: 1 / 5;
+      margin: 8px 14px 4px;
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: .82rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+    .tb-status.ok  { background: #dcfce7; color: #14532d; }
+    .tb-status.err { background: #fee2e2; color: #991b1b; }
+
     @media (max-width: 1200px) {
       .ledger-sub-header, .acct-row { grid-template-columns: 70px 1fr 95px 95px 2px 70px 1fr 95px 95px; }
+      .tb-side { grid-template-columns: 70px 1fr 95px 95px; }
     }
     @media (max-width: 960px) {
       .ledger-sub-header, .acct-row { grid-template-columns: 55px 1fr 80px 80px 2px 55px 1fr 80px 80px; }
       .acct-num { font-size: .72rem; } .acct-dr, .acct-cr { font-size: .76rem; }
+      .tb-side { grid-template-columns: 55px 1fr 80px 80px; }
     }
     @media (max-width: 700px) {
       .upload-row  { grid-template-columns: 1fr; padding: 16px; }
@@ -408,6 +464,22 @@
     return Math.abs(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   }
 
+  function fmtFull(v) {
+    const n = typeof v === 'number' ? v : parseNum(v);
+    return n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+
+  function trialBalance(rows) {
+    let totalDr = 0, totalCr = 0;
+    for (const r of rows) {
+      totalDr += typeof r.dr === 'number' ? r.dr : parseNum(r.dr);
+      totalCr += typeof r.cr === 'number' ? r.cr : parseNum(r.cr);
+    }
+    const diff      = Math.abs(totalDr - totalCr);
+    const balanced  = diff < 0.005;
+    return { totalDr, totalCr, diff, balanced };
+  }
+
   /* ── Basic run ─────────────────────────────────────────────────── */
 
   function runBasic() {
@@ -439,7 +511,9 @@
     const removed = tableRows.filter(r=>r.status==='removed').map(r=>r.prev.name);
     renderResults({ categories, added, removed,
       matchedCount: tableRows.filter(r=>r.status==='matched').length,
-      prevFile: state.prev.fileName, currFile: state.curr.fileName, aiInsight: null });
+      prevFile: state.prev.fileName, currFile: state.curr.fileName,
+      prevTB: trialBalance(prevRows), currTB: trialBalance(currRows),
+      aiInsight: null });
   }
 
   /* ── AI run ─────────────────────────────────────────────────────── */
@@ -545,7 +619,9 @@ Matched: ${matchedCount}`, 512);
 
       progEl.style.display = 'none';
       renderResults({ categories, added, removed, matchedCount,
-        prevFile: state.prev.fileName, currFile: state.curr.fileName, aiInsight: insight });
+        prevFile: state.prev.fileName, currFile: state.curr.fileName,
+        prevTB: trialBalance(prevRows), currTB: trialBalance(currRows),
+        aiInsight: insight });
 
     } catch(err) {
       progEl.style.display = 'none';
@@ -559,7 +635,25 @@ Matched: ${matchedCount}`, 512);
 
   /* ── Render ─────────────────────────────────────────────────────── */
 
-  function renderResults({ categories, added, removed, matchedCount, prevFile, currFile, aiInsight }) {
+  function tbSideHTML(tb) {
+    const statusCls  = tb.balanced ? 'ok' : 'err';
+    const statusIcon = tb.balanced ? '✓' : '✕';
+    const statusText = tb.balanced
+      ? 'Balanced'
+      : `Out of balance by ${fmtFull(tb.diff)}`;
+    return `
+      <div class="tb-side">
+        <div class="tb-label">Total Debits</div>
+        <div class="tb-total-dr">${fmtFull(tb.totalDr)}</div>
+        <div class="tb-total-cr"></div>
+        <div class="tb-label">Total Credits</div>
+        <div class="tb-total-dr"></div>
+        <div class="tb-total-cr">${fmtFull(tb.totalCr)}</div>
+        <div class="tb-status ${statusCls}">${statusIcon} ${statusText}</div>
+      </div>`;
+  }
+
+  function renderResults({ categories, added, removed, matchedCount, prevFile, currFile, prevTB, currTB, aiInsight }) {
     const el = document.getElementById('results');
     el.style.display = 'block';
 
@@ -662,6 +756,11 @@ Matched: ${matchedCount}`, 512);
           <div class="lsh cr">Credit</div>
         </div>
         ${ledgerHTML}
+        <div class="tb-footer">
+          ${tbSideHTML(prevTB)}
+          <div class="tb-div"></div>
+          ${tbSideHTML(currTB)}
+        </div>
       </div>`;
 
     el.scrollIntoView({ behavior:'smooth', block:'start' });
