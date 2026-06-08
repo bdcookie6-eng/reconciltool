@@ -770,7 +770,11 @@ Tasks:
 1. Clean account names (fix caps/spacing, expand abbreviations: A/R→Accounts Receivable, PP&E→Property Plant & Equipment).
 2. Group all accounts from BOTH years into: Assets, Liabilities, Equity, Revenue, Cost of Revenue, Operating Expenses, Other Income/Expense.
 3. Sort within each category by account number if present, else standard financial order.
-4. Match accounts that appear in both years (fuzzy name match OK — use the cleaner name).
+4. Matching rules — apply in this order:
+   a. EXACT match (same name after cleaning, case-insensitive) is ALWAYS a match — never mark an exact-name account as both "removed" and "added". This rule overrides everything else, even if the category, account number, or balance changed between years.
+   b. Only use fuzzy/semantic matching (e.g. abbreviation expansion, minor rewording) for accounts that have NO exact-name counterpart in the other year.
+   c. Be careful not to confuse accounts that merely sound alike but are clearly different concepts (e.g. "Interest Expense" vs "Internet Expense", "Notes Payable" vs "Notes Receivable", "Accounts Payable" vs "Accounts Receivable", "Accumulated Depreciation - Equipment" vs "...- Vehicles" vs "...- Buildings"). When in doubt between two similarly-spelled candidates, prefer the exact-name match (rule a) and leave the others as their own added/removed entries.
+   d. Before finalizing, double-check: no account name should appear in both the "added" and "removed" lists across all categories — if it does, you have missed a match and must correct it.
 5. Layout: matched accounts on same row. Removed (prev only) at bottom of category. Added (curr only) at bottom of category.
 
 Output format — follow EXACTLY, this is machine-parsed:
