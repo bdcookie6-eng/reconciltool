@@ -25,7 +25,7 @@ app.post('/api/claude', async (req, res) => {
   const tokens = Number.isInteger(maxTokens) ? Math.min(maxTokens, MAX_TOKENS_CAP) : 1024;
 
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 90000);
+  const timer = setTimeout(() => controller.abort(), 240000);
 
   try {
     const upstream = await fetch('https://api.anthropic.com/v1/messages', {
