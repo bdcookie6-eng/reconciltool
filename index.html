@@ -330,8 +330,18 @@
       border-top: 1px solid var(--border);
       display: flex; align-items: baseline; gap: 8px;
     }
+    .changes-list li { cursor: pointer; transition: background .15s; }
+    .changes-list li:hover { background: var(--teal-bg); }
     .changes-list li .ch-num { font-family: var(--mono); font-size: .72rem; color: var(--text3); min-width: 44px; }
+    .changes-list li .ch-amt { font-family: var(--mono); font-size: .75rem; margin-left: auto; padding-left: 12px; white-space: nowrap; }
+    .changes-list li .ch-amt.dr { color: var(--green); }
+    .changes-list li .ch-amt.cr { color: var(--red); }
     .changes-empty { padding: 14px; font-size: .8rem; color: var(--text3); font-style: italic; }
+    @keyframes row-flash {
+      0%   { background: rgba(13,148,136,.18); }
+      100% { background: transparent; }
+    }
+    .acct-row.flash { animation: row-flash 1.6s ease-out forwards; }
 
     .stats-summary { margin-top: 16px; }
     .stats-title {
@@ -1112,19 +1122,35 @@ Your previous response could not be parsed as JSON. Respond again with ONLY a si
 
   function changesListHTML(entries, emptyMsg) {
     if (!entries.length) return `<div class="changes-empty">${emptyMsg}</div>`;
-    return `<ul class="changes-list">${entries.map(e => `
-      <li>
+    return `<ul class="changes-list">${entries.map(e => {
+      const hasDr = e.dr && e.dr !== 0 && e.dr !== '';
+      const hasCr = e.cr && e.cr !== 0 && e.cr !== '';
+      const amtHTML = hasDr
+        ? `<span class="ch-amt dr">${fmtFull(e.dr)}</span>`
+        : hasCr
+          ? `<span class="ch-amt cr">(${fmtFull(e.cr)})</span>`
+          : '';
+      const clickAttr = e.rowId ? ` onclick="scrollToAcct('${e.rowId}')" title="Click to jump to this account in the ledger"` : '';
+      return `<li${clickAttr}>
         ${e.num ? `<span class="ch-num">${escHtml(e.num)}</span>` : ''}
         <span>${escHtml(e.name)}${e.category ? ` <span style="color:var(--text3);">— ${escHtml(e.category)}</span>` : ''}</span>
-      </li>`).join('')}</ul>`;
+        ${amtHTML}
+      </li>`;
+    }).join('')}</ul>`;
   }
 
   function changesSummaryHTML(categories) {
     const added = [], removed = [];
     for (const cat of categories) {
       for (const row of cat.rows) {
-        if (row.status === 'added' && row.curr) added.push({ num: row.curr.num, name: row.curr.name, category: cat.name });
-        if (row.status === 'removed' && row.prev) removed.push({ num: row.prev.num, name: row.prev.name, category: cat.name });
+        if (row.status === 'added' && row.curr) {
+          const rowId = `acct-row-${(row.curr.num||row.curr.name||'').replace(/[^a-z0-9]/gi,'-').toLowerCase()}`;
+          added.push({ num: row.curr.num, name: row.curr.name, category: cat.name, dr: row.curr.dr, cr: row.curr.cr, rowId });
+        }
+        if (row.status === 'removed' && row.prev) {
+          const rowId = `acct-row-${(row.prev.num||row.prev.name||'').replace(/[^a-z0-9]/gi,'-').toLowerCase()}`;
+          removed.push({ num: row.prev.num, name: row.prev.name, category: cat.name, dr: row.prev.dr, cr: row.prev.cr, rowId });
+        }
       }
     }
     return `
@@ -1236,7 +1262,10 @@ Your previous response could not be parsed as JSON. Respond again with ONLY a si
         const cDr = c ? fmtAmt(c.dr) : '';
         const cCr = c ? fmtAmt(c.cr) : '';
 
-        ledgerHTML += `<div class="acct-row">
+        const rowId = (isAdded || isRemoved)
+          ? `acct-row-${((isRemoved ? (p?.num||p?.name) : (c?.num||c?.name))||'').replace(/[^a-z0-9]/gi,'-').toLowerCase()}`
+          : '';
+        ledgerHTML += `<div class="acct-row"${rowId ? ` id="${rowId}"` : ''}>
           <div class="acct-num prev-num ${pCls}${!p?' empty-cell':''}">${p ? escHtml(p.num||'') : ''}</div>
           <div class="acct-name prev-name ${pCls}${!p?' empty-cell':''}">${p ? prevBadge+escHtml(p.name||'') : ''}</div>
           <div class="acct-dr prev-dr ${pCls}${!p?' empty-cell':''}">${pDr}</div>
@@ -1437,6 +1466,15 @@ Your previous response could not be parsed as JSON. Respond again with ONLY a si
   function exportPDF() {
     if (!lastResults) return;
     window.print();
+  }
+
+  function scrollToAcct(rowId) {
+    const el = document.getElementById(rowId);
+    if (!el) return;
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    el.classList.remove('flash');
+    void el.offsetWidth; // force reflow so re-triggering works
+    el.classList.add('flash');
   }
 
   function resetAll() {
