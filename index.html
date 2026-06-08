@@ -371,11 +371,12 @@
 
 <div id="key-bar" class="key-bar-sst" style="display:none;">
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0a3d32" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-  <span>API key not detected from server — paste it here to use AI features:</span>
+  <span>Paste your Anthropic API key to use AI features. It's sent directly to Anthropic from your browser, kept only in this page's memory, and never saved or transmitted anywhere else — it's cleared when you reset, close, or reload the page.</span>
   <div style="position:relative;flex:1;min-width:260px;max-width:420px;">
-    <input id="api-key-input" type="password" placeholder="sk-ant-..." autocomplete="off"
-      style="width:100%;padding:7px 34px 7px 10px;border:1px solid #b0c4bc;border-radius:6px;font-size:.85rem;font-family:monospace;background:#fff;" />
-    <button onclick="toggleKey()" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#7a9e94;font-size:.8rem;">👁</button>
+    <input id="api-key-input" type="password" placeholder="sk-ant-..." autocomplete="off" spellcheck="false"
+      style="width:100%;padding:7px 60px 7px 10px;border:1px solid #b0c4bc;border-radius:6px;font-size:.85rem;font-family:monospace;background:#fff;" />
+    <button onclick="toggleKey()" title="Show/hide key" style="position:absolute;right:30px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#7a9e94;font-size:.8rem;">👁</button>
+    <button onclick="forgetKey()" title="Clear key from memory" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#7a9e94;font-size:.8rem;">✕</button>
   </div>
 </div>
 
@@ -487,6 +488,16 @@
     const inp = document.getElementById('api-key-input');
     inp.type = inp.type === 'password' ? 'text' : 'password';
   }
+
+  // Wipe the key from the DOM/memory — never persisted to storage, cookies, or logs.
+  function forgetKey() {
+    const inp = document.getElementById('api-key-input');
+    if (inp) { inp.value = ''; inp.type = 'password'; }
+  }
+
+  // Defense-in-depth: clear the key whenever the page is hidden, navigated away from, or unloaded.
+  window.addEventListener('pagehide', forgetKey);
+  window.addEventListener('beforeunload', forgetKey);
 
   function showError(msg) {
     document.getElementById('error-container').innerHTML = `<div class="error-banner">${msg}</div>`;
