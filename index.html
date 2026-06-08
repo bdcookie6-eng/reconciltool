@@ -986,6 +986,15 @@ Your previous response could not be parsed as JSON. Respond again with ONLY a si
       const seenPrevNames = new Set();
       const seenCurrNums  = new Set();
       const seenCurrNames = new Set();
+      // Pre-matched pairs are guaranteed accounted for on both sides regardless
+      // of what the AI named them — seed them directly from the original input rows
+      // so AI renames don't cause false "missing" detections.
+      for (const m of preMatched) {
+        if (m.prev.num) seenPrevNums.add(String(m.prev.num).trim());
+        seenPrevNames.add(norm(m.prev.name));
+        if (m.curr.num) seenCurrNums.add(String(m.curr.num).trim());
+        seenCurrNames.add(norm(m.curr.name));
+      }
       for (const cat of mergedCategories) {
         for (const row of cat.rows) {
           if (row.prev) { if (row.prev.num) seenPrevNums.add(String(row.prev.num).trim()); seenPrevNames.add(norm(row.prev.name)); }
