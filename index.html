@@ -199,6 +199,7 @@
       color: var(--text2); transition: border-color .15s;
     }
     .export-btn:hover { border-color: var(--border2); color: var(--text); }
+    .export-group { display: flex; gap: 8px; }
 
     .summary-row { display: flex; gap: 10px; margin-bottom: 18px; flex-wrap: wrap; }
     .chip {
@@ -233,6 +234,7 @@
     .legend-swatch.removed-s { background: var(--red-bg);   border: 1px solid rgba(239,68,68,.3); }
     .legend-swatch.dr-s      { background: var(--green-bg); border: 1px solid rgba(34,197,94,.3); }
     .legend-swatch.cr-s      { background: var(--red-bg);   border: 1px solid rgba(239,68,68,.3); }
+    .num-inherited { color: var(--teal-mid); font-weight: 700; cursor: help; }
 
     /* ── Ledger ── */
     .ledger-wrap { border-radius: 8px; overflow: hidden; border: 1px solid var(--border); background: var(--surface); }
@@ -390,6 +392,14 @@
       header       { padding: 0 16px; }
       .ai-progress, .error-banner { margin-left: 16px; margin-right: 16px; }
     }
+
+    @media print {
+      header, .upload-row, .actions, .ai-progress, .error-banner, .export-group, .btn-reset { display: none !important; }
+      body { background: #fff; }
+      .results { padding: 0; }
+      .ledger-wrap, .changes-summary, .stats-summary { break-inside: avoid; }
+      .acct-row, .stat-card, .changes-list li { break-inside: avoid; }
+    }
   </style>
 </head>
 <body>
@@ -463,6 +473,9 @@
     prev: { rows: null, headers: [], cols: null, fileName: '' },
     curr: { rows: null, headers: [], cols: null, fileName: '' }
   };
+
+  // Snapshot of the most recently rendered reconciliation, used by the export buttons.
+  let lastResults = null;
 
   /* ── Column auto-detection ──────────────────────────────────────── */
 
@@ -848,6 +861,18 @@ Your previous response could not be parsed as JSON. Respond again with ONLY a si
       }
       batchEl.textContent = '';
 
+      // If the current year has no account number but its matched prior-year
+      // counterpart does, carry the prior year's number forward so the new
+      // ledger inherits consistent account numbering.
+      for (const cat of mergedCategories) {
+        for (const row of cat.rows) {
+          if (row.status === 'matched' && row.prev && row.curr && row.prev.num && !row.curr.num) {
+            row.curr.num = row.prev.num;
+            row.curr.numInherited = true;
+          }
+        }
+      }
+
       const categories = mergedCategories;
       const added   = categories.flatMap(c=>c.rows.filter(r=>r.status==='added').map(r=>r.curr?.name).filter(Boolean));
       const removed = categories.flatMap(c=>c.rows.filter(r=>r.status==='removed').map(r=>r.prev?.name).filter(Boolean));
@@ -1082,7 +1107,7 @@ Matched: ${matchedCount}`, 512);
           <div class="acct-dr prev-dr ${pCls}${!p?' empty-cell':''}">${pDr}</div>
           <div class="acct-cr prev-cr ${pCls}${!p?' empty-cell':''}">${pCr}</div>
           <div class="acct-div"></div>
-          <div class="acct-num curr-num ${cCls}${!c?' empty-cell':''}">${c ? escHtml(c.num||'') : ''}</div>
+          <div class="acct-num curr-num ${cCls}${!c?' empty-cell':''}" ${c && c.numInherited ? `title="Carried forward from prior year — not present in the original file"` : ''}>${c ? escHtml(c.num||'') + (c.numInherited ? ' <span class="num-inherited">*</span>' : '') : ''}</div>
           <div class="acct-name curr-name ${cCls}${!c?' empty-cell':''}">${c ? currBadge+escHtml(c.name||'') : ''}</div>
           <div class="acct-dr curr-dr ${cCls}${!c?' empty-cell':''}">${cDr}</div>
           <div class="acct-cr curr-cr ${cCls}${!c?' empty-cell':''}">${cCr}</div>
@@ -1090,15 +1115,31 @@ Matched: ${matchedCount}`, 512);
       }
     }
 
+    lastResults = { categories, added, removed, matchedCount, prevFile, currFile, prevTB, currTB };
+
     el.innerHTML = `
       <div class="results-header">
         <h2>Reconciliation Results</h2>
-        <button class="export-btn" onclick="exportResults(${JSON.stringify(added)}, ${JSON.stringify(removed)})">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-            <polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
-          </svg>Export CSV
-        </button>
+        <div class="export-group">
+          <button class="export-btn" onclick="exportCSV()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>CSV
+          </button>
+          <button class="export-btn" onclick="exportExcel()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>Excel
+          </button>
+          <button class="export-btn" onclick="exportPDF()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>PDF
+          </button>
+        </div>
       </div>
 
       <div class="summary-row">
@@ -1114,6 +1155,7 @@ Matched: ${matchedCount}`, 512);
         <div class="legend-item"><div class="legend-swatch cr-s"></div>Credit (negative)</div>
         <div class="legend-item"><div class="legend-swatch added-s"></div>New account</div>
         <div class="legend-item"><div class="legend-swatch removed-s"></div>Removed account</div>
+        <div class="legend-item"><span class="num-inherited">*</span>&nbsp;Account number carried forward from prior year</div>
       </div>
 
       <div class="ledger-wrap">
@@ -1155,16 +1197,84 @@ Matched: ${matchedCount}`, 512);
 
   /* ── Export ─────────────────────────────────────────────────────── */
 
-  function exportResults(added, removed) {
-    const rows = [['Status','Account Name']];
-    added.forEach(a => rows.push(['Added', a]));
-    removed.forEach(a => rows.push(['Removed', a]));
-    const csv = rows.map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
-    const blob = new Blob([csv],{type:'text/csv'});
+  // Builds one flat table (array of arrays) of the full side-by-side reconciliation,
+  // shared by the CSV and Excel exports.
+  function buildLedgerTable() {
+    const header = ['Category','Status',
+      'Prior Acct #','Prior Account Name','Prior Debit','Prior Credit',
+      'Current Acct #','Current Account Name','Current Debit','Current Credit'];
+    const rows = [header];
+    for (const cat of lastResults.categories) {
+      for (const row of cat.rows) {
+        const p = row.prev, c = row.curr;
+        rows.push([
+          cat.name, row.status,
+          p ? (p.num||'') : '', p ? (p.name||'') : '', p ? (p.dr||0) : '', p ? (p.cr||0) : '',
+          c ? (c.num||'') + (c && c.numInherited ? ' *' : '') : '', c ? (c.name||'') : '', c ? (c.dr||0) : '', c ? (c.cr||0) : ''
+        ]);
+      }
+    }
+    return rows;
+  }
+
+  function downloadBlob(blob, filename) {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
-    a.href=url; a.download='reconciliation_results.csv'; a.click();
+    a.href = url; a.download = filename; a.click();
     URL.revokeObjectURL(url);
+  }
+
+  function exportCSV() {
+    if (!lastResults) return;
+    const rows = buildLedgerTable();
+    const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+    downloadBlob(new Blob([csv], { type: 'text/csv' }), 'reconciliation_results.csv');
+  }
+
+  function exportExcel() {
+    if (!lastResults) return;
+    const { categories, added, removed, matchedCount, prevFile, currFile, prevTB, currTB } = lastResults;
+
+    const wb = XLSX.utils.book_new();
+
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(buildLedgerTable()), 'Reconciliation');
+
+    const summaryRows = [
+      ['Reconciliation Summary'],
+      ['Prior Year File', prevFile],
+      ['Current Year File', currFile],
+      [],
+      ['Prior Year — Total Debits', prevTB.totalDr],
+      ['Prior Year — Total Credits', prevTB.totalCr],
+      ['Prior Year — Balanced', prevTB.balanced ? 'Yes' : `No (off by ${prevTB.diff})`],
+      [],
+      ['Current Year — Total Debits', currTB.totalDr],
+      ['Current Year — Total Credits', currTB.totalCr],
+      ['Current Year — Balanced', currTB.balanced ? 'Yes' : `No (off by ${currTB.diff})`],
+      [],
+      ['Matched Accounts', matchedCount],
+      ['Added Accounts', added.length],
+      ['Removed Accounts', removed.length]
+    ];
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(summaryRows), 'Summary');
+
+    const changesRows = [['Change', 'Account Name', 'Category']];
+    for (const cat of categories) {
+      for (const row of cat.rows) {
+        if (row.status === 'added' && row.curr)  changesRows.push(['Added',   row.curr.name, cat.name]);
+        if (row.status === 'removed' && row.prev) changesRows.push(['Removed', row.prev.name, cat.name]);
+      }
+    }
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(changesRows), 'Added & Removed');
+
+    XLSX.writeFile(wb, 'reconciliation_results.xlsx');
+  }
+
+  // Opens the browser's print dialog scoped to the results (via @media print rules
+  // below) — the user can choose "Save as PDF" as the destination.
+  function exportPDF() {
+    if (!lastResults) return;
+    window.print();
   }
 
   function resetAll() {
