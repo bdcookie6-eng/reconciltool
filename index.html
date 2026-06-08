@@ -641,11 +641,17 @@
     // Keep digits, decimal points, sign, and scientific-notation markers (e/E/+)
     // so values like "1.5e10" or "(1,234.56)" parse correctly rather than being mangled.
     let s = String(v).trim();
-    const isParenNegative = /^\(.*\)$/.test(s);
+    const isParenWrapped = /^\(.*\)$/.test(s);
     s = s.replace(/[^0-9.\-eE+]/g, '');
     let n = parseFloat(s);
     if (isNaN(n)) return 0;
-    if (isParenNegative) n = -Math.abs(n);
+    // Parenthetical notation (e.g. ($3,800) or (3,800)) is an accounting
+    // display convention meaning "this is the amount in this column" — it does
+    // NOT mean the value should flip to the opposite column. Treat it as the
+    // absolute value and let the debit/credit column placement define the sign.
+    // Explicit minus signs (e.g. -3800 with no parens) still signal a sign
+    // anomaly that the extractRows normalisation will move to the correct column.
+    if (isParenWrapped) n = Math.abs(n);
     return n;
   }
 
