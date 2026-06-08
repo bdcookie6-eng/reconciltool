@@ -454,6 +454,7 @@
 <div class="ai-progress" id="ai-progress">
   <div class="prog-title"><span class="spinning">✦</span> AI is analyzing your data…</div>
   <div class="prog-steps" id="prog-steps"></div>
+  <div class="prog-elapsed" id="prog-batch"></div>
   <div class="prog-elapsed" id="prog-elapsed"></div>
 </div>
 
@@ -761,7 +762,7 @@
         .filter(Boolean).join(' | ')
       ).join('\n');
 
-      const prompt = `You are a financial data analyst performing a year-over-year account reconciliation.
+      const buildPrompt = (prevList, currList, isBatch) => `You are a financial data analyst performing a year-over-year account reconciliation${isBatch ? ' (this is one slice of a larger ledger — only categorize and match the accounts listed below)' : ''}.
 
 Each account entry: [Account# | ] Account Name [ | DR:debit] [ | CR:credit]
 
@@ -777,28 +778,66 @@ Return ONLY raw JSON, no markdown:
 
 - prev is null when status="added", curr is null when status="removed"
 - dr and cr are numbers (0 if empty)
-- Include every account
+- Include every account listed below
 
 PREVIOUS YEAR:
-${fmtList(prevRows)}
+${fmtList(prevList)}
 
 CURRENT YEAR:
-${fmtList(currRows)}`;
+${fmtList(currList)}`;
 
-      const raw = await callClaude(prompt, 64000, { timeoutMs: 360000 });
-      let parsed;
-      try {
-        parsed = parseAIJson(raw);
-      } catch(e) {
-        console.error('AI categorization — raw response that failed to parse:', raw);
-        const trimmed = raw.trim();
-        const looksTruncated = !trimmed.endsWith('}') && !trimmed.endsWith('```');
-        throw new Error(looksTruncated
-          ? 'The AI response was too large and got cut off. Try reconciling smaller files or fewer accounts at a time.'
-          : 'AI returned an unexpected format. Please try again — if this keeps happening, try smaller files.');
+      // Large ledgers produce responses that get truncated or take too long in a single
+      // AI call. Split into alphabetically-aligned slices (by cleaned account name, so
+      // matching pairs land in the same slice on both sides) and categorize each
+      // slice separately, then merge the results back into one set of categories.
+      const BATCH_SIZE = 100; // max accounts per side, per AI call
+      const sortByName = rows => [...rows].sort((a, b) =>
+        String(a.name||'').toLowerCase().localeCompare(String(b.name||'').toLowerCase()));
+      const prevSorted = sortByName(prevRows);
+      const currSorted = sortByName(currRows);
+      const numBatches = Math.max(1, Math.ceil(Math.max(prevSorted.length, currSorted.length) / BATCH_SIZE));
+      const prevChunkSize = Math.ceil(prevSorted.length / numBatches) || prevSorted.length || 1;
+      const currChunkSize = Math.ceil(currSorted.length / numBatches) || currSorted.length || 1;
+
+      const batchEl = document.getElementById('prog-batch');
+      const categoryIndex = new Map();
+      const mergedCategories = [];
+
+      for (let b = 0; b < numBatches; b++) {
+        const prevSlice = prevSorted.slice(b * prevChunkSize, (b + 1) * prevChunkSize);
+        const currSlice = currSorted.slice(b * currChunkSize, (b + 1) * currChunkSize);
+        if (!prevSlice.length && !currSlice.length) continue;
+
+        if (numBatches > 1) {
+          batchEl.textContent = `Processing batch ${b + 1} of ${numBatches} (${prevSlice.length + currSlice.length} accounts)…`;
+        }
+
+        const raw = await callClaude(buildPrompt(prevSlice, currSlice, numBatches > 1), 32000, { timeoutMs: 240000 });
+        let parsed;
+        try {
+          parsed = parseAIJson(raw);
+        } catch(e) {
+          console.error('AI categorization — raw response that failed to parse:', raw);
+          const trimmed = raw.trim();
+          const looksTruncated = !trimmed.endsWith('}') && !trimmed.endsWith('```');
+          throw new Error(looksTruncated
+            ? 'The AI response was too large and got cut off. Try reconciling smaller files or fewer accounts at a time.'
+            : 'AI returned an unexpected format. Please try again — if this keeps happening, try smaller files.');
+        }
+
+        for (const cat of parsed.categories || []) {
+          let entry = categoryIndex.get(cat.name);
+          if (!entry) {
+            entry = { name: cat.name, rows: [] };
+            categoryIndex.set(cat.name, entry);
+            mergedCategories.push(entry);
+          }
+          entry.rows.push(...(cat.rows || []));
+        }
       }
+      batchEl.textContent = '';
 
-      const categories = parsed.categories || [];
+      const categories = mergedCategories;
       const added   = categories.flatMap(c=>c.rows.filter(r=>r.status==='added').map(r=>r.curr?.name).filter(Boolean));
       const removed = categories.flatMap(c=>c.rows.filter(r=>r.status==='removed').map(r=>r.prev?.name).filter(Boolean));
       const matchedCount = categories.flatMap(c=>c.rows.filter(r=>r.status==='matched')).length;
@@ -830,6 +869,7 @@ Matched: ${matchedCount}`, 512);
     } finally {
       clearInterval(elapsedTimer);
       elapsedEl.textContent = '';
+      document.getElementById('prog-batch').textContent = '';
       checkReady();
     }
   }
