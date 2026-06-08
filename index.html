@@ -705,13 +705,14 @@ ${fmtList(currRows)}`;
       const raw = await callClaude(prompt, 16000);
       let parsed;
       try {
-        const clean = raw.replace(/^```[a-z]*\n?/,'').replace(/\n?```$/,'').trim();
-        parsed = JSON.parse(clean);
+        parsed = parseAIJson(raw);
       } catch(e) {
-        const looksTruncated = !raw.trim().endsWith('}') && !raw.trim().endsWith('```');
+        console.error('AI categorization — raw response that failed to parse:', raw);
+        const trimmed = raw.trim();
+        const looksTruncated = !trimmed.endsWith('}') && !trimmed.endsWith('```');
         throw new Error(looksTruncated
           ? 'The AI response was too large and got cut off. Try reconciling smaller files or fewer accounts at a time.'
-          : 'AI returned an unexpected format. Please try again.');
+          : 'AI returned an unexpected format. Please try again — if this keeps happening, try smaller files.');
       }
 
       const categories = parsed.categories || [];
@@ -749,6 +750,30 @@ Matched: ${matchedCount}`, 512);
   }
 
   function sleep(ms) { return new Promise(r=>setTimeout(r,ms)); }
+
+  // Robustly extract JSON from an LLM response that may include markdown fences
+  // and/or stray prose before/after the JSON object.
+  function parseAIJson(raw) {
+    const attempts = [];
+
+    // 1) Strip a leading/trailing markdown code fence, if present
+    attempts.push(raw.replace(/^```[a-z]*\n?/i, '').replace(/\n?```\s*$/i, '').trim());
+
+    // 2) Slice from the first '{' to the last '}' (handles stray prose around the JSON)
+    const start = raw.indexOf('{');
+    const end = raw.lastIndexOf('}');
+    if (start !== -1 && end !== -1 && end > start) {
+      attempts.push(raw.slice(start, end + 1).trim());
+    }
+
+    // 3) Raw text as-is
+    attempts.push(raw.trim());
+
+    for (const candidate of attempts) {
+      try { return JSON.parse(candidate); } catch (_) { /* try next */ }
+    }
+    throw new Error('Could not parse JSON from AI response');
+  }
 
   /* ── Render ─────────────────────────────────────────────────────── */
 
