@@ -215,18 +215,6 @@
     .chip.removed .dot { background: var(--red); }
     .chip.matched .dot { background: var(--text3); }
 
-    .ai-insight {
-      background: var(--teal-bg);
-      border: 1px solid rgba(10,61,50,.15);
-      border-radius: 8px; padding: 14px 16px; margin-bottom: 18px;
-      font-size: .86rem; color: var(--text2); line-height: 1.65;
-    }
-    .ai-insight .insight-label {
-      font-size: .68rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;
-      color: var(--teal); margin-bottom: 6px;
-      display: flex; align-items: center; gap: 6px; font-family: var(--mono);
-    }
-
     .legend { display: flex; gap: 14px; align-items: center; margin-bottom: 12px; flex-wrap: wrap; }
     .legend-item { display: flex; align-items: center; gap: 5px; font-size: .74rem; color: var(--text3); }
     .legend-swatch { width: 12px; height: 12px; border-radius: 2px; }
@@ -679,7 +667,6 @@
   const STEPS = [
     { id:'extract', label:'Reading and parsing both files' },
     { id:'analyze', label:'AI categorizing, cleaning and aligning accounts' },
-    { id:'insight', label:'AI generating financial insights' },
   ];
 
   function setStep(id) {
@@ -880,26 +867,10 @@ Your previous response could not be parsed as JSON. Respond again with ONLY a si
       const removed = categories.flatMap(c=>c.rows.filter(r=>r.status==='removed').map(r=>r.prev?.name).filter(Boolean));
       const matchedCount = categories.flatMap(c=>c.rows.filter(r=>r.status==='matched')).length;
 
-      setStep('insight');
-      let insight = '';
-      if (added.length > 0 || removed.length > 0) {
-        try {
-          insight = await callClaude(
-            `Financial analyst: summarize in 2-3 professional sentences what these year-over-year account changes suggest about the business. No bullets.
-Added: ${added.slice(0,20).join(', ')}${added.length>20?'…':''}
-Removed: ${removed.slice(0,20).join(', ')}${removed.length>20?'…':''}
-Matched: ${matchedCount}`, 512);
-        } catch (e) {
-          // Insight is a nice-to-have; don't fail the whole reconciliation if it errors.
-          insight = '';
-        }
-      }
-
       progEl.style.display = 'none';
       renderResults({ categories, added, removed, matchedCount,
         prevFile: state.prev.fileName, currFile: state.curr.fileName,
-        prevTB: trialBalance(prevRows), currTB: trialBalance(currRows),
-        aiInsight: insight });
+        prevTB: trialBalance(prevRows), currTB: trialBalance(currRows) });
 
     } catch(err) {
       progEl.style.display = 'none';
@@ -1063,18 +1034,9 @@ Matched: ${matchedCount}`, 512);
       </div>`;
   }
 
-  function renderResults({ categories, added, removed, matchedCount, prevFile, currFile, prevTB, currTB, aiInsight }) {
+  function renderResults({ categories, added, removed, matchedCount, prevFile, currFile, prevTB, currTB }) {
     const el = document.getElementById('results');
     el.style.display = 'block';
-
-    const insightHTML = aiInsight ? `
-      <div class="ai-insight">
-        <div class="insight-label">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-            <path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>
-          </svg>AI Insight
-        </div>${escHtml(aiInsight)}
-      </div>` : '';
 
     let ledgerHTML = '';
     for (const cat of categories) {
@@ -1141,6 +1103,12 @@ Matched: ${matchedCount}`, 512);
               <polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
             </svg>PDF
           </button>
+          <button class="export-btn" onclick="exportCurrentLedger()" title="Export just the current-year ledger — useful for getting a clean copy with account numbers filled in from the prior year">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>Current Ledger
+          </button>
         </div>
       </div>
 
@@ -1149,8 +1117,6 @@ Matched: ${matchedCount}`, 512);
         <div class="chip removed"><div class="dot"></div>${removed.length} Removed</div>
         <div class="chip matched"><div class="dot"></div>${matchedCount} Matched</div>
       </div>
-
-      ${insightHTML}
 
       <div class="legend">
         <div class="legend-item"><div class="legend-swatch dr-s"></div>Debit (positive)</div>
@@ -1217,6 +1183,29 @@ Matched: ${matchedCount}`, 512);
       }
     }
     return rows;
+  }
+
+  // Builds a standalone table of just the current-year ledger (e.g. so a user whose
+  // original file lacked account numbers can export a clean copy with the numbers
+  // filled in from the prior year's matched accounts).
+  function buildCurrentLedgerTable() {
+    const header = ['Category', 'Account #', 'Account Name', 'Debit', 'Credit'];
+    const rows = [header];
+    for (const cat of lastResults.categories) {
+      for (const row of cat.rows) {
+        const c = row.curr;
+        if (!c) continue;
+        rows.push([cat.name, c.num || '', c.name || '', c.dr || 0, c.cr || 0]);
+      }
+    }
+    return rows;
+  }
+
+  function exportCurrentLedger() {
+    if (!lastResults) return;
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(buildCurrentLedgerTable()), 'Current Ledger');
+    XLSX.writeFile(wb, `${(lastResults.currFile || 'current_ledger').replace(/\.[^.]+$/, '')}_with_account_numbers.xlsx`);
   }
 
   function downloadBlob(blob, filename) {
