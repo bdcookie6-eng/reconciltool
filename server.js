@@ -1,4 +1,5 @@
 const express = require('express');
+const rateLimit = require('express-rate-limit');
 const path = require('path');
 
 const PORT = process.env.PORT || 80;
@@ -15,8 +16,17 @@ const app = express();
 app.use(express.json({ limit: '10mb' }));
 app.use(express.static(path.join(__dirname), { index: 'index.html' }));
 
+// Cap AI proxy usage per IP to control cost and abuse: 10 requests per 10 minutes.
+const claudeLimiter = rateLimit({
+  windowMs: 10 * 60 * 1000,
+  limit: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many AI requests from this device. Please wait a few minutes and try again.' }
+});
+
 // Server-side proxy: the API key lives only here and is never sent to the browser.
-app.post('/api/claude', async (req, res) => {
+app.post('/api/claude', claudeLimiter, async (req, res) => {
   const { prompt, maxTokens } = req.body || {};
 
   if (typeof prompt !== 'string' || !prompt.trim()) {
