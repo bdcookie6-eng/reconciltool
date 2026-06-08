@@ -317,6 +317,32 @@
     .tb-status.ok  { background: var(--green-bg); color: var(--green); border: 1px solid rgba(34,197,94,.2); }
     .tb-status.err { background: var(--red-bg);   color: var(--red);   border: 1px solid rgba(239,68,68,.2); }
 
+    /* ── Account changes summary ── */
+    .changes-summary {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
+      margin-top: 16px;
+    }
+    @media (max-width: 700px) { .changes-summary { grid-template-columns: 1fr; } }
+    .changes-col {
+      background: var(--surface); border-radius: 8px; border: 1px solid var(--border);
+      overflow: hidden;
+    }
+    .changes-col-head {
+      display: flex; align-items: center; gap: 7px;
+      padding: 10px 14px; font-size: .76rem; font-weight: 700;
+      letter-spacing: .8px; text-transform: uppercase; font-family: var(--mono);
+    }
+    .changes-col.added-col   .changes-col-head { background: var(--green-bg); color: var(--green); }
+    .changes-col.removed-col .changes-col-head { background: var(--red-bg);   color: var(--red); }
+    .changes-list { list-style: none; }
+    .changes-list li {
+      padding: 7px 14px; font-size: .82rem; color: var(--text);
+      border-top: 1px solid var(--border);
+      display: flex; align-items: baseline; gap: 8px;
+    }
+    .changes-list li .ch-num { font-family: var(--mono); font-size: .72rem; color: var(--text3); min-width: 44px; }
+    .changes-empty { padding: 14px; font-size: .8rem; color: var(--text3); font-style: italic; }
+
     @keyframes spin { to { transform: rotate(360deg); } }
 
     @media (max-width: 1200px) {
@@ -795,6 +821,42 @@ Matched: ${matchedCount}`, 512);
       </div>`;
   }
 
+  function changesListHTML(entries, emptyMsg) {
+    if (!entries.length) return `<div class="changes-empty">${emptyMsg}</div>`;
+    return `<ul class="changes-list">${entries.map(e => `
+      <li>
+        ${e.num ? `<span class="ch-num">${escHtml(e.num)}</span>` : ''}
+        <span>${escHtml(e.name)}${e.category ? ` <span style="color:var(--text3);">— ${escHtml(e.category)}</span>` : ''}</span>
+      </li>`).join('')}</ul>`;
+  }
+
+  function changesSummaryHTML(categories) {
+    const added = [], removed = [];
+    for (const cat of categories) {
+      for (const row of cat.rows) {
+        if (row.status === 'added' && row.curr) added.push({ num: row.curr.num, name: row.curr.name, category: cat.name });
+        if (row.status === 'removed' && row.prev) removed.push({ num: row.prev.num, name: row.prev.name, category: cat.name });
+      }
+    }
+    return `
+      <div class="changes-summary">
+        <div class="changes-col added-col">
+          <div class="changes-col-head">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Added in Current Year (${added.length})
+          </div>
+          ${changesListHTML(added, 'No new accounts in the current year.')}
+        </div>
+        <div class="changes-col removed-col">
+          <div class="changes-col-head">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Removed from Prior Year (${removed.length})
+          </div>
+          ${changesListHTML(removed, 'No accounts were removed from the prior year.')}
+        </div>
+      </div>`;
+  }
+
   function renderResults({ categories, added, removed, matchedCount, prevFile, currFile, prevTB, currTB, aiInsight }) {
     const el = document.getElementById('results');
     el.style.display = 'block';
@@ -903,7 +965,9 @@ Matched: ${matchedCount}`, 512);
           <div class="tb-div"></div>
           ${tbSideHTML(currTB)}
         </div>
-      </div>`;
+      </div>
+
+      ${changesSummaryHTML(categories)}`;
 
     el.scrollIntoView({ behavior:'smooth', block:'start' });
   }
