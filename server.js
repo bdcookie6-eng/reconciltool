@@ -12,7 +12,7 @@ if (!ANTHROPIC_API_KEY) {
 }
 
 const app = express();
-app.use(express.json({ limit: '2mb' }));
+app.use(express.json({ limit: '10mb' }));
 app.use(express.static(path.join(__dirname), { index: 'index.html' }));
 
 // Server-side proxy: the API key lives only here and is never sent to the browser.

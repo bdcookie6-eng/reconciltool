@@ -566,8 +566,12 @@
 
       if (cols.dr >= 0 || cols.cr >= 0) {
         // File has explicit debit/credit columns
-        const rawDr = parseNum(r[cols.dr]);
-        const rawCr = parseNum(r[cols.cr]);
+        let rawDr = parseNum(r[cols.dr]);
+        let rawCr = parseNum(r[cols.cr]);
+        // Normalize sign anomalies — a negative value in one column is a contra
+        // entry that belongs in the other column (debits/credits are magnitudes).
+        if (rawDr < 0) { rawCr += -rawDr; rawDr = 0; }
+        if (rawCr < 0) { rawDr += -rawCr; rawCr = 0; }
         dr = rawDr !== 0 ? rawDr : '';
         cr = rawCr !== 0 ? rawCr : '';
       } else if (cols.bal >= 0) {
@@ -589,8 +593,15 @@
 
   function parseNum(v) {
     if (v === '' || v === null || v === undefined) return 0;
-    const n = parseFloat(String(v).replace(/[^0-9.\-]/g,''));
-    return isNaN(n) ? 0 : n;
+    // Keep digits, decimal points, sign, and scientific-notation markers (e/E/+)
+    // so values like "1.5e10" or "(1,234.56)" parse correctly rather than being mangled.
+    let s = String(v).trim();
+    const isParenNegative = /^\(.*\)$/.test(s);
+    s = s.replace(/[^0-9.\-eE+]/g, '');
+    let n = parseFloat(s);
+    if (isNaN(n)) return 0;
+    if (isParenNegative) n = -Math.abs(n);
+    return n;
   }
 
   function fmtAmt(v) {
@@ -652,7 +663,9 @@
         const data = await res.json().catch(()=>({}));
 
         if (!res.ok) {
-          const msg = data.error || `Server error (${res.status})`;
+          const msg = res.status === 413
+            ? 'These files are too large to reconcile in a single AI run. Try splitting them into smaller batches (e.g. by account range or category) and running each separately.'
+            : (data.error || `Server error (${res.status})`);
           // Retry on rate limit / transient server errors only
           if ((res.status === 429 || res.status >= 500) && attempt < retries) {
             lastErr = new Error(msg);
