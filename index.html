@@ -890,6 +890,14 @@ Your previous response could not be parsed as JSON. Respond again with ONLY a si
       }
       batchEl.textContent = '';
 
+      // Shared normalisation and utility used by all post-processing passes.
+      const norm = normName;
+      const fallbackCat = () => {
+        let cat = mergedCategories.find(c => c.name === 'Other');
+        if (!cat) { cat = { name: 'Other', rows: [] }; mergedCategories.push(cat); }
+        return cat;
+      };
+
       // ── POST-PROCESSING PASS 0: enforce pre-matched pairs ───────────────────
       // The AI sometimes ignores Section A and re-emits pre-matched accounts as
       // removed + added anyway. Correct this before any other pass:
@@ -932,13 +940,6 @@ Your previous response could not be parsed as JSON. Respond again with ONLY a si
       // similarly-named accounts confuse it. Deterministically fix that here:
       // any account that appears as both removed and added with an identical
       // normalised name is merged into a single "matched" row.
-      const norm = normName; // reuse the same normalisation defined above
-
-      const fallbackCat = () => {
-        let cat = mergedCategories.find(c => c.name === 'Other');
-        if (!cat) { cat = { name: 'Other', rows: [] }; mergedCategories.push(cat); }
-        return cat;
-      };
 
       // Index every removed row by normalised name → { catIdx, rowIdx, row }
       const removedByName = new Map();
