@@ -395,6 +395,8 @@
 
     @media print {
       header, .upload-row, .actions, .ai-progress, .error-banner, .export-group, .btn-reset { display: none !important; }
+      .num-inherited { display: none !important; }
+      .legend-item:has(.num-inherited) { display: none !important; }
       body { background: #fff; }
       .results { padding: 0; }
       .ledger-wrap, .changes-summary, .stats-summary { break-inside: avoid; }
@@ -1210,7 +1212,7 @@ Matched: ${matchedCount}`, 512);
         rows.push([
           cat.name, row.status,
           p ? (p.num||'') : '', p ? (p.name||'') : '', p ? (p.dr||0) : '', p ? (p.cr||0) : '',
-          c ? (c.num||'') + (c && c.numInherited ? ' *' : '') : '', c ? (c.name||'') : '', c ? (c.dr||0) : '', c ? (c.cr||0) : ''
+          c ? (c.num||'') : '', c ? (c.name||'') : '', c ? (c.dr||0) : '', c ? (c.cr||0) : ''
         ]);
       }
     }
