@@ -987,19 +987,19 @@ Matched: ${matchedCount}`, 512);
     }
     return `
       <div class="changes-summary">
-        <div class="changes-col added-col">
-          <div class="changes-col-head">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            Added in Current Year (${added.length})
-          </div>
-          ${changesListHTML(added, 'No new accounts in the current year.')}
-        </div>
         <div class="changes-col removed-col">
           <div class="changes-col-head">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/></svg>
             Removed from Prior Year (${removed.length})
           </div>
           ${changesListHTML(removed, 'No accounts were removed from the prior year.')}
+        </div>
+        <div class="changes-col added-col">
+          <div class="changes-col-head">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Added in Current Year (${added.length})
+          </div>
+          ${changesListHTML(added, 'No new accounts in the current year.')}
         </div>
       </div>`;
   }
