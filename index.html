@@ -755,70 +755,106 @@
 
       setStep('analyze');
 
-      const fmtList = rows => rows.map(r =>
+      const fmtRow = r =>
         [r.num, r.name,
          r.dr !== '' ? `DR:${r.dr}` : '',
          r.cr !== '' ? `CR:${r.cr}` : '']
-        .filter(Boolean).join(' | ')
-      ).join('\n');
+        .filter(Boolean).join(' | ');
 
-      const buildPrompt = (prevList, currList, isBatch) => `You are a financial data analyst performing a year-over-year account reconciliation${isBatch ? ' (this is one slice of a larger ledger — only categorize and match the accounts listed below)' : ''}.
+      // ── PHASE 1: code-based exact matching (deterministic) ───────────────────
+      // Matching is too important to leave to an LLM. Exact-name matches are
+      // identified here in code — the AI's only remaining job is category assignment.
+      const normName = s => String(s||'').trim().toLowerCase()
+        .replace(/[-–—]/g,' ').replace(/[^a-z0-9 ]/g,' ').replace(/\s+/g,' ').trim();
 
-Each account entry: [Account# | ] Account Name [ | DR:debit] [ | CR:credit]
+      const currByName = new Map();
+      for (const r of currRows) {
+        const key = normName(r.name);
+        if (!currByName.has(key)) currByName.set(key, []);
+        currByName.get(key).push(r);
+      }
 
-Tasks:
-1. Clean account names (fix caps/spacing, expand abbreviations: A/R→Accounts Receivable, PP&E→Property Plant & Equipment).
-2. Group all accounts from BOTH years into: Assets, Liabilities, Equity, Revenue, Cost of Revenue, Operating Expenses, Other Income/Expense.
-3. Sort within each category by account number if present, else standard financial order.
-4. Matching rules — apply in this order:
-   a. EXACT match (same name after cleaning, case-insensitive) is ALWAYS a match — never mark an exact-name account as both "removed" and "added". This rule overrides everything else, even if the category, account number, or balance changed between years.
-   b. Only use fuzzy/semantic matching (e.g. abbreviation expansion, minor rewording) for accounts that have NO exact-name counterpart in the other year.
-   c. Be careful not to confuse accounts that merely sound alike but are clearly different concepts (e.g. "Interest Expense" vs "Internet Expense", "Notes Payable" vs "Notes Receivable", "Accounts Payable" vs "Accounts Receivable", "Accumulated Depreciation - Equipment" vs "...- Vehicles" vs "...- Buildings"). When in doubt between two similarly-spelled candidates, prefer the exact-name match (rule a) and leave the others as their own added/removed entries.
-   d. Before finalizing, double-check: no account name should appear in both the "added" and "removed" lists across all categories — if it does, you have missed a match and must correct it.
-5. Layout: matched accounts on same row. Removed (prev only) at bottom of category. Added (curr only) at bottom of category.
+      const preMatched   = []; // { prev, curr }
+      const unmatchedPrev = [];
+      const unmatchedCurr = new Map(currRows.map(r => [r, true])); // track which curr rows are consumed
 
-Output format — follow EXACTLY, this is machine-parsed:
+      for (const p of prevRows) {
+        const key = normName(p.name);
+        const candidates = currByName.get(key);
+        if (candidates && candidates.length) {
+          const c = candidates.shift(); // consume one curr row
+          if (!candidates.length) currByName.delete(key);
+          preMatched.push({ prev: p, curr: c });
+          unmatchedCurr.delete(c);
+        } else {
+          unmatchedPrev.push(p);
+        }
+      }
+      const unmatchedCurrArr = [...unmatchedCurr.keys()];
+
+      // ── PHASE 2: AI assigns categories (not matching) ────────────────────────
+      // The AI sees three labelled groups and must ONLY assign a category to each.
+      // Statuses are already decided: preMatched=matched, unmatchedPrev=removed,
+      // unmatchedCurrArr=added (unless AI finds a fuzzy match among unmatched only).
+      const buildPrompt = (matchedSlice, prevSlice, currSlice, isBatch) => {
+        const matchedLines = matchedSlice.map(({prev,curr}) =>
+          `  ${fmtRow(prev)}  ↔  ${fmtRow(curr)}`).join('\n') || '  (none)';
+        const prevLines = prevSlice.map(r => '  ' + fmtRow(r)).join('\n') || '  (none)';
+        const currLines = currSlice.map(r => '  ' + fmtRow(r)).join('\n') || '  (none)';
+        return `You are a financial data analyst. Your ONLY job is to assign each account to a category and clean its name.${isBatch ? ' (this is one slice of a larger ledger)' : ''}
+
+CATEGORIES (use exactly these names): Assets, Liabilities, Equity, Revenue, Cost of Revenue, Operating Expenses, Other Income/Expense
+
+SECTION A — ALREADY MATCHED pairs (one from each year, same account). Status is "matched". Assign category and clean names:
+${matchedLines}
+
+SECTION B — PRIOR YEAR only (status "removed" unless a clear fuzzy match exists in Section C — e.g. same account renamed):
+${prevLines}
+
+SECTION C — CURRENT YEAR only (status "added" unless a clear fuzzy match exists in Section B — e.g. same account renamed):
+${currLines}
+
+Output format — follow EXACTLY, machine-parsed:
 {"categories":[{"name":"Category","rows":[{"status":"matched|added|removed","prev":{"num":"1000","name":"Cash","dr":50000,"cr":0},"curr":{"num":"1000","name":"Cash","dr":72000,"cr":0}}]}]}
 
-- Respond with ONLY the JSON object above — no markdown fences, no preamble, no explanation, no trailing text. The response must start with { and end with }.
-- The JSON must be strictly valid: escape any double-quote or backslash characters that appear inside name strings (e.g. write Owner\"s Account, not Owner"s Account).
+Rules:
+- Respond with ONLY the JSON — no markdown fences, no preamble, no trailing text. Start with { end with }.
+- Strictly valid JSON: escape double-quotes and backslashes inside strings.
 - prev is null when status="added", curr is null when status="removed"
-- dr and cr are numbers (0 if empty)
-- Include every account listed below
+- dr and cr are numbers (0 if empty/blank)
+- Include EVERY account from all three sections above — nothing may be omitted
+- Do NOT match a Section A account to a Section B or C account — Section A pairs are final`;
+      };
 
-PREVIOUS YEAR:
-${fmtList(prevList)}
+      const BATCH_SIZE = 80; // accounts per AI call (matched pairs count as 1)
+      const sortByName = arr => [...arr].sort((a,b) =>
+        normName(a.name||'').localeCompare(normName(b.name||'')));
 
-CURRENT YEAR:
-${fmtList(currList)}`;
+      const preMatchedSorted  = sortByName(preMatched.map(m=>({...m, _key: normName(m.prev.name)}))).map(m=>({prev:m.prev,curr:m.curr}));
+      const unmatchedPrevSorted = sortByName(unmatchedPrev);
+      const unmatchedCurrSorted = sortByName(unmatchedCurrArr);
 
-      // Large ledgers produce responses that get truncated or take too long in a single
-      // AI call. Split into alphabetically-aligned slices (by cleaned account name, so
-      // matching pairs land in the same slice on both sides) and categorize each
-      // slice separately, then merge the results back into one set of categories.
-      const BATCH_SIZE = 100; // max accounts per side, per AI call
-      const sortByName = rows => [...rows].sort((a, b) =>
-        String(a.name||'').toLowerCase().localeCompare(String(b.name||'').toLowerCase()));
-      const prevSorted = sortByName(prevRows);
-      const currSorted = sortByName(currRows);
-      const numBatches = Math.max(1, Math.ceil(Math.max(prevSorted.length, currSorted.length) / BATCH_SIZE));
-      const prevChunkSize = Math.ceil(prevSorted.length / numBatches) || prevSorted.length || 1;
-      const currChunkSize = Math.ceil(currSorted.length / numBatches) || currSorted.length || 1;
+      const totalSlots = preMatchedSorted.length + unmatchedPrevSorted.length + unmatchedCurrSorted.length;
+      const numBatches = Math.max(1, Math.ceil(totalSlots / BATCH_SIZE));
+      const mChunk = Math.ceil(preMatchedSorted.length  / numBatches) || 1;
+      const pChunk = Math.ceil(unmatchedPrevSorted.length / numBatches) || 0;
+      const cChunk = Math.ceil(unmatchedCurrSorted.length / numBatches) || 0;
 
       const batchEl = document.getElementById('prog-batch');
       const categoryIndex = new Map();
       const mergedCategories = [];
 
       for (let b = 0; b < numBatches; b++) {
-        const prevSlice = prevSorted.slice(b * prevChunkSize, (b + 1) * prevChunkSize);
-        const currSlice = currSorted.slice(b * currChunkSize, (b + 1) * currChunkSize);
-        if (!prevSlice.length && !currSlice.length) continue;
+        const mSlice = preMatchedSorted.slice(b * mChunk, (b + 1) * mChunk);
+        const pSlice = unmatchedPrevSorted.slice(b * pChunk, (b + 1) * pChunk);
+        const cSlice = unmatchedCurrSorted.slice(b * cChunk, (b + 1) * cChunk);
+        if (!mSlice.length && !pSlice.length && !cSlice.length) continue;
 
         if (numBatches > 1) {
-          batchEl.textContent = `Processing batch ${b + 1} of ${numBatches} (${prevSlice.length + currSlice.length} accounts)…`;
+          batchEl.textContent = `Processing batch ${b + 1} of ${numBatches}…`;
         }
 
-        const basePrompt = buildPrompt(prevSlice, currSlice, numBatches > 1);
+        const basePrompt = buildPrompt(mSlice, pSlice, cSlice, numBatches > 1);
         let parsed, raw, parseErr;
         for (let pass = 0; pass < 2; pass++) {
           const prompt = pass === 0 ? basePrompt : `${basePrompt}
@@ -860,10 +896,7 @@ Your previous response could not be parsed as JSON. Respond again with ONLY a si
       // similarly-named accounts confuse it. Deterministically fix that here:
       // any account that appears as both removed and added with an identical
       // normalised name is merged into a single "matched" row.
-      // Strip punctuation so AI-cleaned names ("Paid in Capital") match originals
-      // ("Paid-in Capital") and hyphens/dashes in compound names don't cause misses.
-      const norm = s => String(s||'').trim().toLowerCase()
-        .replace(/[-–—]/g,' ').replace(/[^a-z0-9 ]/g,' ').replace(/\s+/g,' ').trim();
+      const norm = normName; // reuse the same normalisation defined above
 
       // Index every removed row by normalised name → { catIdx, rowIdx, row }
       const removedByName = new Map();
