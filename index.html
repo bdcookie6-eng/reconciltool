@@ -771,9 +771,11 @@ Tasks:
 4. Match accounts that appear in both years (fuzzy name match OK — use the cleaner name).
 5. Layout: matched accounts on same row. Removed (prev only) at bottom of category. Added (curr only) at bottom of category.
 
-Return ONLY raw JSON, no markdown:
+Output format — follow EXACTLY, this is machine-parsed:
 {"categories":[{"name":"Category","rows":[{"status":"matched|added|removed","prev":{"num":"1000","name":"Cash","dr":50000,"cr":0},"curr":{"num":"1000","name":"Cash","dr":72000,"cr":0}}]}]}
 
+- Respond with ONLY the JSON object above — no markdown fences, no preamble, no explanation, no trailing text. The response must start with { and end with }.
+- The JSON must be strictly valid: escape any double-quote or backslash characters that appear inside name strings (e.g. write Owner\"s Account, not Owner"s Account).
 - prev is null when status="added", curr is null when status="removed"
 - dr and cr are numbers (0 if empty)
 - Include every account listed below
@@ -810,11 +812,22 @@ ${fmtList(currList)}`;
           batchEl.textContent = `Processing batch ${b + 1} of ${numBatches} (${prevSlice.length + currSlice.length} accounts)…`;
         }
 
-        const raw = await callClaude(buildPrompt(prevSlice, currSlice, numBatches > 1), 32000, { timeoutMs: 240000 });
-        let parsed;
-        try {
-          parsed = parseAIJson(raw);
-        } catch(e) {
+        const basePrompt = buildPrompt(prevSlice, currSlice, numBatches > 1);
+        let parsed, raw, parseErr;
+        for (let pass = 0; pass < 2; pass++) {
+          const prompt = pass === 0 ? basePrompt : `${basePrompt}
+
+Your previous response could not be parsed as JSON. Respond again with ONLY a single valid JSON object — no markdown, no commentary, no text before or after it, and make sure every string is properly escaped.`;
+          raw = await callClaude(prompt, 32000, { timeoutMs: 240000 });
+          try {
+            parsed = parseAIJson(raw);
+            parseErr = null;
+            break;
+          } catch (e) {
+            parseErr = e;
+          }
+        }
+        if (parseErr) {
           console.error('AI categorization — raw response that failed to parse:', raw);
           const trimmed = raw.trim();
           const looksTruncated = !trimmed.endsWith('}') && !trimmed.endsWith('```');
@@ -895,6 +908,16 @@ Matched: ${matchedCount}`, 512);
     for (const candidate of attempts) {
       try { return JSON.parse(candidate); } catch (_) { /* try next */ }
     }
+
+    // 4) Last resort: strip stray control characters and trailing commas, which
+    // LLMs occasionally emit inside otherwise-valid-looking JSON.
+    for (const candidate of attempts) {
+      const cleaned = candidate
+        .replace(/[ --]/g, '')
+        .replace(/,(\s*[}\]])/g, '$1');
+      try { return JSON.parse(cleaned); } catch (_) { /* try next */ }
+    }
+
     throw new Error('Could not parse JSON from AI response');
   }
 
