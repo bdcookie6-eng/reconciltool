@@ -76,24 +76,6 @@
       font-family: var(--mono);
     }
 
-    /* ── Key bar ── */
-    .key-bar-sst {
-      background: var(--teal-dim);
-      border-bottom: 1px solid rgba(10,61,50,.15);
-      padding: 10px 40px;
-      display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
-    }
-    .key-bar-sst span { font-size: .82rem; font-weight: 500; color: var(--teal); }
-    .key-bar-sst input {
-      flex: 1; min-width: 260px; max-width: 400px;
-      padding: 7px 12px; border-radius: 6px;
-      border: 1px solid var(--border2);
-      background: var(--surface); color: var(--text);
-      font-size: .84rem; font-family: var(--mono);
-    }
-    .key-bar-sst input:focus { outline: none; border-color: var(--teal-mid); box-shadow: 0 0 0 3px var(--teal-bg); }
-    .key-bar-sst button { background: none; border: none; cursor: pointer; color: var(--text3); font-size: .8rem; padding: 0 4px; }
-
     /* ── Layout ── */
     .upload-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; padding: 28px 40px 0; }
 
@@ -369,17 +351,6 @@
   <span class="ai-badge">AI</span>
 </header>
 
-<div id="key-bar" class="key-bar-sst" style="display:none;">
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0a3d32" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-  <span>Paste your Anthropic API key to use AI features. It's sent directly to Anthropic from your browser, kept only in this page's memory, and never saved or transmitted anywhere else — it's cleared when you reset, close, or reload the page.</span>
-  <div style="position:relative;flex:1;min-width:260px;max-width:420px;">
-    <input id="api-key-input" type="password" placeholder="sk-ant-..." autocomplete="off" spellcheck="false"
-      style="width:100%;padding:7px 60px 7px 10px;border:1px solid #b0c4bc;border-radius:6px;font-size:.85rem;font-family:monospace;background:#fff;" />
-    <button onclick="toggleKey()" title="Show/hide key" style="position:absolute;right:30px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#7a9e94;font-size:.8rem;">👁</button>
-    <button onclick="forgetKey()" title="Clear key from memory" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#7a9e94;font-size:.8rem;">✕</button>
-  </div>
-</div>
-
 <div id="error-container"></div>
 
 <div class="upload-row">
@@ -435,15 +406,6 @@
     curr: { rows: null, headers: [], cols: null, fileName: '' }
   };
 
-  const INJECTED_KEY = '__ANTHROPIC_API_KEY__';
-  // If the placeholder wasn't replaced at deploy time, fall back to what the user types
-  function getApiKey() {
-    const manual = document.getElementById('api-key-input')?.value.trim();
-    if (manual) return manual;
-    if (INJECTED_KEY && !INJECTED_KEY.includes('ANTHROPIC_API_KEY')) return INJECTED_KEY;
-    return '';
-  }
-
   /* ── Column auto-detection ──────────────────────────────────────── */
 
   function detectCols(headers) {
@@ -473,31 +435,6 @@
   }
 
   /* ── File handling ─────────────────────────────────────────────── */
-
-  // Show key bar only if the server didn't inject a real key
-  (function() {
-    const bar = document.getElementById('key-bar');
-    if (INJECTED_KEY.includes('ANTHROPIC_API_KEY')) {
-      bar.style.display = 'flex';
-    } else {
-      bar.style.display = 'none';
-    }
-  })();
-
-  function toggleKey() {
-    const inp = document.getElementById('api-key-input');
-    inp.type = inp.type === 'password' ? 'text' : 'password';
-  }
-
-  // Wipe the key from the DOM/memory — never persisted to storage, cookies, or logs.
-  function forgetKey() {
-    const inp = document.getElementById('api-key-input');
-    if (inp) { inp.value = ''; inp.type = 'password'; }
-  }
-
-  // Defense-in-depth: clear the key whenever the page is hidden, navigated away from, or unloaded.
-  window.addEventListener('pagehide', forgetKey);
-  window.addEventListener('beforeunload', forgetKey);
 
   function showError(msg) {
     document.getElementById('error-container').innerHTML = `<div class="error-banner">${msg}</div>`;
@@ -670,31 +607,26 @@
     }).join('');
   }
 
-  async function callClaude(prompt, maxTokens=8192, { timeoutMs=60000, retries=1 } = {}) {
-    const apiKey = getApiKey();
-    if (!apiKey) throw new Error('No API key found. Paste your Anthropic key in the field above.');
-
+  // Calls our own server-side proxy at /api/claude — the Anthropic API key lives
+  // only on the server and is never exposed to the browser.
+  async function callClaude(prompt, maxTokens=8192, { timeoutMs=90000, retries=1 } = {}) {
     let lastErr;
     for (let attempt = 0; attempt <= retries; attempt++) {
       const controller = new AbortController();
       const timer = setTimeout(() => controller.abort(), timeoutMs);
       try {
-        const res = await fetch('https://api.anthropic.com/v1/messages', {
+        const res = await fetch('/api/claude', {
           method:'POST',
           signal: controller.signal,
-          headers:{
-            'x-api-key': apiKey,
-            'anthropic-version':'2023-06-01',
-            'anthropic-dangerous-direct-browser-access':'true',
-            'content-type':'application/json'
-          },
-          body: JSON.stringify({ model:'claude-sonnet-4-6', max_tokens:maxTokens, messages:[{role:'user',content:prompt}] })
+          headers: { 'content-type':'application/json' },
+          body: JSON.stringify({ prompt, maxTokens })
         });
         clearTimeout(timer);
 
+        const data = await res.json().catch(()=>({}));
+
         if (!res.ok) {
-          const e = await res.json().catch(()=>({}));
-          const msg = e.error?.message || `API error ${res.status}`;
+          const msg = data.error || `Server error (${res.status})`;
           // Retry on rate limit / transient server errors only
           if ((res.status === 429 || res.status >= 500) && attempt < retries) {
             lastErr = new Error(msg);
@@ -704,10 +636,8 @@
           throw new Error(msg);
         }
 
-        const data = await res.json();
-        const text = data.content?.[0]?.text;
-        if (!text) throw new Error('AI returned an empty response.');
-        return text;
+        if (!data.text) throw new Error('AI returned an empty response.');
+        return data.text;
 
       } catch (err) {
         clearTimeout(timer);
