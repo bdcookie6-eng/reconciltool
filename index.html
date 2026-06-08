@@ -785,7 +785,7 @@ ${fmtList(prevRows)}
 CURRENT YEAR:
 ${fmtList(currRows)}`;
 
-      const raw = await callClaude(prompt, 16000);
+      const raw = await callClaude(prompt, 64000, { timeoutMs: 360000 });
       let parsed;
       try {
         parsed = parseAIJson(raw);

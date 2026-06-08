@@ -5,7 +5,7 @@ const path = require('path');
 const PORT = process.env.PORT || 80;
 const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
 const ANTHROPIC_MODEL = 'claude-sonnet-4-6';
-const MAX_TOKENS_CAP = 16000;
+const MAX_TOKENS_CAP = 64000;
 
 if (!ANTHROPIC_API_KEY) {
   console.error('FATAL: ANTHROPIC_API_KEY environment variable is not set.');
@@ -35,7 +35,7 @@ app.post('/api/claude', claudeLimiter, async (req, res) => {
   const tokens = Number.isInteger(maxTokens) ? Math.min(maxTokens, MAX_TOKENS_CAP) : 1024;
 
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 240000);
+  const timer = setTimeout(() => controller.abort(), 360000);
 
   try {
     const upstream = await fetch('https://api.anthropic.com/v1/messages', {
