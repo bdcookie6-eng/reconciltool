@@ -860,7 +860,10 @@ Your previous response could not be parsed as JSON. Respond again with ONLY a si
       // similarly-named accounts confuse it. Deterministically fix that here:
       // any account that appears as both removed and added with an identical
       // normalised name is merged into a single "matched" row.
-      const norm = s => String(s||'').trim().toLowerCase().replace(/\s+/g,' ');
+      // Strip punctuation so AI-cleaned names ("Paid in Capital") match originals
+      // ("Paid-in Capital") and hyphens/dashes in compound names don't cause misses.
+      const norm = s => String(s||'').trim().toLowerCase()
+        .replace(/[-–—]/g,' ').replace(/[^a-z0-9 ]/g,' ').replace(/\s+/g,' ').trim();
 
       // Index every removed row by normalised name → { catIdx, rowIdx, row }
       const removedByName = new Map();
@@ -903,31 +906,34 @@ Your previous response could not be parsed as JSON. Respond again with ONLY a si
       // Ensure every account from the original input files appears in the output.
       // If the AI silently dropped an account, inject it back as added/removed
       // so nothing is ever lost.
+      // Match by account number first (exact), then fall back to normalised name.
+      const seenPrevNums  = new Set();
       const seenPrevNames = new Set();
+      const seenCurrNums  = new Set();
       const seenCurrNames = new Set();
       for (const cat of mergedCategories) {
         for (const row of cat.rows) {
-          if (row.prev) seenPrevNames.add(norm(row.prev.name));
-          if (row.curr) seenCurrNames.add(norm(row.curr.name));
+          if (row.prev) { if (row.prev.num) seenPrevNums.add(String(row.prev.num).trim()); seenPrevNames.add(norm(row.prev.name)); }
+          if (row.curr) { if (row.curr.num) seenCurrNums.add(String(row.curr.num).trim()); seenCurrNames.add(norm(row.curr.name)); }
         }
       }
 
-      const fallbackCat = name => {
-        // Try to find an existing category to append to, otherwise create one.
+      const isSeen = (r, numSet, nameSet) =>
+        (r.num && numSet.has(String(r.num).trim())) || nameSet.has(norm(r.name));
+
+      const fallbackCat = () => {
         let cat = mergedCategories.find(c => c.name === 'Other');
         if (!cat) { cat = { name: 'Other', rows: [] }; mergedCategories.push(cat); }
         return cat;
       };
 
       for (const r of prevRows) {
-        if (!seenPrevNames.has(norm(r.name))) {
-          fallbackCat(r.name).rows.push({ status: 'removed', prev: r, curr: null });
-        }
+        if (!isSeen(r, seenPrevNums, seenPrevNames))
+          fallbackCat().rows.push({ status: 'removed', prev: r, curr: null });
       }
       for (const r of currRows) {
-        if (!seenCurrNames.has(norm(r.name))) {
-          fallbackCat(r.name).rows.push({ status: 'added', prev: null, curr: r });
-        }
+        if (!isSeen(r, seenCurrNums, seenCurrNames))
+          fallbackCat().rows.push({ status: 'added', prev: null, curr: r });
       }
 
       // Remove any categories that ended up empty
