@@ -1,8 +1,11 @@
-FROM nginx:alpine
+FROM node:20-alpine
 
-COPY index.html /usr/share/nginx/html/index.html
-COPY entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
+WORKDIR /app
+
+COPY package.json package-lock.json* ./
+RUN npm install --omit=dev
+
+COPY index.html server.js ./
 
 EXPOSE 80
-ENTRYPOINT ["/entrypoint.sh"]
+CMD ["node", "server.js"]

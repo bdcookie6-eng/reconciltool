@@ -76,24 +76,6 @@
       font-family: var(--mono);
     }
 
-    /* ── Key bar ── */
-    .key-bar-sst {
-      background: var(--teal-dim);
-      border-bottom: 1px solid rgba(10,61,50,.15);
-      padding: 10px 40px;
-      display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
-    }
-    .key-bar-sst span { font-size: .82rem; font-weight: 500; color: var(--teal); }
-    .key-bar-sst input {
-      flex: 1; min-width: 260px; max-width: 400px;
-      padding: 7px 12px; border-radius: 6px;
-      border: 1px solid var(--border2);
-      background: var(--surface); color: var(--text);
-      font-size: .84rem; font-family: var(--mono);
-    }
-    .key-bar-sst input:focus { outline: none; border-color: var(--teal-mid); box-shadow: 0 0 0 3px var(--teal-bg); }
-    .key-bar-sst button { background: none; border: none; cursor: pointer; color: var(--text3); font-size: .8rem; padding: 0 4px; }
-
     /* ── Layout ── */
     .upload-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; padding: 28px 40px 0; }
 
@@ -160,17 +142,6 @@
     .btn-ai:hover:not(:disabled) { opacity: .88; }
     .btn-ai:active:not(:disabled) { transform: scale(.98); }
     .btn-ai:disabled { opacity: .3; cursor: not-allowed; }
-
-    .btn-reconcile {
-      background: var(--surface2); color: var(--text);
-      border: 1px solid var(--border2); padding: 10px 28px; border-radius: 6px;
-      font-size: .88rem; font-weight: 500; cursor: pointer;
-      display: flex; align-items: center; gap: 7px;
-      transition: border-color .15s, background .15s;
-      font-family: 'Inter', sans-serif;
-    }
-    .btn-reconcile:hover:not(:disabled) { border-color: var(--border2); background: var(--surface3); }
-    .btn-reconcile:disabled { opacity: .3; cursor: not-allowed; }
 
     .btn-reset {
       background: transparent; color: var(--text3);
@@ -380,16 +351,6 @@
   <span class="ai-badge">AI</span>
 </header>
 
-<div id="key-bar" class="key-bar-sst" style="display:none;">
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0a3d32" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-  <span>API key not detected from server — paste it here to use AI features:</span>
-  <div style="position:relative;flex:1;min-width:260px;max-width:420px;">
-    <input id="api-key-input" type="password" placeholder="sk-ant-..." autocomplete="off"
-      style="width:100%;padding:7px 34px 7px 10px;border:1px solid #b0c4bc;border-radius:6px;font-size:.85rem;font-family:monospace;background:#fff;" />
-    <button onclick="toggleKey()" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#7a9e94;font-size:.8rem;">👁</button>
-  </div>
-</div>
-
 <div id="error-container"></div>
 
 <div class="upload-row">
@@ -429,13 +390,6 @@
     </svg>
     Run with AI
   </button>
-  <button class="btn-reconcile" id="btn-reconcile" onclick="runBasic()" disabled>
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-      <polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/>
-      <polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/>
-    </svg>
-    Run Basic
-  </button>
   <button class="btn-reset" onclick="resetAll()">Reset</button>
 </div>
 
@@ -451,15 +405,6 @@
     prev: { rows: null, headers: [], cols: null, fileName: '' },
     curr: { rows: null, headers: [], cols: null, fileName: '' }
   };
-
-  const INJECTED_KEY = '__ANTHROPIC_API_KEY__';
-  // If the placeholder wasn't replaced at deploy time, fall back to what the user types
-  function getApiKey() {
-    const manual = document.getElementById('api-key-input')?.value.trim();
-    if (manual) return manual;
-    if (INJECTED_KEY && !INJECTED_KEY.includes('ANTHROPIC_API_KEY')) return INJECTED_KEY;
-    return '';
-  }
 
   /* ── Column auto-detection ──────────────────────────────────────── */
 
@@ -490,21 +435,6 @@
   }
 
   /* ── File handling ─────────────────────────────────────────────── */
-
-  // Show key bar only if the server didn't inject a real key
-  (function() {
-    const bar = document.getElementById('key-bar');
-    if (INJECTED_KEY.includes('ANTHROPIC_API_KEY')) {
-      bar.style.display = 'flex';
-    } else {
-      bar.style.display = 'none';
-    }
-  })();
-
-  function toggleKey() {
-    const inp = document.getElementById('api-key-input');
-    inp.type = inp.type === 'password' ? 'text' : 'password';
-  }
 
   function showError(msg) {
     document.getElementById('error-container').innerHTML = `<div class="error-banner">${msg}</div>`;
@@ -589,7 +519,6 @@
 
   function checkReady() {
     const ok = state.prev.rows && state.curr.rows;
-    document.getElementById('btn-reconcile').disabled = !ok;
     document.getElementById('btn-ai').disabled = !ok;
   }
 
@@ -661,42 +590,6 @@
     return { totalDr, totalCr, diff, balanced };
   }
 
-  /* ── Basic run ─────────────────────────────────────────────────── */
-
-  function runBasic() {
-    const prevRows = extractRows('prev');
-    const currRows = extractRows('curr');
-
-    prevRows.sort((a,b) => (a.num && b.num)
-      ? a.num.localeCompare(b.num, undefined, {numeric:true})
-      : a.name.localeCompare(b.name));
-    currRows.sort((a,b) => (a.num && b.num)
-      ? a.num.localeCompare(b.num, undefined, {numeric:true})
-      : a.name.localeCompare(b.name));
-
-    const prevMap = new Map(prevRows.map(r => [r.name.toLowerCase(), r]));
-    const currMap = new Map(currRows.map(r => [r.name.toLowerCase(), r]));
-
-    const tableRows = [];
-    prevRows.forEach(p => {
-      const c = currMap.get(p.name.toLowerCase()) || null;
-      tableRows.push({ prev:p, curr:c, status: c ? 'matched' : 'removed' });
-    });
-    currRows.forEach(c => {
-      if (!prevMap.has(c.name.toLowerCase()))
-        tableRows.push({ prev:null, curr:c, status:'added' });
-    });
-
-    const categories = [{ name:'All Accounts', rows:tableRows }];
-    const added   = tableRows.filter(r=>r.status==='added').map(r=>r.curr.name);
-    const removed = tableRows.filter(r=>r.status==='removed').map(r=>r.prev.name);
-    renderResults({ categories, added, removed,
-      matchedCount: tableRows.filter(r=>r.status==='matched').length,
-      prevFile: state.prev.fileName, currFile: state.curr.fileName,
-      prevTB: trialBalance(prevRows), currTB: trialBalance(currRows),
-      aiInsight: null });
-  }
-
   /* ── AI run ─────────────────────────────────────────────────────── */
 
   const STEPS = [
@@ -714,21 +607,53 @@
     }).join('');
   }
 
-  async function callClaude(prompt, maxTokens=8192) {
-    const apiKey = getApiKey();
-    if (!apiKey) throw new Error('No API key found. Paste your Anthropic key in the field above.');
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
-      method:'POST',
-      headers:{
-        'x-api-key': apiKey,
-        'anthropic-version':'2023-06-01',
-        'anthropic-dangerous-direct-browser-access':'true',
-        'content-type':'application/json'
-      },
-      body: JSON.stringify({ model:'claude-sonnet-4-6', max_tokens:maxTokens, messages:[{role:'user',content:prompt}] })
-    });
-    if (!res.ok) { const e=await res.json().catch(()=>({})); throw new Error(e.error?.message||`API ${res.status}`); }
-    return (await res.json()).content[0].text;
+  // Calls our own server-side proxy at /api/claude — the Anthropic API key lives
+  // only on the server and is never exposed to the browser.
+  async function callClaude(prompt, maxTokens=8192, { timeoutMs=90000, retries=1 } = {}) {
+    let lastErr;
+    for (let attempt = 0; attempt <= retries; attempt++) {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), timeoutMs);
+      try {
+        const res = await fetch('/api/claude', {
+          method:'POST',
+          signal: controller.signal,
+          headers: { 'content-type':'application/json' },
+          body: JSON.stringify({ prompt, maxTokens })
+        });
+        clearTimeout(timer);
+
+        const data = await res.json().catch(()=>({}));
+
+        if (!res.ok) {
+          const msg = data.error || `Server error (${res.status})`;
+          // Retry on rate limit / transient server errors only
+          if ((res.status === 429 || res.status >= 500) && attempt < retries) {
+            lastErr = new Error(msg);
+            await sleep(1000 * (attempt + 1));
+            continue;
+          }
+          throw new Error(msg);
+        }
+
+        if (!data.text) throw new Error('AI returned an empty response.');
+        return data.text;
+
+      } catch (err) {
+        clearTimeout(timer);
+        if (err.name === 'AbortError') {
+          lastErr = new Error('Request timed out — the AI took too long to respond.');
+        } else {
+          lastErr = err;
+        }
+        if (attempt < retries && (err.name === 'AbortError' || err instanceof TypeError)) {
+          await sleep(1000 * (attempt + 1));
+          continue;
+        }
+        throw lastErr;
+      }
+    }
+    throw lastErr;
   }
 
   async function runWithAI() {
@@ -739,7 +664,6 @@
     progEl.style.display = 'block';
     document.getElementById('results').style.display = 'none';
     document.getElementById('btn-ai').disabled = true;
-    document.getElementById('btn-reconcile').disabled = true;
 
     try {
       setStep('extract');
@@ -778,12 +702,17 @@ ${fmtList(prevRows)}
 CURRENT YEAR:
 ${fmtList(currRows)}`;
 
-      const raw = await callClaude(prompt, 8192);
+      const raw = await callClaude(prompt, 16000);
       let parsed;
       try {
         const clean = raw.replace(/^```[a-z]*\n?/,'').replace(/\n?```$/,'').trim();
         parsed = JSON.parse(clean);
-      } catch(e) { throw new Error('AI returned unexpected format. Please try again.'); }
+      } catch(e) {
+        const looksTruncated = !raw.trim().endsWith('}') && !raw.trim().endsWith('```');
+        throw new Error(looksTruncated
+          ? 'The AI response was too large and got cut off. Try reconciling smaller files or fewer accounts at a time.'
+          : 'AI returned an unexpected format. Please try again.');
+      }
 
       const categories = parsed.categories || [];
       const added   = categories.flatMap(c=>c.rows.filter(r=>r.status==='added').map(r=>r.curr?.name).filter(Boolean));
@@ -793,11 +722,16 @@ ${fmtList(currRows)}`;
       setStep('insight');
       let insight = '';
       if (added.length > 0 || removed.length > 0) {
-        insight = await callClaude(
-          `Financial analyst: summarize in 2-3 professional sentences what these year-over-year account changes suggest about the business. No bullets.
+        try {
+          insight = await callClaude(
+            `Financial analyst: summarize in 2-3 professional sentences what these year-over-year account changes suggest about the business. No bullets.
 Added: ${added.slice(0,20).join(', ')}${added.length>20?'…':''}
 Removed: ${removed.slice(0,20).join(', ')}${removed.length>20?'…':''}
 Matched: ${matchedCount}`, 512);
+        } catch (e) {
+          // Insight is a nice-to-have; don't fail the whole reconciliation if it errors.
+          insight = '';
+        }
       }
 
       progEl.style.display = 'none';
