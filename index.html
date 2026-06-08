@@ -353,8 +353,19 @@
     }
     .stat-card {
       background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
-      padding: 12px 14px;
+      padding: 12px 14px; position: relative;
     }
+    .stat-card.anomaly { border-color: var(--red); box-shadow: 0 0 0 1px var(--red); }
+    .anomaly-badge {
+      display: flex; align-items: center; gap: 6px; width: 100%;
+      background: var(--red-bg); color: var(--red); border: none; border-radius: 6px;
+      font-size: .72rem; font-weight: 600; padding: 6px 9px; margin-bottom: 8px;
+      cursor: pointer; text-align: left; font-family: inherit;
+    }
+    .anomaly-badge:hover { background: var(--red-dim); }
+    .anomaly-badge svg { flex-shrink: 0; }
+    .anomaly-badge .dismiss-x { margin-left: auto; opacity: .6; }
+    .anomaly-badge:hover .dismiss-x { opacity: 1; }
     .stat-name { font-size: .78rem; color: var(--text3); margin-bottom: 6px; }
     .stat-amounts { font-family: var(--mono); font-size: .82rem; color: var(--text); margin-bottom: 6px; }
     .stat-pct { font-size: .9rem; font-weight: 700; }
@@ -905,6 +916,16 @@ Matched: ${matchedCount}`, 512);
       </div>`;
   }
 
+  // Categories whose total swung by this much or more year-over-year get flagged
+  // for the accountant to take a closer look at.
+  const ANOMALY_THRESHOLD = 25;
+
+  function dismissAnomaly(btn) {
+    const card = btn.closest('.stat-card');
+    if (card) card.classList.remove('anomaly');
+    btn.remove();
+  }
+
   function statsSummaryHTML(categories) {
     const rows = categories.map(cat => {
       let prevTotal = 0, currTotal = 0;
@@ -929,8 +950,18 @@ Matched: ${matchedCount}`, 512);
         arrow = cls === 'flat' ? '→' : (cls === 'up' ? '▲' : '▼');
       }
       const pctStr = `${cls === 'up' ? '+' : ''}${pct.toFixed(1)}%`;
+
+      const isAnomaly = r.prevTotal > 0 && Math.abs(pct) >= ANOMALY_THRESHOLD;
+      const anomalyBadge = isAnomaly ? `
+        <button class="anomaly-badge" onclick="dismissAnomaly(this)" title="Click to dismiss this flag">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          <span>Unusual change &mdash; review this category</span>
+          <span class="dismiss-x">&times;</span>
+        </button>` : '';
+
       return `
-        <div class="stat-card">
+        <div class="stat-card${isAnomaly ? ' anomaly' : ''}">
+          ${anomalyBadge}
           <div class="stat-name">${escHtml(r.name)}</div>
           <div class="stat-amounts">${fmtAmt(r.prevTotal)} &rarr; ${fmtAmt(r.currTotal)}</div>
           <div class="stat-pct ${cls}">${arrow} ${pctStr}</div>
