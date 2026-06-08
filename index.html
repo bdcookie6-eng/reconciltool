@@ -343,6 +343,27 @@
     .changes-list li .ch-num { font-family: var(--mono); font-size: .72rem; color: var(--text3); min-width: 44px; }
     .changes-empty { padding: 14px; font-size: .8rem; color: var(--text3); font-style: italic; }
 
+    .stats-summary { margin-top: 16px; }
+    .stats-title {
+      font-size: .76rem; font-weight: 700; letter-spacing: .8px; text-transform: uppercase;
+      font-family: var(--mono); color: var(--text3); margin-bottom: 10px;
+    }
+    .stats-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px;
+    }
+    .stat-card {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+      padding: 12px 14px;
+    }
+    .stat-name { font-size: .78rem; color: var(--text3); margin-bottom: 6px; }
+    .stat-amounts { font-family: var(--mono); font-size: .82rem; color: var(--text); margin-bottom: 6px; }
+    .stat-pct { font-size: .9rem; font-weight: 700; }
+    .stat-pct.up   { color: var(--green); }
+    .stat-pct.down { color: var(--red); }
+    .stat-pct.flat { color: var(--text3); }
+
+    .prog-elapsed { margin-top: 10px; font-size: .76rem; color: var(--text3); font-family: var(--mono); }
+
     @keyframes spin { to { transform: rotate(360deg); } }
 
     @media (max-width: 1200px) {
@@ -422,6 +443,7 @@
 <div class="ai-progress" id="ai-progress">
   <div class="prog-title"><span class="spinning">✦</span> AI is analyzing your data…</div>
   <div class="prog-steps" id="prog-steps"></div>
+  <div class="prog-elapsed" id="prog-elapsed"></div>
 </div>
 
 <div class="results" id="results" style="display:none"></div>
@@ -700,9 +722,20 @@
     const currRows = extractRows('curr');
 
     const progEl = document.getElementById('ai-progress');
+    const elapsedEl = document.getElementById('prog-elapsed');
     progEl.style.display = 'block';
     document.getElementById('results').style.display = 'none';
     document.getElementById('btn-ai').disabled = true;
+
+    const startedAt = Date.now();
+    const elapsedTimer = setInterval(() => {
+      const secs = Math.floor((Date.now() - startedAt) / 1000);
+      const mins = Math.floor(secs / 60);
+      const rem = secs % 60;
+      const timeStr = mins > 0 ? `${mins}m ${rem}s` : `${secs}s`;
+      const note = secs > 60 ? ' — large ledgers can take a few minutes, hang tight' : '';
+      elapsedEl.textContent = `Elapsed: ${timeStr}${note}`;
+    }, 1000);
 
     try {
       setStep('extract');
@@ -784,6 +817,8 @@ Matched: ${matchedCount}`, 512);
       progEl.style.display = 'none';
       showError('AI error: ' + err.message);
     } finally {
+      clearInterval(elapsedTimer);
+      elapsedEl.textContent = '';
       checkReady();
     }
   }
@@ -867,6 +902,45 @@ Matched: ${matchedCount}`, 512);
           </div>
           ${changesListHTML(removed, 'No accounts were removed from the prior year.')}
         </div>
+      </div>`;
+  }
+
+  function statsSummaryHTML(categories) {
+    const rows = categories.map(cat => {
+      let prevTotal = 0, currTotal = 0;
+      for (const row of cat.rows) {
+        if (row.prev) prevTotal += (row.prev.dr || 0) + (row.prev.cr || 0);
+        if (row.curr) currTotal += (row.curr.dr || 0) + (row.curr.cr || 0);
+      }
+      return { name: cat.name, prevTotal, currTotal };
+    }).filter(r => r.prevTotal > 0 || r.currTotal > 0);
+
+    if (!rows.length) return '';
+
+    const cards = rows.map(r => {
+      let pct, cls, arrow;
+      if (r.prevTotal === 0) {
+        pct = r.currTotal === 0 ? 0 : 100;
+        cls = r.currTotal === 0 ? 'flat' : 'up';
+        arrow = r.currTotal === 0 ? '→' : '▲';
+      } else {
+        pct = ((r.currTotal - r.prevTotal) / r.prevTotal) * 100;
+        cls = Math.abs(pct) < 0.05 ? 'flat' : (pct > 0 ? 'up' : 'down');
+        arrow = cls === 'flat' ? '→' : (cls === 'up' ? '▲' : '▼');
+      }
+      const pctStr = `${cls === 'up' ? '+' : ''}${pct.toFixed(1)}%`;
+      return `
+        <div class="stat-card">
+          <div class="stat-name">${escHtml(r.name)}</div>
+          <div class="stat-amounts">${fmtAmt(r.prevTotal)} &rarr; ${fmtAmt(r.currTotal)}</div>
+          <div class="stat-pct ${cls}">${arrow} ${pctStr}</div>
+        </div>`;
+    }).join('');
+
+    return `
+      <div class="stats-summary">
+        <div class="stats-title">Year-over-Year Change by Category</div>
+        <div class="stats-grid">${cards}</div>
       </div>`;
   }
 
@@ -980,7 +1054,9 @@ Matched: ${matchedCount}`, 512);
         </div>
       </div>
 
-      ${changesSummaryHTML(categories)}`;
+      ${changesSummaryHTML(categories)}
+
+      ${statsSummaryHTML(categories)}`;
 
     el.scrollIntoView({ behavior:'smooth', block:'start' });
   }
