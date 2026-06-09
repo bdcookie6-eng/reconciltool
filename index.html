@@ -374,6 +374,33 @@
     .stat-pct.flat { color: var(--text3); }
 
     .prog-elapsed { margin-top: 10px; font-size: .76rem; color: var(--text3); font-family: var(--mono); }
+    .batch-prog-wrap { margin-top: 10px; }
+    .batch-prog-text { display: flex; justify-content: space-between; font-size: .76rem; color: var(--text3); font-family: var(--mono); margin-bottom: 5px; }
+    .batch-prog-bar { height: 4px; background: var(--surface3); border-radius: 2px; overflow: hidden; }
+    .batch-prog-fill { height: 100%; background: var(--teal-light); border-radius: 2px; transition: width .4s ease; }
+
+    /* ── Repair mode ── */
+    .btn-repair {
+      background: var(--surface2); border: 1px solid var(--border2);
+      padding: 7px 14px; border-radius: 6px; font-size: .8rem; font-weight: 500;
+      cursor: pointer; display: flex; align-items: center; gap: 6px;
+      color: var(--text2); transition: border-color .15s, background .15s;
+    }
+    .btn-repair:hover { border-color: var(--teal-mid); color: var(--teal-mid); }
+    .btn-repair.active { background: var(--teal-dim); border-color: var(--teal-mid); color: var(--teal); }
+    .repair-banner {
+      display: flex; align-items: center; gap: 10px;
+      background: var(--teal-dim); border: 1px solid rgba(10,61,50,.18);
+      border-radius: 6px; padding: 9px 14px; margin-bottom: 14px;
+      font-size: .82rem; color: var(--teal); font-weight: 500;
+    }
+    .repair-banner svg { flex-shrink: 0; }
+    .repair-cancel { margin-left: auto; font-size: .78rem; font-weight: 400; cursor: pointer; color: var(--text3); text-decoration: underline; }
+    .repair-cancel:hover { color: var(--text); }
+    .acct-row.repair-selectable { cursor: pointer; }
+    .acct-row.repair-selectable:hover .prev-name,
+    .acct-row.repair-selectable:hover .curr-name { text-decoration: underline; }
+    .acct-row.repair-pick { outline: 2px solid var(--teal-mid); outline-offset: -2px; background: var(--teal-dim); }
 
     @media (max-width: 1200px) {
       .ledger-sub-header, .acct-row { grid-template-columns: 70px 1fr 95px 95px 1px 70px 1fr 95px 95px; }
@@ -1061,7 +1088,16 @@ Rules:
         if (!mSlice.length && !pSlice.length && !cSlice.length) continue;
 
         if (numBatches > 1) {
-          batchEl.textContent = `Processing batch ${b + 1} of ${numBatches}…`;
+          const batchCount = mSlice.length + pSlice.length + cSlice.length;
+          const pct = Math.round((b / numBatches) * 100);
+          batchEl.innerHTML = `
+            <div class="batch-prog-wrap">
+              <div class="batch-prog-text">
+                <span>Batch ${b + 1} of ${numBatches} — ${batchCount} account${batchCount !== 1 ? 's' : ''}</span>
+                <span>${pct}%</span>
+              </div>
+              <div class="batch-prog-bar"><div class="batch-prog-fill" style="width:${pct}%"></div></div>
+            </div>`;
         }
 
         const basePrompt = buildPrompt(mSlice, pSlice, cSlice, numBatches > 1);
@@ -1096,6 +1132,16 @@ Your previous response could not be parsed as JSON. Respond again with ONLY a si
             mergedCategories.push(entry);
           }
           entry.rows.push(...(cat.rows || []));
+        }
+
+        if (numBatches > 1) {
+          const pct = Math.round(((b + 1) / numBatches) * 100);
+          const fill = document.querySelector('#prog-batch .batch-prog-fill');
+          const pctLabel = document.querySelector('#prog-batch .batch-prog-text span:last-child');
+          const batchLabel = document.querySelector('#prog-batch .batch-prog-text span:first-child');
+          if (fill) fill.style.width = pct + '%';
+          if (pctLabel) pctLabel.textContent = pct + '%';
+          if (batchLabel) batchLabel.textContent = `Batch ${b + 1} of ${numBatches} — done`;
         }
       }
       batchEl.textContent = '';
@@ -1431,12 +1477,13 @@ Your previous response could not be parsed as JSON. Respond again with ONLY a si
       </div>`;
   }
 
-  function renderResults({ categories, added, removed, matchedCount, prevFile, currFile, prevTB, currTB }) {
+  function renderResults({ categories, added, removed, matchedCount, prevFile, currFile, prevTB, currTB }, { scroll = true } = {}) {
     const el = document.getElementById('results');
     el.style.display = 'block';
 
     let ledgerHTML = '';
-    for (const cat of categories) {
+    for (let ci = 0; ci < categories.length; ci++) {
+      const cat = categories[ci];
       ledgerHTML += `
         <div class="cat-header">
           <div class="cat-label">${escHtml(cat.name)}</div>
@@ -1444,7 +1491,8 @@ Your previous response could not be parsed as JSON. Respond again with ONLY a si
           <div class="cat-label"></div>
         </div>`;
 
-      for (const row of cat.rows) {
+      for (let ri = 0; ri < cat.rows.length; ri++) {
+        const row = cat.rows[ri];
         const isAdded   = row.status === 'added';
         const isRemoved = row.status === 'removed';
 
@@ -1465,7 +1513,11 @@ Your previous response could not be parsed as JSON. Respond again with ONLY a si
         const rowId = (isAdded || isRemoved)
           ? `acct-row-${((isRemoved ? (p?.num||p?.name) : (c?.num||c?.name))||'').replace(/[^a-z0-9]/gi,'-').toLowerCase()}`
           : '';
-        ledgerHTML += `<div class="acct-row"${rowId ? ` id="${rowId}"` : ''}>
+        const repairAttr = (isAdded || isRemoved)
+          ? ` data-catidx="${ci}" data-rowidx="${ri}" data-status="${row.status}" onclick="handleRepairClick(this)"`
+          : '';
+        const repairCls = (isAdded || isRemoved) ? ' repair-selectable' : '';
+        ledgerHTML += `<div class="acct-row${repairCls}"${rowId ? ` id="${rowId}"` : ''}${repairAttr}>
           <div class="acct-num prev-num ${pCls}${!p?' empty-cell':''}">${p ? escHtml(p.num||'') : ''}</div>
           <div class="acct-name prev-name ${pCls}${!p?' empty-cell':''}">${p ? prevBadge+escHtml(p.name||'') : ''}</div>
           <div class="acct-dr prev-dr ${pCls}${!p?' empty-cell':''}">${pDr}</div>
@@ -1485,6 +1537,12 @@ Your previous response could not be parsed as JSON. Respond again with ONLY a si
       <div class="results-header">
         <h2>Reconciliation Results</h2>
         <div class="export-group">
+          ${(added.length + removed.length) > 0 ? `<button class="btn-repair" id="btn-repair" onclick="toggleRepairMode()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+              <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+            </svg>Re-pair
+          </button>` : ''}
           <button class="export-btn" onclick="exportCSV()">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
@@ -1526,6 +1584,8 @@ Your previous response could not be parsed as JSON. Respond again with ONLY a si
         <div class="legend-item"><span class="num-inherited">*</span>&nbsp;Account number carried forward from prior year</div>
       </div>
 
+      <div id="repair-banner" class="repair-banner" style="display:none"></div>
+
       <div class="ledger-wrap">
         <div class="ledger-top-header">
           <div class="lth">
@@ -1560,7 +1620,130 @@ Your previous response could not be parsed as JSON. Respond again with ONLY a si
 
       ${statsSummaryHTML(categories)}`;
 
-    el.scrollIntoView({ behavior:'smooth', block:'start' });
+    if (scroll) el.scrollIntoView({ behavior:'smooth', block:'start' });
+    if (repairMode) activateRepairUI();
+  }
+
+  /* ── Repair mode ─────────────────────────────────────────────────── */
+
+  let repairMode = false;
+  let repairPick = null; // { catIdx, rowIdx, status }
+
+  function toggleRepairMode() {
+    repairMode = !repairMode;
+    repairPick = null;
+    const btn = document.getElementById('btn-repair');
+    if (btn) btn.classList.toggle('active', repairMode);
+    if (repairMode) activateRepairUI(); else deactivateRepairUI();
+  }
+
+  function activateRepairUI() {
+    updateRepairBanner();
+    document.addEventListener('keydown', repairEscListener);
+  }
+
+  function deactivateRepairUI() {
+    repairPick = null;
+    document.querySelectorAll('.acct-row.repair-pick').forEach(r => r.classList.remove('repair-pick'));
+    const banner = document.getElementById('repair-banner');
+    if (banner) banner.style.display = 'none';
+    document.removeEventListener('keydown', repairEscListener);
+  }
+
+  function repairEscListener(e) {
+    if (e.key === 'Escape') { repairMode = false; deactivateRepairUI(); const btn = document.getElementById('btn-repair'); if (btn) btn.classList.remove('active'); }
+  }
+
+  function updateRepairBanner() {
+    const banner = document.getElementById('repair-banner');
+    if (!banner) return;
+    const msg = repairPick
+      ? `Now click the matching <strong>${repairPick.status === 'removed' ? 'Added' : 'Removed'}</strong> account to pair them`
+      : `Click a <strong>Removed</strong> or <strong>Added</strong> account to start re-pairing`;
+    banner.style.display = 'flex';
+    banner.innerHTML = `
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+        <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+      </svg>
+      <span>${msg}</span>
+      <span class="repair-cancel" onclick="toggleRepairMode()">Cancel</span>`;
+  }
+
+  function handleRepairClick(rowEl) {
+    if (!repairMode) return;
+
+    const catIdx = parseInt(rowEl.dataset.catidx);
+    const rowIdx = parseInt(rowEl.dataset.rowidx);
+    const status = rowEl.dataset.status;
+
+    if (!repairPick) {
+      // First click — select this row
+      repairPick = { catIdx, rowIdx, status };
+      rowEl.classList.add('repair-pick');
+      updateRepairBanner();
+      return;
+    }
+
+    // Second click — must be the opposite status
+    if (repairPick.status === status) {
+      // Same status — switch selection to this row instead
+      document.querySelectorAll('.acct-row.repair-pick').forEach(r => r.classList.remove('repair-pick'));
+      repairPick = { catIdx, rowIdx, status };
+      rowEl.classList.add('repair-pick');
+      updateRepairBanner();
+      return;
+    }
+
+    // Opposite status — do the merge
+    const removedRef = status === 'removed' ? { catIdx, rowIdx } : repairPick;
+    const addedRef   = status === 'added'   ? { catIdx, rowIdx } : repairPick;
+
+    doRepairMerge(removedRef, addedRef);
+  }
+
+  function doRepairMerge(removedRef, addedRef) {
+    const cats = lastResults.categories;
+    const removedRow = cats[removedRef.catIdx].rows[removedRef.rowIdx];
+    const addedRow   = cats[addedRef.catIdx].rows[addedRef.rowIdx];
+
+    // Build merged matched row
+    const merged = { status: 'matched', prev: removedRow.prev, curr: addedRow.curr };
+
+    // Remove both original rows (remove higher index first to avoid index shifting)
+    const refs = [
+      { catIdx: removedRef.catIdx, rowIdx: removedRef.rowIdx },
+      { catIdx: addedRef.catIdx,   rowIdx: addedRef.rowIdx   },
+    ].sort((a, b) => a.catIdx !== b.catIdx ? a.catIdx - b.catIdx : b.rowIdx - a.rowIdx);
+
+    for (const ref of refs) {
+      cats[ref.catIdx].rows.splice(ref.rowIdx, 1);
+    }
+
+    // Insert merged row at the position of the removed row's category
+    const targetCatIdx = removedRef.catIdx;
+    const insertAt = Math.min(removedRef.rowIdx, cats[targetCatIdx].rows.length);
+    cats[targetCatIdx].rows.splice(insertAt, 0, merged);
+
+    // Prune empty categories
+    lastResults.categories = cats.filter(c => c.rows.length > 0);
+
+    // Recalculate added/removed/matched counts
+    let matchedCount = 0;
+    const added = [], removed = [];
+    for (const cat of lastResults.categories) {
+      for (const row of cat.rows) {
+        if (row.status === 'matched') matchedCount++;
+        if (row.status === 'added'   && row.curr) added.push(row.curr);
+        if (row.status === 'removed' && row.prev) removed.push(row.prev);
+      }
+    }
+    lastResults.matchedCount = matchedCount;
+    lastResults.added = added;
+    lastResults.removed = removed;
+
+    repairPick = null;
+    renderResults(lastResults, { scroll: false });
   }
 
   /* ── Export ─────────────────────────────────────────────────────── */
@@ -1570,17 +1753,41 @@ Your previous response could not be parsed as JSON. Respond again with ONLY a si
   function buildLedgerTable() {
     const header = ['Category','Status',
       'Prior Acct #','Prior Account Name','Prior Debit','Prior Credit',
-      'Current Acct #','Current Account Name','Current Debit','Current Credit'];
+      'Current Acct #','Current Account Name','Current Debit','Current Credit',
+      'Net Debit Change','Net Credit Change'];
     const rows = [header];
     for (const cat of lastResults.categories) {
       for (const row of cat.rows) {
         const p = row.prev, c = row.curr;
+        const pDr = p ? (p.dr||0) : 0, pCr = p ? (p.cr||0) : 0;
+        const cDr = c ? (c.dr||0) : 0, cCr = c ? (c.cr||0) : 0;
         rows.push([
           cat.name, row.status,
-          p ? (p.num||'') : '', p ? (p.name||'') : '', p ? (p.dr||0) : '', p ? (p.cr||0) : '',
-          c ? (c.num||'') : '', c ? (c.name||'') : '', c ? (c.dr||0) : '', c ? (c.cr||0) : ''
+          p ? (p.num||'') : '', p ? (p.name||'') : '', pDr, pCr,
+          c ? (c.num||'') : '', c ? (c.name||'') : '', cDr, cCr,
+          row.status === 'matched' ? cDr - pDr : '',
+          row.status === 'matched' ? cCr - pCr : ''
         ]);
       }
+    }
+    return rows;
+  }
+
+  function buildCategorySummaryTable() {
+    const header = ['Category','Matched','Added','Removed','Prior Total','Current Total','Net Change','% Change'];
+    const rows = [header];
+    for (const cat of lastResults.categories) {
+      let matched = 0, added = 0, removed = 0, prevTotal = 0, currTotal = 0;
+      for (const row of cat.rows) {
+        if (row.status === 'matched') matched++;
+        if (row.status === 'added')   added++;
+        if (row.status === 'removed') removed++;
+        if (row.prev) prevTotal += (row.prev.dr||0) + (row.prev.cr||0);
+        if (row.curr) currTotal += (row.curr.dr||0) + (row.curr.cr||0);
+      }
+      const net = currTotal - prevTotal;
+      const pct = prevTotal !== 0 ? net / prevTotal : (currTotal !== 0 ? 1 : 0);
+      rows.push([cat.name, matched, added, removed, prevTotal, currTotal, net, pct]);
     }
     return rows;
   }
@@ -1658,6 +1865,22 @@ Your previous response could not be parsed as JSON. Respond again with ONLY a si
     }
     XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(changesRows), 'Added & Removed');
 
+    // Category summary sheet with % Change column formatted as percentage
+    const catSummaryData = buildCategorySummaryTable();
+    const catWs = XLSX.utils.aoa_to_sheet(catSummaryData);
+    // Apply percentage format to column H (index 7) — skip header row
+    for (let r = 1; r < catSummaryData.length; r++) {
+      const cellRef = XLSX.utils.encode_cell({ r, c: 7 });
+      if (catWs[cellRef] && typeof catWs[cellRef].v === 'number') {
+        catWs[cellRef].z = '0.0%';
+      }
+    }
+    catWs['!cols'] = [
+      { wch: 22 }, { wch: 9 }, { wch: 8 }, { wch: 10 },
+      { wch: 14 }, { wch: 16 }, { wch: 14 }, { wch: 10 }
+    ];
+    XLSX.utils.book_append_sheet(wb, catWs, 'Category Summary');
+
     XLSX.writeFile(wb, 'reconciliation_results.xlsx');
   }
 
@@ -1678,6 +1901,8 @@ Your previous response could not be parsed as JSON. Respond again with ONLY a si
   }
 
   function resetAll() {
+    repairMode = false; repairPick = null;
+    document.removeEventListener('keydown', repairEscListener);
     clearSide('prev'); clearSide('curr');
     document.getElementById('results').style.display = 'none';
     document.getElementById('ai-progress').style.display = 'none';
