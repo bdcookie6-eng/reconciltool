@@ -400,6 +400,75 @@
       .ledger-wrap, .changes-summary, .stats-summary { break-inside: avoid; }
       .acct-row, .stat-card, .changes-list li { break-inside: avoid; }
     }
+
+    /* ── Column mapping modal ── */
+    .col-modal-overlay {
+      position: fixed; inset: 0; z-index: 1000;
+      background: rgba(13,43,36,.45); backdrop-filter: blur(2px);
+      display: flex; align-items: center; justify-content: center; padding: 20px;
+    }
+    .col-modal {
+      background: var(--surface); border-radius: 12px;
+      border: 1px solid var(--border); box-shadow: 0 20px 60px rgba(0,0,0,.18);
+      width: 100%; max-width: 680px; max-height: 90vh;
+      display: flex; flex-direction: column; overflow: hidden;
+    }
+    .col-modal-head {
+      padding: 20px 24px 16px; border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .col-modal-head h3 { font-size: .95rem; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+    .col-modal-head p  { font-size: .82rem; color: var(--text3); line-height: 1.5; }
+    .col-modal-head strong { color: var(--text2); }
+    .col-modal-body { padding: 18px 24px; overflow-y: auto; flex: 1; }
+    .col-field-row {
+      display: grid; grid-template-columns: 130px 1fr;
+      align-items: center; gap: 10px; margin-bottom: 10px;
+    }
+    .col-field-label {
+      font-size: .82rem; font-weight: 500; color: var(--text2);
+      display: flex; align-items: center; gap: 6px;
+    }
+    .col-uncertain-badge {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 16px; height: 16px; border-radius: 50%;
+      background: #f59e0b; color: #fff; font-size: .65rem; font-weight: 700;
+      flex-shrink: 0; line-height: 1;
+    }
+    .col-field-select {
+      width: 100%; padding: 7px 10px; border-radius: 6px;
+      border: 1px solid var(--border); background: var(--surface);
+      font-size: .84rem; color: var(--text); font-family: inherit;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%237a9e94' stroke-width='2.5'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 10px center;
+      padding-right: 28px; cursor: pointer;
+    }
+    .col-field-select.uncertain { border-color: #f59e0b; background-color: #fffbeb; }
+    .col-field-select:focus { outline: none; border-color: var(--teal-mid); box-shadow: 0 0 0 3px var(--teal-bg); }
+    .col-preview-section { margin-top: 18px; }
+    .col-preview-label { font-size: .78rem; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: .04em; margin-bottom: 8px; }
+    .col-preview-scroll { overflow-x: auto; border: 1px solid var(--border); border-radius: 6px; }
+    .col-preview-table { border-collapse: collapse; font-size: .78rem; font-family: var(--mono); width: 100%; }
+    .col-preview-table th { background: var(--surface2); padding: 6px 10px; text-align: left; font-weight: 600; color: var(--text2); border-bottom: 1px solid var(--border); white-space: nowrap; }
+    .col-preview-table td { padding: 5px 10px; color: var(--text); border-bottom: 1px solid var(--border); white-space: nowrap; max-width: 160px; overflow: hidden; text-overflow: ellipsis; }
+    .col-preview-table tr:last-child td { border-bottom: none; }
+    .col-preview-table th.col-highlighted,
+    .col-preview-table td.col-highlighted { background: var(--teal-dim); }
+    .col-modal-foot {
+      padding: 14px 24px; border-top: 1px solid var(--border);
+      display: flex; justify-content: flex-end; gap: 10px; flex-shrink: 0;
+    }
+    .col-modal-foot .btn-cancel {
+      padding: 8px 16px; border-radius: 6px; font-size: .84rem; font-weight: 500;
+      border: 1px solid var(--border); background: var(--surface); color: var(--text2); cursor: pointer;
+    }
+    .col-modal-foot .btn-cancel:hover { background: var(--surface2); }
+    .col-modal-foot .btn-confirm {
+      padding: 8px 18px; border-radius: 6px; font-size: .84rem; font-weight: 600;
+      border: none; background: var(--teal); color: #fff; cursor: pointer;
+    }
+    .col-modal-foot .btn-confirm:hover { background: var(--teal-mid); }
   </style>
 </head>
 <body>
@@ -490,19 +559,139 @@
       return -1;
     }
 
-    const numIdx  = find(['gl code','gl #','acct #','account #','account no','acct no','acct number','account number','gl','code','num']);
-    const nameIdx = find(['account name','account desc','description','account','name','desc']);
-    const drIdx   = find(['debit','dr ','dr$',' dr']);
-    const crIdx   = find(['credit','cr ','cr$',' cr']);
-    const balIdx  = find(['balance','amount','total','ytd','net']);
+    const numIdx   = find(['gl code','gl #','acct #','account #','account no','acct no','acct number','account number','gl','code','num']);
+    const nameRaw  = find(['account name','account desc','description','account','name','desc']);
+    const drIdx    = find(['debit','dr ','dr$',' dr']);
+    const crIdx    = find(['credit','cr ','cr$',' cr']);
+    const balIdx   = find(['balance','amount','total','ytd','net']);
+
+    const uncertain = [];
+    if (nameRaw < 0) uncertain.push('name');
+    if (drIdx < 0 && crIdx < 0 && balIdx < 0) uncertain.push('amounts');
 
     return {
       num:  numIdx  >= 0 ? numIdx  : -1,
-      name: nameIdx >= 0 ? nameIdx : 0,   // fallback to first col
+      name: nameRaw >= 0 ? nameRaw : 0,   // fallback to first col
       dr:   drIdx   >= 0 ? drIdx   : -1,
       cr:   crIdx   >= 0 ? crIdx   : -1,
       bal:  balIdx  >= 0 ? balIdx  : -1,
+      uncertain,
     };
+  }
+
+  /* ── Column mapping modal ─────────────────────────────────────────── */
+
+  let _colModalState = null; // { side, fileName, headers, previewRows, cols }
+
+  function showColModal(side, fileName, headers, previewRows, cols) {
+    _colModalState = { side, fileName, headers, previewRows, cols };
+
+    document.getElementById('col-modal-fname').textContent = fileName;
+
+    // Build field rows
+    const fields = [
+      { key: 'name', label: 'Account Name', required: true,  uncertain: cols.uncertain.includes('name') },
+      { key: 'num',  label: 'Account #',    required: false, uncertain: false },
+      { key: 'dr',   label: 'Debit',        required: false, uncertain: cols.uncertain.includes('amounts') },
+      { key: 'cr',   label: 'Credit',       required: false, uncertain: cols.uncertain.includes('amounts') },
+      { key: 'bal',  label: 'Balance',      required: false, uncertain: cols.uncertain.includes('amounts') },
+    ];
+
+    const noneOpt = `<option value="-1">(not in file)</option>`;
+
+    document.getElementById('col-modal-fields').innerHTML = fields.map(f => {
+      const cur = cols[f.key];
+      const badge = f.uncertain ? `<span class="col-uncertain-badge" title="Could not auto-detect">!</span>` : '';
+      const selClass = f.uncertain ? 'col-field-select uncertain' : 'col-field-select';
+      return `
+        <div class="col-field-row">
+          <label class="col-field-label" for="col-sel-${f.key}">${escHtml(f.label)}${badge}</label>
+          <select id="col-sel-${f.key}" class="${selClass}" onchange="refreshColModalPreview()">
+            ${f.required ? '' : noneOpt}
+            ${headers.map((h, i) => `<option value="${i}"${i === cur ? ' selected' : ''}>${escHtml(h)}</option>`).join('')}
+          </select>
+        </div>`;
+    }).join('');
+
+    renderColModalPreview();
+    document.getElementById('col-modal-overlay').style.display = 'flex';
+  }
+
+  function renderColModalPreview() {
+    const { headers, previewRows } = _colModalState;
+    const highlighted = getHighlightedColIndices();
+
+    const ths = headers.map((h, i) =>
+      `<th class="${highlighted.has(i) ? 'col-highlighted' : ''}">${escHtml(h)}</th>`
+    ).join('');
+
+    const trs = previewRows.map(row =>
+      '<tr>' + headers.map((_, i) => {
+        const val = row[i] !== undefined ? String(row[i]) : '';
+        return `<td class="${highlighted.has(i) ? 'col-highlighted' : ''}">${escHtml(val)}</td>`;
+      }).join('') + '</tr>'
+    ).join('');
+
+    document.getElementById('col-modal-table').innerHTML = `<thead><tr>${ths}</tr></thead><tbody>${trs}</tbody>`;
+  }
+
+  function refreshColModalPreview() {
+    // Update uncertain highlight on selects when user changes a value
+    ['name','num','dr','cr','bal'].forEach(key => {
+      const sel = document.getElementById('col-sel-' + key);
+      if (!sel) return;
+      if (sel.classList.contains('uncertain') && parseInt(sel.value) >= 0) {
+        sel.classList.remove('uncertain');
+      }
+    });
+    renderColModalPreview();
+  }
+
+  function getHighlightedColIndices() {
+    const set = new Set();
+    ['name','num','dr','cr','bal'].forEach(key => {
+      const sel = document.getElementById('col-sel-' + key);
+      if (sel) {
+        const v = parseInt(sel.value);
+        if (v >= 0) set.add(v);
+      }
+    });
+    return set;
+  }
+
+  function cancelColModal() {
+    document.getElementById('col-modal-overlay').style.display = 'none';
+    _colModalState = null;
+  }
+
+  function handleColModalOverlayClick(e) {
+    if (e.target === document.getElementById('col-modal-overlay')) cancelColModal();
+  }
+
+  function confirmColModal() {
+    const { side, fileName, headers } = _colModalState;
+    const rows = state[side].rows; // already stored in processFile before modal
+
+    function selVal(key) {
+      const el = document.getElementById('col-sel-' + key);
+      return el ? parseInt(el.value) : -1;
+    }
+
+    const cols = {
+      name: selVal('name') >= 0 ? selVal('name') : 0,
+      num:  selVal('num'),
+      dr:   selVal('dr'),
+      cr:   selVal('cr'),
+      bal:  selVal('bal'),
+      uncertain: [],
+    };
+
+    state[side].cols = cols;
+    document.getElementById('col-modal-overlay').style.display = 'none';
+    _colModalState = null;
+
+    renderFileInfo(side, fileName, rows.length, headers, cols);
+    checkReady();
   }
 
   /* ── File handling ─────────────────────────────────────────────── */
@@ -533,9 +722,14 @@
         if (rows.length < 2) { showError('File appears empty.'); return; }
         const headers = rows[0].map(h => String(h).trim());
         const cols = detectCols(headers);
-        state[side] = { rows: rows.slice(1), headers, cols, fileName: file.name };
-        renderFileInfo(side, file.name, rows.length - 1, headers, cols);
-        checkReady();
+        const dataRows = rows.slice(1);
+        state[side] = { rows: dataRows, headers, cols, fileName: file.name };
+        if (cols.uncertain.length > 0) {
+          showColModal(side, file.name, headers, dataRows.slice(0, 5), cols);
+        } else {
+          renderFileInfo(side, file.name, dataRows.length, headers, cols);
+          checkReady();
+        }
       } catch(err) { showError('Could not parse file: ' + err.message); }
     };
     if (ext === 'csv') reader.readAsText(file); else reader.readAsArrayBuffer(file);
@@ -1494,5 +1688,26 @@ Your previous response could not be parsed as JSON. Respond again with ONLY a si
     return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   }
 </script>
+
+<!-- ── Column mapping modal ── -->
+<div id="col-modal-overlay" class="col-modal-overlay" style="display:none" onclick="handleColModalOverlayClick(event)">
+  <div class="col-modal" onclick="event.stopPropagation()">
+    <div class="col-modal-head">
+      <h3>Confirm Column Mapping</h3>
+      <p>Some columns in <strong id="col-modal-fname"></strong> couldn't be identified automatically. Please confirm or correct the mapping below.</p>
+    </div>
+    <div class="col-modal-body">
+      <div id="col-modal-fields"></div>
+      <div class="col-preview-section">
+        <div class="col-preview-label">Sheet Preview</div>
+        <div class="col-preview-scroll"><table class="col-preview-table" id="col-modal-table"></table></div>
+      </div>
+    </div>
+    <div class="col-modal-foot">
+      <button class="btn-cancel" onclick="cancelColModal()">Cancel</button>
+      <button class="btn-confirm" onclick="confirmColModal()">Confirm Mapping</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>
