@@ -379,6 +379,47 @@
     .batch-prog-bar { height: 4px; background: var(--surface3); border-radius: 2px; overflow: hidden; }
     .batch-prog-fill { height: 100%; background: var(--teal-light); border-radius: 2px; transition: width .4s ease; }
 
+    /* ── Ledger filter bar ── */
+    .ledger-filter {
+      display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+      margin-bottom: 12px; padding: 10px 14px;
+      background: var(--surface2); border: 1px solid var(--border); border-radius: 8px;
+    }
+    .filter-search-wrap { position: relative; flex: 1; min-width: 160px; }
+    .filter-search-wrap svg {
+      position: absolute; left: 9px; top: 50%; transform: translateY(-50%);
+      color: var(--text3); pointer-events: none;
+    }
+    .filter-search {
+      width: 100%; padding: 6px 26px 6px 30px; border: 1px solid var(--border);
+      border-radius: 6px; font-size: .82rem; font-family: inherit; color: var(--text);
+      background: var(--surface);
+    }
+    .filter-search:focus { outline: none; border-color: var(--teal-mid); box-shadow: 0 0 0 3px var(--teal-bg); }
+    .filter-search-clear {
+      position: absolute; right: 7px; top: 50%; transform: translateY(-50%);
+      background: none; border: none; cursor: pointer; color: var(--text3);
+      font-size: 1.1rem; line-height: 1; padding: 0 2px;
+    }
+    .filter-search-clear:hover { color: var(--text); }
+    .filter-pills { display: flex; gap: 4px; }
+    .filter-pill {
+      padding: 5px 11px; border-radius: 20px; font-size: .78rem; font-weight: 500;
+      border: 1px solid var(--border); background: var(--surface); color: var(--text3);
+      cursor: pointer; transition: all .15s;
+    }
+    .filter-pill:hover { border-color: var(--border2); color: var(--text2); }
+    .filter-pill.active       { background: var(--teal);  border-color: var(--teal);  color: #fff; }
+    .filter-pill.active.added-pill   { background: var(--green); border-color: var(--green); }
+    .filter-pill.active.removed-pill { background: var(--red);   border-color: var(--red);   }
+    .filter-cat-select {
+      padding: 6px 10px; border-radius: 6px; border: 1px solid var(--border);
+      font-size: .82rem; font-family: inherit; color: var(--text2);
+      background: var(--surface); cursor: pointer;
+    }
+    .filter-cat-select:focus { outline: none; border-color: var(--teal-mid); }
+    .filter-count { font-size: .76rem; color: var(--text3); font-family: var(--mono); white-space: nowrap; margin-left: auto; }
+
     /* ── Repair mode ── */
     .btn-repair {
       background: var(--surface2); border: 1px solid var(--border2);
@@ -1485,7 +1526,7 @@ Your previous response could not be parsed as JSON. Respond again with ONLY a si
     for (let ci = 0; ci < categories.length; ci++) {
       const cat = categories[ci];
       ledgerHTML += `
-        <div class="cat-header">
+        <div class="cat-header" data-cat="${escHtml(cat.name)}">
           <div class="cat-label">${escHtml(cat.name)}</div>
           <div class="cat-div"></div>
           <div class="cat-label"></div>
@@ -1514,10 +1555,11 @@ Your previous response could not be parsed as JSON. Respond again with ONLY a si
           ? `acct-row-${((isRemoved ? (p?.num||p?.name) : (c?.num||c?.name))||'').replace(/[^a-z0-9]/gi,'-').toLowerCase()}`
           : '';
         const repairAttr = (isAdded || isRemoved)
-          ? ` data-catidx="${ci}" data-rowidx="${ri}" data-status="${row.status}" onclick="handleRepairClick(this)"`
+          ? ` data-catidx="${ci}" data-rowidx="${ri}" onclick="handleRepairClick(this)"`
           : '';
         const repairCls = (isAdded || isRemoved) ? ' repair-selectable' : '';
-        ledgerHTML += `<div class="acct-row${repairCls}"${rowId ? ` id="${rowId}"` : ''}${repairAttr}>
+        const searchVal = [p?.name, c?.name].filter(Boolean).join(' ').toLowerCase();
+        ledgerHTML += `<div class="acct-row${repairCls}"${rowId ? ` id="${rowId}"` : ''}${repairAttr} data-status="${row.status}" data-category="${escHtml(cat.name)}" data-search="${escHtml(searchVal)}">
           <div class="acct-num prev-num ${pCls}${!p?' empty-cell':''}">${p ? escHtml(p.num||'') : ''}</div>
           <div class="acct-name prev-name ${pCls}${!p?' empty-cell':''}">${p ? prevBadge+escHtml(p.name||'') : ''}</div>
           <div class="acct-dr prev-dr ${pCls}${!p?' empty-cell':''}">${pDr}</div>
@@ -1584,6 +1626,27 @@ Your previous response could not be parsed as JSON. Respond again with ONLY a si
         <div class="legend-item"><span class="num-inherited">*</span>&nbsp;Account number carried forward from prior year</div>
       </div>
 
+      <div class="ledger-filter">
+        <div class="filter-search-wrap">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+          <input type="text" id="filter-search" class="filter-search" placeholder="Search accounts…" oninput="handleFilterSearch(this.value)" autocomplete="off">
+          <button class="filter-search-clear" id="filter-clear" onclick="clearFilterSearch()" style="display:none" title="Clear">×</button>
+        </div>
+        <div class="filter-pills">
+          <button class="filter-pill active" id="pill-all"     onclick="setFilterStatus('all')">All</button>
+          <button class="filter-pill"        id="pill-matched" onclick="setFilterStatus('matched')">Matched</button>
+          <button class="filter-pill added-pill"   id="pill-added"   onclick="setFilterStatus('added')">Added</button>
+          <button class="filter-pill removed-pill" id="pill-removed" onclick="setFilterStatus('removed')">Removed</button>
+        </div>
+        <select id="filter-category" class="filter-cat-select" onchange="handleFilterCategory(this.value)">
+          <option value="all">All categories</option>
+          ${categories.map(c => `<option value="${escHtml(c.name)}">${escHtml(c.name)}</option>`).join('')}
+        </select>
+        <span id="filter-count" class="filter-count"></span>
+      </div>
+
       <div id="repair-banner" class="repair-banner" style="display:none"></div>
 
       <div class="ledger-wrap">
@@ -1621,7 +1684,89 @@ Your previous response could not be parsed as JSON. Respond again with ONLY a si
       ${statsSummaryHTML(categories)}`;
 
     if (scroll) el.scrollIntoView({ behavior:'smooth', block:'start' });
+    restoreFilterUI();
     if (repairMode) activateRepairUI();
+  }
+
+  /* ── Ledger filter ───────────────────────────────────────────────── */
+
+  let filterText = '';
+  let filterStatus = 'all';
+  let filterCategory = 'all';
+
+  function handleFilterSearch(val) {
+    filterText = val.trim().toLowerCase();
+    const clearBtn = document.getElementById('filter-clear');
+    if (clearBtn) clearBtn.style.display = filterText ? '' : 'none';
+    applyLedgerFilter();
+  }
+
+  function clearFilterSearch() {
+    filterText = '';
+    const input = document.getElementById('filter-search');
+    if (input) { input.value = ''; input.focus(); }
+    const clearBtn = document.getElementById('filter-clear');
+    if (clearBtn) clearBtn.style.display = 'none';
+    applyLedgerFilter();
+  }
+
+  function setFilterStatus(status) {
+    filterStatus = status;
+    ['all','matched','added','removed'].forEach(s => {
+      const el = document.getElementById('pill-' + s);
+      if (el) el.classList.toggle('active', s === status);
+    });
+    applyLedgerFilter();
+  }
+
+  function handleFilterCategory(val) {
+    filterCategory = val;
+    applyLedgerFilter();
+  }
+
+  function applyLedgerFilter() {
+    const text = filterText;
+    const status = filterStatus;
+    const category = filterCategory;
+    let visible = 0, total = 0;
+
+    document.querySelectorAll('.ledger-wrap .acct-row').forEach(row => {
+      total++;
+      const show = (!text     || (row.dataset.search   || '').includes(text))
+                && (status === 'all' || row.dataset.status   === status)
+                && (category === 'all' || row.dataset.category === category);
+      row.style.display = show ? '' : 'none';
+      if (show) visible++;
+    });
+
+    document.querySelectorAll('.ledger-wrap .cat-header').forEach(header => {
+      let sib = header.nextElementSibling;
+      let hasVisible = false;
+      while (sib && !sib.classList.contains('cat-header') && !sib.classList.contains('tb-footer')) {
+        if (sib.classList.contains('acct-row') && sib.style.display !== 'none') { hasVisible = true; break; }
+        sib = sib.nextElementSibling;
+      }
+      header.style.display = hasVisible ? '' : 'none';
+    });
+
+    const countEl = document.getElementById('filter-count');
+    if (countEl) countEl.textContent = visible < total ? `${visible.toLocaleString()} of ${total.toLocaleString()} accounts` : '';
+  }
+
+  function restoreFilterUI() {
+    const searchEl = document.getElementById('filter-search');
+    if (searchEl) searchEl.value = filterText;
+    const clearBtn = document.getElementById('filter-clear');
+    if (clearBtn) clearBtn.style.display = filterText ? '' : 'none';
+    const catEl = document.getElementById('filter-category');
+    if (catEl) catEl.value = filterCategory;
+    if (filterStatus !== 'all') {
+      ['all','matched','added','removed'].forEach(s => {
+        const el = document.getElementById('pill-' + s);
+        if (el) el.classList.toggle('active', s === filterStatus);
+      });
+    }
+    applyLedgerFilter();
   }
 
   /* ── Repair mode ─────────────────────────────────────────────────── */
@@ -1902,6 +2047,7 @@ Your previous response could not be parsed as JSON. Respond again with ONLY a si
 
   function resetAll() {
     repairMode = false; repairPick = null;
+    filterText = ''; filterStatus = 'all'; filterCategory = 'all';
     document.removeEventListener('keydown', repairEscListener);
     clearSide('prev'); clearSide('curr');
     document.getElementById('results').style.display = 'none';
