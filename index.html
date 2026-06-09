@@ -508,8 +508,13 @@
   /* ── File handling ─────────────────────────────────────────────── */
 
   function showError(msg) {
-    document.getElementById('error-container').innerHTML = `<div class="error-banner">${msg}</div>`;
-    setTimeout(() => document.getElementById('error-container').innerHTML = '', 7000);
+    const banner = document.createElement('div');
+    banner.className = 'error-banner';
+    banner.textContent = msg;
+    const container = document.getElementById('error-container');
+    container.innerHTML = '';
+    container.appendChild(banner);
+    setTimeout(() => { container.innerHTML = ''; }, 7000);
   }
 
   function handleDragOver(e, s) { e.preventDefault(); document.getElementById('card-'+s).classList.add('dragover'); }
@@ -886,7 +891,7 @@ Your previous response could not be parsed as JSON. Respond again with ONLY a si
           }
         }
         if (parseErr) {
-          console.error('AI categorization — raw response that failed to parse:', raw);
+          console.error('AI categorization — response failed to parse (check format).');
           const trimmed = raw.trim();
           const looksTruncated = !trimmed.endsWith('}') && !trimmed.endsWith('```');
           throw new Error(looksTruncated
