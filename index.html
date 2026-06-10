@@ -1409,8 +1409,23 @@ Your previous response could not be parsed as JSON. Respond again with ONLY a si
 
   function exportCurrentLedger() {
     if (!lastResults) return;
+    const ledgerData = buildCurrentLedgerTable();
+    const ws = XLSX.utils.aoa_to_sheet(ledgerData);
+
+    ws['!cols'] = [{ wch: 22 }, { wch: 13 }, { wch: 36 }, { wch: 15 }, { wch: 15 }];
+    ws['!freeze'] = { xSplit: 0, ySplit: 1, topLeftCell: 'A2' };
+    ws['!autofilter'] = { ref: `A1:E${ledgerData.length}` };
+
+    const acctFmt = '#,##0.00';
+    for (let r = 1; r < ledgerData.length; r++) {
+      for (const c of [3, 4]) {
+        const ref = XLSX.utils.encode_cell({ r, c });
+        if (ws[ref]) ws[ref].z = acctFmt;
+      }
+    }
+
     const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(buildCurrentLedgerTable()), 'Current Ledger');
+    XLSX.utils.book_append_sheet(wb, ws, 'Current Ledger');
     XLSX.writeFile(wb, `${(lastResults.currFile || 'current_ledger').replace(/\.[^.]+$/, '')}_with_account_numbers.xlsx`);
   }
 
@@ -1434,35 +1449,81 @@ Your previous response could not be parsed as JSON. Respond again with ONLY a si
 
     const wb = XLSX.utils.book_new();
 
-    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(buildLedgerTable()), 'Reconciliation');
+    // ── Reconciliation sheet ──────────────────────────────────────────
+    const ledgerData = buildLedgerTable();
+    const wsRecon = XLSX.utils.aoa_to_sheet(ledgerData);
 
+    wsRecon['!cols'] = [
+      { wch: 22 }, // Category
+      { wch: 10 }, // Status
+      { wch: 12 }, // Prior Acct #
+      { wch: 32 }, // Prior Account Name
+      { wch: 15 }, // Prior Debit
+      { wch: 15 }, // Prior Credit
+      { wch: 12 }, // Current Acct #
+      { wch: 32 }, // Current Account Name
+      { wch: 15 }, // Current Debit
+      { wch: 15 }, // Current Credit
+    ];
+    wsRecon['!freeze'] = { xSplit: 0, ySplit: 1, topLeftCell: 'A2' };
+    wsRecon['!autofilter'] = { ref: `A1:J${ledgerData.length}` };
+
+    const acctFmt = '#,##0.00';
+    for (let r = 1; r < ledgerData.length; r++) {
+      for (const c of [4, 5, 8, 9]) {
+        const ref = XLSX.utils.encode_cell({ r, c });
+        if (wsRecon[ref]) wsRecon[ref].z = acctFmt;
+      }
+    }
+
+    XLSX.utils.book_append_sheet(wb, wsRecon, 'Reconciliation');
+
+    // ── Summary sheet ─────────────────────────────────────────────────
     const summaryRows = [
-      ['Reconciliation Summary'],
+      ['Reconciliation Summary', ''],
+      [],
       ['Prior Year File', prevFile],
       ['Current Year File', currFile],
       [],
-      ['Prior Year — Total Debits', prevTB.totalDr],
+      ['Prior Year — Total Debits',  prevTB.totalDr],
       ['Prior Year — Total Credits', prevTB.totalCr],
-      ['Prior Year — Balanced', prevTB.balanced ? 'Yes' : `No (off by ${prevTB.diff})`],
+      ['Prior Year — Balanced',      prevTB.balanced ? 'Yes' : `No (off by ${prevTB.diff})`],
       [],
-      ['Current Year — Total Debits', currTB.totalDr],
+      ['Current Year — Total Debits',  currTB.totalDr],
       ['Current Year — Total Credits', currTB.totalCr],
-      ['Current Year — Balanced', currTB.balanced ? 'Yes' : `No (off by ${currTB.diff})`],
+      ['Current Year — Balanced',      currTB.balanced ? 'Yes' : `No (off by ${currTB.diff})`],
       [],
       ['Matched Accounts', matchedCount],
-      ['Added Accounts', added.length],
-      ['Removed Accounts', removed.length]
+      ['Added Accounts',   added.length],
+      ['Removed Accounts', removed.length],
     ];
-    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(summaryRows), 'Summary');
+    const wsSummary = XLSX.utils.aoa_to_sheet(summaryRows);
 
-    const changesRows = [['Change', 'Account Name', 'Category']];
+    wsSummary['!cols'] = [{ wch: 30 }, { wch: 42 }];
+    wsSummary['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 1 } }];
+    for (const [r, c] of [[5,1],[6,1],[9,1],[10,1]]) {
+      const ref = XLSX.utils.encode_cell({ r, c });
+      if (wsSummary[ref]) wsSummary[ref].z = acctFmt;
+    }
+
+    XLSX.utils.book_append_sheet(wb, wsSummary, 'Summary');
+
+    // ── Added & Removed sheet ─────────────────────────────────────────
+    const changesRows = [['Change', 'Account #', 'Account Name', 'Category']];
     for (const cat of categories) {
       for (const row of cat.rows) {
-        if (row.status === 'added' && row.curr)  changesRows.push(['Added',   row.curr.name, cat.name]);
-        if (row.status === 'removed' && row.prev) changesRows.push(['Removed', row.prev.name, cat.name]);
+        if (row.status === 'added'   && row.curr) changesRows.push(['Added',   row.curr.num || '', row.curr.name, cat.name]);
+        if (row.status === 'removed' && row.prev) changesRows.push(['Removed', row.prev.num || '', row.prev.name, cat.name]);
       }
     }
-    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(changesRows), 'Added & Removed');
+    const wsChanges = XLSX.utils.aoa_to_sheet(changesRows);
+    wsChanges['!cols'] = [{ wch: 10 }, { wch: 13 }, { wch: 36 }, { wch: 22 }];
+    wsChanges['!freeze'] = { xSplit: 0, ySplit: 1, topLeftCell: 'A2' };
+    if (changesRows.length > 1) {
+      wsChanges['!autofilter'] = { ref: `A1:D${changesRows.length}` };
+    }
+
+    XLSX.utils.book_append_sheet(wb, wsChanges, 'Added & Removed');
 
     XLSX.writeFile(wb, 'reconciliation_results.xlsx');
   }
