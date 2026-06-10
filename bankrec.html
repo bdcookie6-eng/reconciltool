@@ -321,44 +321,72 @@
     const h = headers.map(x => String(x).toLowerCase().trim());
     const find = (...kws) => {
       for (const kw of kws) {
-        const i = h.findIndex(x => x.includes(kw));
+        const i = h.findIndex(x => x === kw || x.includes(kw));
         if (i !== -1) return i;
       }
       return -1;
     };
+    // Prefer explicit debit/credit columns; fall back to single amount column
+    const debit  = find('withdrawal', 'withdrawals', 'debit', 'debits', 'payment', 'payments', 'spent', 'charges', 'dr', 'amount out', 'money out');
+    const credit = find('deposit', 'deposits', 'credit', 'credits', 'receipt', 'receipts', 'received', 'cr', 'amount in', 'money in');
+    // Only use generic 'amount' if we have no split debit/credit columns
+    const amount = (debit < 0 && credit < 0) ? find('amount', 'total', 'net', 'value', 'sum', 'transaction amount') : -1;
     return {
-      date:   find('date', 'posted', 'trans date', 'value date', 'effective'),
-      desc:   find('description', 'memo', 'particulars', 'details', 'narration', 'payee', 'name', 'text', 'reference'),
-      debit:  find('debit', 'withdrawal', 'withdrawals', 'payment', 'payments', 'spent', 'charges', 'out'),
-      credit: find('deposit', 'deposits', 'credit', 'receipt', 'receipts', 'received', 'in'),
-      amount: find('amount', 'total', 'net', 'value', 'sum'),
-      balance:find('balance', 'running'),
+      date:   find('date', 'post date', 'posted', 'trans date', 'transaction date', 'value date', 'effective date', 'settlement date'),
+      desc:   find('description', 'memo', 'particulars', 'details', 'narration', 'payee', 'narrative', 'text', 'reference', 'remarks', 'note'),
+      debit,
+      credit,
+      amount,
+      balance: find('balance', 'running balance', 'ledger balance', 'available balance'),
     };
   }
 
   /* ── Date parsing ── */
 
+  const MONTHS = { jan:0,feb:1,mar:2,apr:3,may:4,jun:5,jul:6,aug:7,sep:8,oct:9,nov:10,dec:11 };
+
   function parseDate(val) {
     if (val === null || val === undefined || val === '') return null;
+    // Excel stores dates as numbers — check for numeric type first (before stringifying)
+    if (typeof val === 'number' && val > 10000 && val < 100000) {
+      return new Date(Math.round((val - 25569) * 86400 * 1000));
+    }
     const s = String(val).trim();
     if (!s) return null;
-    // Excel serial date (integer ~40000–50000)
-    const serial = parseInt(s);
-    if (!isNaN(serial) && serial > 10000 && serial < 100000 && String(serial) === s) {
-      return new Date((serial - 25569) * 86400 * 1000);
+    // Excel serial as string
+    const serial = Number(s);
+    if (Number.isInteger(serial) && serial > 10000 && serial < 100000 && String(serial) === s) {
+      return new Date(Math.round((serial - 25569) * 86400 * 1000));
     }
-    // ISO / native
-    const d1 = new Date(s);
-    if (!isNaN(d1) && d1.getFullYear() > 1970 && d1.getFullYear() < 2100) return d1;
-    // M/D/YYYY or D/M/YYYY
-    const parts = s.split(/[\/\-\.]/);
-    if (parts.length === 3) {
-      const [a, b, c] = parts.map(Number);
-      // Try YYYY-MM-DD
-      if (a > 1970) { const d = new Date(a, b-1, c); if (!isNaN(d)) return d; }
-      // Try MM/DD/YYYY
-      if (c > 1970) { const d = new Date(c, a-1, b); if (!isNaN(d)) return d; }
+    // Strip time component if present (e.g. "2024-01-15T00:00:00")
+    const stripped = s.replace(/T\d{2}:\d{2}(:\d{2})?(\.\d+)?(Z|[+-]\d{2}:?\d{2})?$/, '').trim();
+    // ISO 8601: YYYY-MM-DD
+    if (/^\d{4}-\d{2}-\d{2}$/.test(stripped)) {
+      const [y, m, d] = stripped.split('-').map(Number);
+      return new Date(y, m-1, d);
     }
+    // MM/DD/YYYY or M/D/YY
+    const slash = stripped.split(/[\/-]/);
+    if (slash.length === 3) {
+      const [a, b, c] = slash.map(Number);
+      if (a > 1900) return new Date(a, b-1, c);           // YYYY/MM/DD
+      const yr = c < 100 ? (c < 50 ? 2000+c : 1900+c) : c;
+      return new Date(yr, a-1, b);                        // MM/DD/YYYY or MM/DD/YY
+    }
+    // "Jan 15, 2024" or "15 Jan 2024"
+    const wordMatch = stripped.match(/(\d{1,2})[\- ]([A-Za-z]{3,})[\- ,]+(\d{4})|([A-Za-z]{3,})[\- ]+(\d{1,2})[,\- ]+(\d{4})/);
+    if (wordMatch) {
+      if (wordMatch[1]) {
+        const mo = MONTHS[wordMatch[2].toLowerCase().slice(0,3)];
+        if (mo !== undefined) return new Date(+wordMatch[3], mo, +wordMatch[1]);
+      } else {
+        const mo = MONTHS[wordMatch[4].toLowerCase().slice(0,3)];
+        if (mo !== undefined) return new Date(+wordMatch[6], mo, +wordMatch[5]);
+      }
+    }
+    // Last resort: native parse
+    const native = new Date(stripped);
+    if (!isNaN(native) && native.getFullYear() > 1970 && native.getFullYear() < 2100) return native;
     return null;
   }
 
@@ -407,38 +435,92 @@
   function amountsMatch(a, b) {
     return Math.abs(Math.abs(a) - Math.abs(b)) < 0.005;
   }
+  function amountsNear(a, b) {
+    const diff = Math.abs(Math.abs(a) - Math.abs(b));
+    // Tolerance: $0.50 flat or 1% of larger amount, whichever is greater
+    const tol = Math.max(0.50, Math.max(Math.abs(a), Math.abs(b)) * 0.01);
+    return diff > 0.005 && diff <= tol;
+  }
+
+  // Description similarity: Jaccard over meaningful tokens
+  const DESC_STOPWORDS = new Set(['the','and','for','from','via','ref','to','at','in','on','of','by','or','a','an','ltd','inc','llc','co']);
+  function tokenizeDesc(s) {
+    return String(s).toLowerCase()
+      .replace(/[^a-z0-9]/g, ' ').split(/\s+/)
+      .filter(t => t.length > 1 && !DESC_STOPWORDS.has(t));
+  }
+  function descSimilarity(a, b) {
+    const tokA = tokenizeDesc(a);
+    const tokB = tokenizeDesc(b);
+    if (!tokA.length || !tokB.length) return 0;
+    const setA = new Set(tokA);
+    const setB = new Set(tokB);
+    // Exact token overlap
+    let inter = 0;
+    for (const t of setA) {
+      if (setB.has(t)) { inter++; continue; }
+      // Partial: one token is a prefix of the other (min 4 chars)
+      if (t.length >= 4) {
+        for (const u of setB) {
+          if (u.length >= 4 && (u.startsWith(t) || t.startsWith(u))) { inter += 0.5; break; }
+        }
+      }
+    }
+    return inter / (setA.size + setB.size - inter);
+  }
 
   function matchTxns(bankTxns, bookTxns) {
     const usedBank = new Set();
     const usedBook = new Set();
     const matched  = [];
 
-    // Pass 1: exact date + exact absolute amount
+    function tryMatch(bi, ri, confidence, extra) {
+      matched.push({ bank: bankTxns[bi], book: bookTxns[ri], confidence, ...extra });
+      usedBank.add(bi); usedBook.add(ri);
+    }
+
+    // ── Pass 1: exact date + exact absolute amount ──────────────────────────
     for (let bi = 0; bi < bankTxns.length; bi++) {
       const b = bankTxns[bi];
       for (let ri = 0; ri < bookTxns.length; ri++) {
         if (usedBook.has(ri)) continue;
-        const r = bookTxns[ri];
-        if (datesEqual(b.date, r.date) && amountsMatch(b.amount, r.amount)) {
-          matched.push({ bank: b, book: r, confidence: 'exact' });
-          usedBank.add(bi); usedBook.add(ri); break;
+        if (datesEqual(b.date, bookTxns[ri].date) && amountsMatch(b.amount, bookTxns[ri].amount)) {
+          tryMatch(bi, ri, 'exact', {}); break;
         }
       }
     }
 
-    // Pass 2: ±3 day window + exact absolute amount (sort by closest date)
+    // ── Pass 2: ±3 day window + exact amount (closest date wins) ───────────
     for (let bi = 0; bi < bankTxns.length; bi++) {
       if (usedBank.has(bi)) continue;
       const b = bankTxns[bi];
-      const candidates = bookTxns
-        .map((r, ri) => ({ r, ri, diff: daysDiff(b.date, r.date) }))
-        .filter(c => !usedBook.has(c.ri) && c.diff <= 3 && c.diff > 0 && amountsMatch(b.amount, c.r.amount))
+      const cands = bookTxns
+        .map((r, ri) => ({ ri, diff: daysDiff(b.date, r.date) }))
+        .filter(c => !usedBook.has(c.ri) && c.diff > 0 && c.diff <= 3 && amountsMatch(b.amount, bookTxns[c.ri].amount))
         .sort((a, z) => a.diff - z.diff);
-      if (candidates.length) {
-        const best = candidates[0];
-        matched.push({ bank: b, book: best.r, confidence: 'near_date', daysDiff: Math.round(best.diff) });
-        usedBank.add(bi); usedBook.add(best.ri);
-      }
+      if (cands.length) tryMatch(bi, cands[0].ri, 'near_date', { daysDiff: Math.round(cands[0].diff) });
+    }
+
+    // ── Pass 3: ±7 days + exact amount, ranked by description similarity ───
+    for (let bi = 0; bi < bankTxns.length; bi++) {
+      if (usedBank.has(bi)) continue;
+      const b = bankTxns[bi];
+      const cands = bookTxns
+        .map((r, ri) => ({ ri, diff: daysDiff(b.date, r.date), sim: descSimilarity(b.desc, r.desc) }))
+        .filter(c => !usedBook.has(c.ri) && c.diff > 3 && c.diff <= 7 && amountsMatch(b.amount, bookTxns[c.ri].amount))
+        .sort((a, z) => (z.sim - a.sim) || (a.diff - z.diff));
+      if (cands.length) tryMatch(bi, cands[0].ri, 'wide_date', { daysDiff: Math.round(cands[0].diff), simScore: Math.round(cands[0].sim * 100) });
+    }
+
+    // ── Pass 4: ±3 days + amount within tolerance (rounding/typo differences)
+    for (let bi = 0; bi < bankTxns.length; bi++) {
+      if (usedBank.has(bi)) continue;
+      const b = bankTxns[bi];
+      const cands = bookTxns
+        .map((r, ri) => ({ ri, diff: daysDiff(b.date, r.date), amtDiff: Math.abs(Math.abs(b.amount) - Math.abs(r.amount)) }))
+        .filter(c => !usedBook.has(c.ri) && c.diff <= 3 && amountsNear(b.amount, bookTxns[c.ri].amount))
+        .sort((a, z) => a.amtDiff - z.amtDiff || a.diff - z.diff);
+      if (cands.length) tryMatch(bi, cands[0].ri, 'near_amount', { daysDiff: Math.round(cands[0].diff), amtDiff: +cands[0].amtDiff.toFixed(2) });
     }
 
     const bankOnly = bankTxns.filter((_, i) => !usedBank.has(i));
@@ -628,7 +710,11 @@
             <div class="txn-cell desc" title="${escHtml(m.bank.desc)}">${escHtml(m.bank.desc)}</div>
             <div class="txn-cell desc2" title="${escHtml(m.book.desc)}">${escHtml(m.book.desc)}</div>
             ${amtCell(m.bank.amount)}
-            <div class="txn-cell badge-cell">${m.confidence === 'near_date' ? `<span class="type-badge near-date">±${m.daysDiff}d</span>` : ''}</div>
+            <div class="txn-cell badge-cell">${
+              m.confidence === 'near_date'   ? `<span class="type-badge near-date">±${m.daysDiff}d</span>` :
+              m.confidence === 'wide_date'   ? `<span class="type-badge near-date">±${m.daysDiff}d</span>` :
+              m.confidence === 'near_amount' ? `<span class="type-badge near-date" title="Amount differs by $${m.amtDiff}">~amt</span>` : ''
+            }</div>
           </div>`).join('');
     } else {
       body = `
