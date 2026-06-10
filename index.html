@@ -405,6 +405,9 @@
       .ai-progress, .error-banner { margin-left: 16px; margin-right: 16px; }
     }
 
+    .nav-link { font-size: .8rem; color: var(--text3); text-decoration: none; padding: 5px 10px; border-radius: 5px; border: 1px solid var(--border); transition: color .15s, border-color .15s; white-space: nowrap; }
+    .nav-link:hover { color: var(--teal-mid); border-color: var(--border2); }
+
     @media print {
       header, .upload-row, .actions, .ai-progress, .error-banner, .export-group, .btn-reset { display: none !important; }
       .num-inherited { display: none !important; }
@@ -429,6 +432,7 @@
   <span class="sub">SST Accountants &amp; Consultants</span>
   <span class="badge">Financial</span>
   <span class="ai-badge">AI</span>
+  <a href="/bankrec.html" class="nav-link">Bank Rec →</a>
 </header>
 
 <div id="error-container"></div>
