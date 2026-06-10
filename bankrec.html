@@ -4,6 +4,10 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Bank Reconciliation — SST</title>
+  <script>
+    if (localStorage.getItem('bankrec-theme') === 'dark')
+      document.documentElement.setAttribute('data-theme', 'dark');
+  </script>
   <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -33,18 +37,55 @@
       --amber:     #d97706;
       --amber-bg:  rgba(217,119,6,.10);
       --amber-dim: #fef3c7;
+      --orange:    #c2410c;
+      --orange-bg: rgba(194,65,12,.09);
+      --orange-dim:#ffedd5;
       --blue:      #2563eb;
       --blue-bg:   rgba(37,99,235,.08);
       --mono:      'JetBrains Mono', monospace;
+      --shadow:    0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
+    }
+
+    [data-theme="dark"] {
+      --bg:        #0d1a16;
+      --surface:   #141f1c;
+      --surface2:  #1a2d27;
+      --surface3:  #223830;
+      --border:    #28403a;
+      --border2:   #365c52;
+      --text:      #dff0ea;
+      --text2:     #96bfb4;
+      --text3:     #5e8c80;
+      --teal:      #4cbf9a;
+      --teal-mid:  #5dd4ac;
+      --teal-light:#78e0bc;
+      --teal-dim:  #1a3d32;
+      --teal-bg:   rgba(77,191,154,.1);
+      --green:     #4ade80;
+      --green-dim: #14532d;
+      --green-bg:  rgba(74,222,128,.08);
+      --red:       #f87171;
+      --red-dim:   #450a0a;
+      --red-bg:    rgba(248,113,113,.08);
+      --amber:     #fbbf24;
+      --amber-bg:  rgba(251,191,36,.08);
+      --amber-dim: #451a03;
+      --orange:    #fb923c;
+      --orange-bg: rgba(251,146,60,.09);
+      --orange-dim:#431407;
+      --blue:      #60a5fa;
+      --blue-bg:   rgba(96,165,250,.09);
+      --shadow:    0 1px 3px rgba(0,0,0,.3);
     }
 
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; -webkit-font-smoothing: antialiased; }
+    body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; -webkit-font-smoothing: antialiased; transition: background .2s, color .2s; }
 
     header {
       border-bottom: 1px solid var(--border); padding: 0 40px; height: 56px;
       display: flex; align-items: center; gap: 14px;
       background: var(--surface); position: sticky; top: 0; z-index: 100;
+      box-shadow: var(--shadow);
     }
     .logo-mark {
       width: 28px; height: 28px; background: var(--teal); border-radius: 6px;
@@ -56,9 +97,15 @@
     .badge { margin-left: auto; background: var(--teal-dim); color: var(--teal); border: 1px solid rgba(10,61,50,.2); font-size: .68rem; padding: 2px 8px; border-radius: 4px; font-weight: 600; letter-spacing: .8px; text-transform: uppercase; font-family: var(--mono); }
     .nav-link { font-size: .8rem; color: var(--text3); text-decoration: none; padding: 5px 10px; border-radius: 5px; border: 1px solid var(--border); transition: color .15s, border-color .15s; white-space: nowrap; }
     .nav-link:hover { color: var(--teal-mid); border-color: var(--border2); }
+    .dark-toggle { background: none; border: 1px solid var(--border); border-radius: 6px; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--text3); transition: color .15s, border-color .15s, background .15s; flex-shrink: 0; }
+    .dark-toggle:hover { color: var(--teal-mid); border-color: var(--border2); background: var(--surface2); }
+    .dark-toggle .icon-sun  { display: none; }
+    .dark-toggle .icon-moon { display: block; }
+    [data-theme="dark"] .dark-toggle .icon-sun  { display: block; }
+    [data-theme="dark"] .dark-toggle .icon-moon { display: none; }
 
     .upload-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; padding: 28px 40px 0; }
-    .upload-card { background: var(--surface); border-radius: 8px; padding: 24px; border: 1px solid var(--border); transition: border-color .15s; cursor: pointer; }
+    .upload-card { background: var(--surface); border-radius: 8px; padding: 24px; border: 1px solid var(--border); transition: border-color .15s, box-shadow .15s; cursor: pointer; box-shadow: var(--shadow); }
     .upload-card.dragover { border-color: var(--teal-mid); box-shadow: 0 0 0 3px var(--teal-bg); }
     .upload-card.loaded   { border-color: var(--green); cursor: default; }
     .upload-card .year-label { font-size: .68rem; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: var(--text3); margin-bottom: 6px; font-family: var(--mono); }
@@ -80,7 +127,7 @@
     .detected-cols { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 8px; }
 
     .balance-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; padding: 16px 40px 0; }
-    .balance-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 16px 20px; display: flex; flex-direction: column; gap: 6px; }
+    .balance-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 16px 20px; display: flex; flex-direction: column; gap: 6px; box-shadow: var(--shadow); }
     .balance-card label { font-size: .72rem; font-weight: 600; letter-spacing: .8px; text-transform: uppercase; color: var(--text3); font-family: var(--mono); }
     .balance-card input[type="number"] { width: 100%; border: 1px solid var(--border2); border-radius: 6px; padding: 8px 12px; font-size: .95rem; font-family: var(--mono); color: var(--text); background: var(--surface2); outline: none; transition: border-color .15s; }
     .balance-card input[type="number"]:focus { border-color: var(--teal-mid); background: var(--surface); }
@@ -100,11 +147,40 @@
     /* ── Results ── */
     .results { padding: 28px 40px 56px; }
 
+    /* ── Status Dashboard ── */
+    .stat-dashboard {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      box-shadow: var(--shadow);
+      transition: border-color .15s;
+    }
+    .stat-card.status-ok  { border-color: rgba(22,163,74,.35);  background: var(--green-bg); }
+    .stat-card.status-err { border-color: rgba(220,38,38,.35);  background: var(--red-bg); }
+    .stat-label { font-size: .62rem; font-weight: 700; letter-spacing: .9px; text-transform: uppercase; color: var(--text3); font-family: var(--mono); }
+    .stat-value { font-size: 1.65rem; font-weight: 700; line-height: 1.1; font-family: var(--mono); color: var(--text); margin-top: 4px; }
+    .stat-value.green { color: var(--green); }
+    .stat-value.red   { color: var(--red); }
+    .stat-value.amber { color: var(--amber); }
+    .stat-value.blue  { color: var(--blue); }
+    .stat-sub { font-size: .7rem; color: var(--text3); margin-top: 2px; }
+
     /* Reconciliation equation card */
     .rec-equation {
       background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
       padding: 20px 24px; margin-bottom: 20px;
       display: grid; grid-template-columns: 1fr 1px 1fr; gap: 0;
+      box-shadow: var(--shadow);
     }
     .rec-eq-side { padding: 0 20px; }
     .rec-eq-side:first-child { padding-left: 0; }
@@ -127,7 +203,7 @@
     .rec-status.err { background: var(--red-bg);   color: var(--red);   border: 1px solid rgba(239,68,68,.2); }
 
     /* Buckets */
-    .bucket { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; margin-bottom: 14px; overflow: hidden; }
+    .bucket { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; margin-bottom: 14px; overflow: hidden; box-shadow: var(--shadow); }
     .bucket-head {
       display: flex; align-items: center; gap: 10px; padding: 12px 16px;
       font-size: .76rem; font-weight: 700; letter-spacing: .8px; text-transform: uppercase; font-family: var(--mono);
@@ -153,8 +229,8 @@
     .txn-row { display: grid; gap: 0; border-top: 1px solid var(--border); }
     .txn-row:first-child { border-top: none; }
     .txn-row.single-side { grid-template-columns: 90px 1fr 120px 160px; }
-    .txn-row.dual-side   { grid-template-columns: 90px 1fr 1fr 120px 100px; }
-    .txn-cell { padding: 8px 12px; font-size: .82rem; background: var(--surface); }
+    .txn-row.dual-side   { grid-template-columns: 90px 1fr 1fr 120px 110px; }
+    .txn-cell { padding: 8px 12px; font-size: .82rem; background: var(--surface); transition: background .1s; }
     .txn-cell.date  { font-family: var(--mono); font-size: .74rem; color: var(--text3); white-space: nowrap; }
     .txn-cell.desc  { color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .txn-cell.desc2 { color: var(--text2); font-size: .78rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -171,37 +247,49 @@
     .type-badge.outstanding-chk { background: var(--surface3); color: var(--text2); border: 1px solid var(--border2); }
     .type-badge.deposit-transit { background: #dbeafe; color: var(--blue); }
     .type-badge.outstanding-pmt { background: var(--surface3); color: var(--text2); border: 1px solid var(--border2); }
-    .type-badge.near-date { background: var(--teal-dim); color: var(--teal-mid); border: 1px solid rgba(13,92,73,.15); }
+    /* Confidence badges — each type has a distinct color */
+    .type-badge.conf-exact       { background: var(--green-dim);  color: var(--green); }
+    .type-badge.conf-near-date   { background: var(--amber-dim);  color: var(--amber); }
+    .type-badge.conf-wide-date   { background: var(--orange-dim); color: var(--orange); }
+    .type-badge.conf-near-amount { background: var(--red-dim);    color: var(--red); }
+    /* Row tinting by confidence */
+    .txn-row.conf-near-date   .txn-cell { background: rgba(217,119,6,.04); }
+    .txn-row.conf-wide-date   .txn-cell { background: rgba(194,65,12,.06); }
+    .txn-row.conf-near-amount .txn-cell { background: rgba(220,38,38,.05); }
+    .txn-row:hover .txn-cell { background: var(--surface2) !important; }
+
     .txn-sub-header { display: grid; background: var(--surface3); border-bottom: 1px solid var(--border); }
     .txn-sub-header.single-side { grid-template-columns: 90px 1fr 120px 160px; }
-    .txn-sub-header.dual-side   { grid-template-columns: 90px 1fr 1fr 120px 100px; }
+    .txn-sub-header.dual-side   { grid-template-columns: 90px 1fr 1fr 120px 110px; }
     .txn-sh { padding: 5px 12px; font-size: .62rem; font-weight: 700; letter-spacing: .8px; text-transform: uppercase; color: var(--text3); font-family: var(--mono); }
-    .txn-row:hover .txn-cell { background: var(--surface2); }
 
     .bucket-empty { padding: 14px 16px; font-size: .82rem; color: var(--text3); font-style: italic; }
+
+    /* Confidence legend strip */
+    .conf-legend {
+      display: flex; gap: 14px; align-items: center; flex-wrap: wrap;
+      padding: 8px 14px; background: var(--surface2); border-bottom: 1px solid var(--border);
+      font-size: .72rem; color: var(--text3);
+    }
+    .conf-legend-item { display: flex; align-items: center; gap: 5px; }
 
     .export-group { display: flex; gap: 8px; margin-bottom: 20px; }
     .export-btn { background: var(--surface2); border: 1px solid var(--border2); padding: 7px 14px; border-radius: 6px; font-size: .8rem; font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 6px; color: var(--text2); transition: border-color .15s; }
     .export-btn:hover { border-color: var(--border2); color: var(--text); }
 
-    .summary-chips { display: flex; gap: 10px; margin-bottom: 18px; flex-wrap: wrap; }
-    .chip { display: flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 4px; font-size: .78rem; font-weight: 600; font-family: var(--mono); }
-    .chip.matched  { background: var(--green-bg);  color: var(--green); border: 1px solid rgba(34,197,94,.2); }
-    .chip.bank-only{ background: var(--amber-bg);  color: var(--amber); border: 1px solid rgba(217,119,6,.2); }
-    .chip.book-only{ background: var(--blue-bg);   color: var(--blue);  border: 1px solid rgba(37,99,235,.15); }
-    .chip .dot { width: 6px; height: 6px; border-radius: 50%; }
-    .chip.matched .dot   { background: var(--green); }
-    .chip.bank-only .dot { background: var(--amber); }
-    .chip.book-only .dot { background: var(--blue); }
-
+    @media (max-width: 900px) {
+      .stat-dashboard { grid-template-columns: repeat(3, 1fr); }
+    }
     @media (max-width: 700px) {
       .upload-row, .balance-row { grid-template-columns: 1fr; padding: 16px; }
       .results { padding: 16px 16px 40px; }
       header { padding: 0 16px; }
+      header .sub { display: none; }
       .actions { padding: 16px; }
       .rec-equation { grid-template-columns: 1fr; }
       .rec-eq-divider { height: 1px; width: 100%; margin: 12px 0; }
       .txn-row.dual-side, .txn-sub-header.dual-side { grid-template-columns: 80px 1fr 100px 80px; }
+      .stat-dashboard { grid-template-columns: repeat(2, 1fr); }
     }
   </style>
 </head>
@@ -217,6 +305,17 @@
   <span class="sep">|</span>
   <span class="sub">SST Accountants &amp; Consultants</span>
   <span class="badge">Financial</span>
+  <button class="dark-toggle" id="dark-toggle" onclick="toggleDark()" title="Toggle dark mode" aria-label="Toggle dark mode">
+    <svg class="icon-moon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+    </svg>
+    <svg class="icon-sun" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+      <line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+    </svg>
+  </button>
   <a href="/" class="nav-link">← Ledger Compare</a>
 </header>
 
@@ -326,10 +425,8 @@
       }
       return -1;
     };
-    // Prefer explicit debit/credit columns; fall back to single amount column
     const debit  = find('withdrawal', 'withdrawals', 'debit', 'debits', 'payment', 'payments', 'spent', 'charges', 'dr', 'amount out', 'money out');
     const credit = find('deposit', 'deposits', 'credit', 'credits', 'receipt', 'receipts', 'received', 'cr', 'amount in', 'money in');
-    // Only use generic 'amount' if we have no split debit/credit columns
     const amount = (debit < 0 && credit < 0) ? find('amount', 'total', 'net', 'value', 'sum', 'transaction amount') : -1;
     return {
       date:   find('date', 'post date', 'posted', 'trans date', 'transaction date', 'value date', 'effective date', 'settlement date'),
@@ -347,33 +444,27 @@
 
   function parseDate(val) {
     if (val === null || val === undefined || val === '') return null;
-    // Excel stores dates as numbers — check for numeric type first (before stringifying)
     if (typeof val === 'number' && val > 10000 && val < 100000) {
       return new Date(Math.round((val - 25569) * 86400 * 1000));
     }
     const s = String(val).trim();
     if (!s) return null;
-    // Excel serial as string
     const serial = Number(s);
     if (Number.isInteger(serial) && serial > 10000 && serial < 100000 && String(serial) === s) {
       return new Date(Math.round((serial - 25569) * 86400 * 1000));
     }
-    // Strip time component if present (e.g. "2024-01-15T00:00:00")
     const stripped = s.replace(/T\d{2}:\d{2}(:\d{2})?(\.\d+)?(Z|[+-]\d{2}:?\d{2})?$/, '').trim();
-    // ISO 8601: YYYY-MM-DD
     if (/^\d{4}-\d{2}-\d{2}$/.test(stripped)) {
       const [y, m, d] = stripped.split('-').map(Number);
       return new Date(y, m-1, d);
     }
-    // MM/DD/YYYY or M/D/YY
     const slash = stripped.split(/[\/-]/);
     if (slash.length === 3) {
       const [a, b, c] = slash.map(Number);
-      if (a > 1900) return new Date(a, b-1, c);           // YYYY/MM/DD
+      if (a > 1900) return new Date(a, b-1, c);
       const yr = c < 100 ? (c < 50 ? 2000+c : 1900+c) : c;
-      return new Date(yr, a-1, b);                        // MM/DD/YYYY or MM/DD/YY
+      return new Date(yr, a-1, b);
     }
-    // "Jan 15, 2024" or "15 Jan 2024"
     const wordMatch = stripped.match(/(\d{1,2})[\- ]([A-Za-z]{3,})[\- ,]+(\d{4})|([A-Za-z]{3,})[\- ]+(\d{1,2})[,\- ]+(\d{4})/);
     if (wordMatch) {
       if (wordMatch[1]) {
@@ -384,7 +475,6 @@
         if (mo !== undefined) return new Date(+wordMatch[6], mo, +wordMatch[5]);
       }
     }
-    // Last resort: native parse
     const native = new Date(stripped);
     if (!isNaN(native) && native.getFullYear() > 1970 && native.getFullYear() < 2100) return native;
     return null;
@@ -408,7 +498,6 @@
       if (cols.debit >= 0 || cols.credit >= 0) {
         const credit = parseNum(cols.credit >= 0 ? r[cols.credit] : 0);
         const debit  = parseNum(cols.debit  >= 0 ? r[cols.debit]  : 0);
-        // Positive = inflow (deposit/credit to account), negative = outflow
         amount = credit - debit;
       } else if (cols.amount >= 0) {
         amount = parseNum(r[cols.amount]);
@@ -437,12 +526,10 @@
   }
   function amountsNear(a, b) {
     const diff = Math.abs(Math.abs(a) - Math.abs(b));
-    // Tolerance: $0.50 flat or 1% of larger amount, whichever is greater
     const tol = Math.max(0.50, Math.max(Math.abs(a), Math.abs(b)) * 0.01);
     return diff > 0.005 && diff <= tol;
   }
 
-  // Description similarity: Jaccard over meaningful tokens
   const DESC_STOPWORDS = new Set(['the','and','for','from','via','ref','to','at','in','on','of','by','or','a','an','ltd','inc','llc','co']);
   function tokenizeDesc(s) {
     return String(s).toLowerCase()
@@ -455,11 +542,9 @@
     if (!tokA.length || !tokB.length) return 0;
     const setA = new Set(tokA);
     const setB = new Set(tokB);
-    // Exact token overlap
     let inter = 0;
     for (const t of setA) {
       if (setB.has(t)) { inter++; continue; }
-      // Partial: one token is a prefix of the other (min 4 chars)
       if (t.length >= 4) {
         for (const u of setB) {
           if (u.length >= 4 && (u.startsWith(t) || t.startsWith(u))) { inter += 0.5; break; }
@@ -479,7 +564,7 @@
       usedBank.add(bi); usedBook.add(ri);
     }
 
-    // ── Pass 1: exact date + exact absolute amount ──────────────────────────
+    // Pass 1: exact date + exact absolute amount
     for (let bi = 0; bi < bankTxns.length; bi++) {
       const b = bankTxns[bi];
       for (let ri = 0; ri < bookTxns.length; ri++) {
@@ -490,7 +575,7 @@
       }
     }
 
-    // ── Pass 2: ±3 day window + exact amount (closest date wins) ───────────
+    // Pass 2: ±3 day window + exact amount (closest date wins)
     for (let bi = 0; bi < bankTxns.length; bi++) {
       if (usedBank.has(bi)) continue;
       const b = bankTxns[bi];
@@ -501,7 +586,7 @@
       if (cands.length) tryMatch(bi, cands[0].ri, 'near_date', { daysDiff: Math.round(cands[0].diff) });
     }
 
-    // ── Pass 3: ±7 days + exact amount, ranked by description similarity ───
+    // Pass 3: ±7 days + exact amount, ranked by description similarity
     for (let bi = 0; bi < bankTxns.length; bi++) {
       if (usedBank.has(bi)) continue;
       const b = bankTxns[bi];
@@ -512,7 +597,7 @@
       if (cands.length) tryMatch(bi, cands[0].ri, 'wide_date', { daysDiff: Math.round(cands[0].diff), simScore: Math.round(cands[0].sim * 100) });
     }
 
-    // ── Pass 4: ±3 days + amount within tolerance (rounding/typo differences)
+    // Pass 4: ±3 days + amount within tolerance
     for (let bi = 0; bi < bankTxns.length; bi++) {
       if (usedBank.has(bi)) continue;
       const b = bankTxns[bi];
@@ -655,7 +740,6 @@
 
     const { matched, bankOnly, bookOnly } = matchTxns(bankTxns, bookTxns);
 
-    // Compute reconciliation equation
     const depositsInTransit = bookOnly.filter(t => t.amount > 0).reduce((s, t) => s + t.amount, 0);
     const outstandingPmts   = bookOnly.filter(t => t.amount < 0).reduce((s, t) => s + t.amount, 0);
     const adjustedBank      = bankBalance + depositsInTransit + outstandingPmts;
@@ -686,7 +770,15 @@
     return `<span class="type-badge ${cls}">${escHtml(label)}</span>`;
   }
 
-  function renderBucket(items, side, title, desc) {
+  function confBadge(m) {
+    if (m.confidence === 'exact')       return `<span class="type-badge conf-exact">Exact</span>`;
+    if (m.confidence === 'near_date')   return `<span class="type-badge conf-near-date" title="Date differs by ${m.daysDiff} day(s)">±${m.daysDiff}d</span>`;
+    if (m.confidence === 'wide_date')   return `<span class="type-badge conf-wide-date" title="Date differs by ${m.daysDiff} days (wide window)">±${m.daysDiff}d wide</span>`;
+    if (m.confidence === 'near_amount') return `<span class="type-badge conf-near-amount" title="Amount differs by $${m.amtDiff}">~$${m.amtDiff}</span>`;
+    return '';
+  }
+
+  function renderBucket(items, side, title) {
     const bucketCls = side === 'matched' ? 'matched' : (side === 'bank' ? 'bank-only' : 'book-only');
     const totalAmt = side === 'matched'
       ? items.reduce((s, m) => s + Math.abs(m.bank.amount), 0)
@@ -696,26 +788,35 @@
     if (!items.length) {
       body = `<div class="bucket-empty">No ${side === 'matched' ? 'matched' : 'unmatched'} items.</div>`;
     } else if (side === 'matched') {
-      body = `
-        <div class="txn-sub-header dual-side">
+      const legend = `
+        <div class="conf-legend">
+          <span style="font-size:.7rem;color:var(--text3);margin-right:4px">Match quality:</span>
+          <span class="conf-legend-item"><span class="type-badge conf-exact">Exact</span> date &amp; amount</span>
+          <span class="conf-legend-item"><span class="type-badge conf-near-date">±Nd</span> within 3 days</span>
+          <span class="conf-legend-item"><span class="type-badge conf-wide-date">±Nd wide</span> within 7 days</span>
+          <span class="conf-legend-item"><span class="type-badge conf-near-amount">~$X</span> rounded amount</span>
+        </div>`;
+      body = legend +
+        `<div class="txn-sub-header dual-side">
           <div class="txn-sh">Date</div>
           <div class="txn-sh">Bank Description</div>
           <div class="txn-sh">Book Description</div>
           <div class="txn-sh" style="text-align:right">Amount</div>
-          <div class="txn-sh">Match</div>
+          <div class="txn-sh">Confidence</div>
         </div>` +
-        items.map(m => `
-          <div class="txn-row dual-side">
+        items.map(m => {
+          const confCls = m.confidence === 'near_date' ? 'conf-near-date' :
+                          m.confidence === 'wide_date'  ? 'conf-wide-date' :
+                          m.confidence === 'near_amount'? 'conf-near-amount' : '';
+          return `
+          <div class="txn-row dual-side ${confCls}">
             <div class="txn-cell date">${escHtml(fmtDate(m.bank.date))}</div>
             <div class="txn-cell desc" title="${escHtml(m.bank.desc)}">${escHtml(m.bank.desc)}</div>
             <div class="txn-cell desc2" title="${escHtml(m.book.desc)}">${escHtml(m.book.desc)}</div>
             ${amtCell(m.bank.amount)}
-            <div class="txn-cell badge-cell">${
-              m.confidence === 'near_date'   ? `<span class="type-badge near-date">±${m.daysDiff}d</span>` :
-              m.confidence === 'wide_date'   ? `<span class="type-badge near-date">±${m.daysDiff}d</span>` :
-              m.confidence === 'near_amount' ? `<span class="type-badge near-date" title="Amount differs by $${m.amtDiff}">~amt</span>` : ''
-            }</div>
-          </div>`).join('');
+            <div class="txn-cell badge-cell">${confBadge(m)}</div>
+          </div>`;
+        }).join('');
     } else {
       body = `
         <div class="txn-sub-header single-side">
@@ -751,10 +852,47 @@
     const el = document.getElementById('results');
     el.style.display = 'block';
 
-    const balCls = r.balanced ? 'balanced' : 'unbalanced';
+    const balCls    = r.balanced ? 'balanced' : 'unbalanced';
     const statusCls = r.balanced ? 'ok' : 'err';
-    const statusMsg = r.balanced ? '✓ Reconciled — adjusted balances agree' : `✕ Out of balance by ${fmtAmt(Math.abs(r.difference))}`;
+    const statusMsg = r.balanced
+      ? '✓ Reconciled — adjusted balances agree'
+      : `✕ Out of balance by ${fmtAmt(Math.abs(r.difference))}`;
 
+    // ── Stat dashboard ──────────────────────────────────────────────────────
+    const totalTxns = r.matched.length + Math.max(r.bankOnly.length, r.bookOnly.length);
+    const matchRate = totalTxns > 0 ? Math.round(r.matched.length / totalTxns * 100) : 0;
+    const rateColor = matchRate >= 90 ? 'green' : matchRate >= 70 ? 'amber' : 'red';
+
+    const statHTML = `
+      <div class="stat-dashboard">
+        <div class="stat-card ${r.balanced ? 'status-ok' : 'status-err'}">
+          <div class="stat-label">Status</div>
+          <div class="stat-value ${r.balanced ? 'green' : 'red'}">${r.balanced ? 'Balanced' : 'Off by'}</div>
+          <div class="stat-sub">${r.balanced ? 'Adjusted balances agree' : fmtAmt(Math.abs(r.difference)) + ' difference'}</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Match Rate</div>
+          <div class="stat-value ${rateColor}">${matchRate}%</div>
+          <div class="stat-sub">${r.matched.length} of ${totalTxns} transactions</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Matched</div>
+          <div class="stat-value green">${r.matched.length}</div>
+          <div class="stat-sub">transactions paired</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Bank Only</div>
+          <div class="stat-value ${r.bankOnly.length ? 'amber' : ''}">${r.bankOnly.length}</div>
+          <div class="stat-sub">not in books</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Books Only</div>
+          <div class="stat-value ${r.bookOnly.length ? 'blue' : ''}">${r.bookOnly.length}</div>
+          <div class="stat-sub">not on statement</div>
+        </div>
+      </div>`;
+
+    // ── Reconciliation equation ─────────────────────────────────────────────
     const eqHTML = `
       <div class="rec-equation">
         <div class="rec-eq-side">
@@ -777,12 +915,8 @@
         </div>
       </div>`;
 
-    const matchRate = r.matched.length + r.bankOnly.length + r.bookOnly.length > 0
-      ? Math.round(r.matched.length / (r.matched.length + Math.max(r.bankOnly.length, r.bookOnly.length)) * 100)
-      : 0;
-
     el.innerHTML = `
-      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; flex-wrap:wrap; gap:10px;">
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; flex-wrap:wrap; gap:10px;">
         <h2 style="font-size:1rem; font-weight:600;">Bank Reconciliation Results</h2>
         <div class="export-group">
           <button class="export-btn" onclick="exportExcel()">
@@ -792,17 +926,12 @@
         </div>
       </div>
 
-      <div class="summary-chips">
-        <div class="chip matched"><div class="dot"></div>${r.matched.length} Matched &nbsp;·&nbsp; ${matchRate}% match rate</div>
-        <div class="chip bank-only"><div class="dot"></div>${r.bankOnly.length} Bank Only</div>
-        <div class="chip book-only"><div class="dot"></div>${r.bookOnly.length} Books Only</div>
-      </div>
-
+      ${statHTML}
       ${eqHTML}
 
-      ${renderBucket(r.bankOnly, 'bank', 'In Bank Statement Only', 'Transactions on the bank statement not recorded in the books')}
-      ${renderBucket(r.bookOnly, 'book', 'In Books Only', 'Transactions recorded in the books but not yet on the bank statement')}
-      ${renderBucket(r.matched,  'matched', 'Matched Transactions', '')}`;
+      ${renderBucket(r.bankOnly, 'bank',    'In Bank Statement Only')}
+      ${renderBucket(r.bookOnly, 'book',    'In Books Only')}
+      ${renderBucket(r.matched,  'matched', 'Matched Transactions')}`;
 
     el.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
@@ -815,7 +944,6 @@
     const wb = XLSX.utils.book_new();
     const fmt = '#,##0.00';
 
-    // Summary sheet
     const summaryRows = [
       ['Bank Reconciliation Work Paper'],
       [],
@@ -850,7 +978,6 @@
     }
     XLSX.utils.book_append_sheet(wb, wsSummary, 'Summary');
 
-    // Bank-only sheet
     const bankOnlyRows = [['Date','Description','Amount','Type']];
     for (const t of r.bankOnly) {
       const { label } = classifyItem(t, 'bank');
@@ -865,7 +992,6 @@
     }
     XLSX.utils.book_append_sheet(wb, wsBankOnly, 'Bank Only');
 
-    // Book-only sheet
     const bookOnlyRows = [['Date','Description','Amount','Type']];
     for (const t of r.bookOnly) {
       const { label } = classifyItem(t, 'book');
@@ -880,14 +1006,16 @@
     }
     XLSX.utils.book_append_sheet(wb, wsBookOnly, 'Books Only');
 
-    // Matched sheet
     const matchedRows = [['Date (Bank)','Bank Description','Date (Book)','Book Description','Amount','Match Type']];
     for (const m of r.matched) {
-      matchedRows.push([fmtDate(m.bank.date), m.bank.desc, fmtDate(m.book.date), m.book.desc, m.bank.amount,
-        m.confidence === 'near_date' ? `Near date (±${m.daysDiff}d)` : 'Exact']);
+      const matchLabel = m.confidence === 'exact' ? 'Exact' :
+                         m.confidence === 'near_date'   ? `Near date (±${m.daysDiff}d)` :
+                         m.confidence === 'wide_date'   ? `Wide date (±${m.daysDiff}d)` :
+                         m.confidence === 'near_amount' ? `Near amount (~$${m.amtDiff})` : m.confidence;
+      matchedRows.push([fmtDate(m.bank.date), m.bank.desc, fmtDate(m.book.date), m.book.desc, m.bank.amount, matchLabel]);
     }
     const wsMatched = XLSX.utils.aoa_to_sheet(matchedRows);
-    wsMatched['!cols'] = [{ wch: 12 }, { wch: 36 }, { wch: 12 }, { wch: 36 }, { wch: 14 }, { wch: 18 }];
+    wsMatched['!cols'] = [{ wch: 12 }, { wch: 36 }, { wch: 12 }, { wch: 36 }, { wch: 14 }, { wch: 22 }];
     wsMatched['!freeze'] = { xSplit: 0, ySplit: 1, topLeftCell: 'A2' };
     if (r.matched.length > 0) wsMatched['!autofilter'] = { ref: `A1:F${matchedRows.length}` };
     for (let i = 1; i < matchedRows.length; i++) {
@@ -898,6 +1026,14 @@
 
     const period = new Date().toISOString().slice(0,7);
     XLSX.writeFile(wb, `bank_rec_${period}.xlsx`);
+  }
+
+  /* ── Dark mode ── */
+
+  function toggleDark() {
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    document.documentElement.setAttribute('data-theme', isDark ? '' : 'dark');
+    localStorage.setItem('bankrec-theme', isDark ? 'light' : 'dark');
   }
 
   function resetAll() {
