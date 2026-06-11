@@ -186,6 +186,11 @@
       color: var(--red); padding: 11px 14px; border-radius: 6px;
       font-size: .84rem; margin: 12px 40px 0;
     }
+    .warn-banner {
+      background: rgba(245,158,11,.08); border: 1px solid rgba(245,158,11,.3);
+      color: #92400e; padding: 11px 14px; border-radius: 6px;
+      font-size: .84rem; margin: 12px 40px 0;
+    }
 
     /* ── Results ── */
     .results { padding: 28px 40px 56px; }
@@ -225,9 +230,9 @@
     .num-inherited { color: var(--teal-mid); font-weight: 700; cursor: help; }
 
     /* ── Ledger ── */
-    .ledger-wrap { border-radius: 8px; overflow: hidden; border: 1px solid var(--border); background: var(--surface); }
+    .ledger-wrap { border-radius: 8px; border: 1px solid var(--border); background: var(--surface); }
 
-    .ledger-top-header { display: grid; grid-template-columns: 1fr 1fr; background: var(--surface2); }
+    .ledger-top-header { display: grid; grid-template-columns: 1fr 1fr; background: var(--surface2); border-radius: 7px 7px 0 0; }
     .lth {
       padding: 10px 14px; font-size: .72rem; font-weight: 600;
       letter-spacing: .6px; text-transform: uppercase;
@@ -237,9 +242,9 @@
     .lth:first-child { border-right: 1px solid var(--border); }
 
     .ledger-sub-header,
-    .acct-row { display: grid; grid-template-columns: 80px 1fr 110px 110px 1px 80px 1fr 110px 110px; }
+    .acct-row { display: grid; grid-template-columns: 80px 1fr 110px 110px 1px 80px 1fr 110px 110px 110px; }
 
-    .ledger-sub-header { background: var(--surface3); border-bottom: 1px solid var(--border); }
+    .ledger-sub-header { background: var(--surface3); border-bottom: 1px solid var(--border); position: sticky; top: 56px; z-index: 5; }
     .lsh { padding: 6px 10px; font-size: .65rem; font-weight: 700; letter-spacing: .8px; text-transform: uppercase; color: var(--text3); font-family: var(--mono); }
     .lsh.dr  { text-align: right; color: var(--green); }
     .lsh.cr  { text-align: right; color: var(--red); }
@@ -253,12 +258,17 @@
     .acct-row:hover .acct-num,
     .acct-row:hover .acct-name,
     .acct-row:hover .acct-dr,
-    .acct-row:hover .acct-cr { background: var(--surface3) !important; }
+    .acct-row:hover .acct-cr,
+    .acct-row:hover .acct-chg { background: var(--surface3) !important; }
 
     .acct-num  { padding: 8px 10px; font-size: .76rem; color: var(--text3); font-family: var(--mono); background: var(--surface); }
     .acct-name { padding: 8px 10px; font-size: .84rem; color: var(--text); display: flex; align-items: center; gap: 6px; background: var(--surface); }
     .acct-dr   { padding: 8px 10px; font-size: .8rem; color: var(--green); font-weight: 500; text-align: right; font-family: var(--mono); white-space: nowrap; background: var(--surface); }
     .acct-cr   { padding: 8px 10px; font-size: .8rem; color: var(--red); font-weight: 500; text-align: right; font-family: var(--mono); white-space: nowrap; background: var(--surface); }
+    .acct-chg  { padding: 8px 10px; font-size: .8rem; font-weight: 500; text-align: right; font-family: var(--mono); white-space: nowrap; background: var(--surface); color: var(--text3); }
+    .acct-chg.pos { color: var(--green); }
+    .acct-chg.neg { color: var(--red); }
+    .lsh.chg   { text-align: right; color: var(--text3); }
     .acct-div  { background: var(--border); }
 
     .acct-row .curr-num.added-cell,
@@ -281,10 +291,12 @@
 
     /* ── Trial Balance Footer ── */
     .tb-footer {
-      display: grid; grid-template-columns: 1fr 1px 1fr;
+      display: grid; grid-template-columns: 1fr 1px 1fr 110px;
       border-top: 1px solid var(--border);
       background: var(--surface2);
+      border-radius: 0 0 7px 7px;
     }
+    .tb-chg-cell { background: var(--surface2); border-left: 1px solid var(--border); }
     .tb-side {
       padding: 14px 0;
       display: grid;
@@ -376,12 +388,14 @@
     .prog-elapsed { margin-top: 10px; font-size: .76rem; color: var(--text3); font-family: var(--mono); }
 
     @media (max-width: 1200px) {
-      .ledger-sub-header, .acct-row { grid-template-columns: 70px 1fr 95px 95px 1px 70px 1fr 95px 95px; }
+      .ledger-sub-header, .acct-row { grid-template-columns: 70px 1fr 95px 95px 1px 70px 1fr 95px 95px 95px; }
       .tb-side { grid-template-columns: 70px 1fr 95px 95px; }
+      .tb-footer { grid-template-columns: 1fr 1px 1fr 95px; }
     }
     @media (max-width: 960px) {
-      .ledger-sub-header, .acct-row { grid-template-columns: 55px 1fr 80px 80px 1px 55px 1fr 80px 80px; }
+      .ledger-sub-header, .acct-row { grid-template-columns: 55px 1fr 80px 80px 1px 55px 1fr 80px 80px 80px; }
       .tb-side { grid-template-columns: 55px 1fr 80px 80px; }
+      .tb-footer { grid-template-columns: 1fr 1px 1fr 80px; }
     }
     @media (max-width: 700px) {
       .upload-row  { grid-template-columns: 1fr; padding: 16px; }
@@ -390,6 +404,9 @@
       header       { padding: 0 16px; }
       .ai-progress, .error-banner { margin-left: 16px; margin-right: 16px; }
     }
+
+    .nav-link { font-size: .8rem; color: var(--text3); text-decoration: none; padding: 5px 10px; border-radius: 5px; border: 1px solid var(--border); transition: color .15s, border-color .15s; white-space: nowrap; }
+    .nav-link:hover { color: var(--teal-mid); border-color: var(--border2); }
 
     @media print {
       header, .upload-row, .actions, .ai-progress, .error-banner, .export-group, .btn-reset { display: none !important; }
@@ -415,6 +432,7 @@
   <span class="sub">SST Accountants &amp; Consultants</span>
   <span class="badge">Financial</span>
   <span class="ai-badge">AI</span>
+  <a href="/bankrec.html" class="nav-link">Bank Rec →</a>
 </header>
 
 <div id="error-container"></div>
@@ -512,6 +530,18 @@
     setTimeout(() => document.getElementById('error-container').innerHTML = '', 7000);
   }
 
+  function showWarning(msg) {
+    document.getElementById('error-container').innerHTML += `<div class="warn-banner">${msg}</div>`;
+  }
+
+  function fmtChg(prev, curr) {
+    if (!prev || !curr) return '';
+    const delta = ((curr.dr||0) - (curr.cr||0)) - ((prev.dr||0) - (prev.cr||0));
+    if (Math.abs(delta) < 0.005) return '';
+    const abs = Math.abs(delta).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    return delta > 0 ? `+${abs}` : `(${abs})`;
+  }
+
   function handleDragOver(e, s) { e.preventDefault(); document.getElementById('card-'+s).classList.add('dragover'); }
   function handleDragLeave(s)   { document.getElementById('card-'+s).classList.remove('dragover'); }
   function handleDrop(e, s)     { e.preventDefault(); handleDragLeave(s); const f = e.dataTransfer.files[0]; if (f) processFile(f, s); }
@@ -599,12 +629,13 @@
     const { rows, cols } = state[side];
     const seen = new Set();
     const out  = [];
+    const dupes = [];
 
     for (const r of rows) {
       const name = String(r[cols.name] ?? '').trim();
       if (!name) continue;
       const key = name.toLowerCase();
-      if (seen.has(key)) continue;
+      if (seen.has(key)) { dupes.push(name); continue; }
       seen.add(key);
 
       let dr = '', cr = '';
@@ -633,7 +664,7 @@
         cr,
       });
     }
-    return out;
+    return { rows: out, dupes };
   }
 
   function parseNum(v) {
@@ -746,8 +777,8 @@
   }
 
   async function runWithAI() {
-    const prevRows = extractRows('prev');
-    const currRows = extractRows('curr');
+    const { rows: prevRows, dupes: prevDupes } = extractRows('prev');
+    const { rows: currRows, dupes: currDupes } = extractRows('curr');
 
     const progEl = document.getElementById('ai-progress');
     const elapsedEl = document.getElementById('prog-elapsed');
@@ -782,6 +813,13 @@
       // identified here in code — the AI's only remaining job is category assignment.
       const normName = s => String(s||'').trim().toLowerCase()
         .replace(/[-–—]/g,' ').replace(/[^a-z0-9 ]/g,' ').replace(/\s+/g,' ').trim();
+
+      if (prevDupes.length || currDupes.length) {
+        const parts = [];
+        if (prevDupes.length) parts.push(`Prior year: ${prevDupes.map(escHtml).join(', ')}`);
+        if (currDupes.length) parts.push(`Current year: ${currDupes.map(escHtml).join(', ')}`);
+        showWarning(`Duplicate account names were found and skipped — ${parts.join(' · ')}`);
+      }
 
       const currByName = new Map();
       for (const r of currRows) {
@@ -1049,6 +1087,16 @@ Your previous response could not be parsed as JSON. Respond again with ONLY a si
         }
       }
 
+      // ── POST-PROCESSING PASS 4: canonical category ordering ──────────────────
+      const CAT_ORDER = ['Assets','Liabilities','Equity','Revenue','Cost of Revenue','Operating Expenses','Other Income/Expense'];
+      mergedCategories.sort((a, b) => {
+        const ai = CAT_ORDER.indexOf(a.name), bi = CAT_ORDER.indexOf(b.name);
+        if (ai === -1 && bi === -1) return a.name.localeCompare(b.name);
+        if (ai === -1) return 1;
+        if (bi === -1) return -1;
+        return ai - bi;
+      });
+
       const categories = mergedCategories;
       const added   = categories.flatMap(c=>c.rows.filter(r=>r.status==='added').map(r=>r.curr?.name).filter(Boolean));
       const removed = categories.flatMap(c=>c.rows.filter(r=>r.status==='removed').map(r=>r.prev?.name).filter(Boolean));
@@ -1268,6 +1316,9 @@ Your previous response could not be parsed as JSON. Respond again with ONLY a si
         const cDr = c ? fmtAmt(c.dr) : '';
         const cCr = c ? fmtAmt(c.cr) : '';
 
+        const chg = row.status === 'matched' ? fmtChg(p, c) : '';
+        const chgCls = chg.startsWith('+') ? 'pos' : (chg ? 'neg' : '');
+
         const rowId = (isAdded || isRemoved)
           ? `acct-row-${((isRemoved ? (p?.num||p?.name) : (c?.num||c?.name))||'').replace(/[^a-z0-9]/gi,'-').toLowerCase()}`
           : '';
@@ -1281,6 +1332,7 @@ Your previous response could not be parsed as JSON. Respond again with ONLY a si
           <div class="acct-name curr-name ${cCls}${!c?' empty-cell':''}">${c ? currBadge+escHtml(c.name||'') : ''}</div>
           <div class="acct-dr curr-dr ${cCls}${!c?' empty-cell':''}">${cDr}</div>
           <div class="acct-cr curr-cr ${cCls}${!c?' empty-cell':''}">${cCr}</div>
+          <div class="acct-chg ${chgCls}${row.status !== 'matched' ? ' empty-cell' : ''}">${chg}</div>
         </div>`;
       }
     }
@@ -1353,12 +1405,14 @@ Your previous response could not be parsed as JSON. Respond again with ONLY a si
           <div class="lsh">Account Name</div>
           <div class="lsh dr">Debit</div>
           <div class="lsh cr">Credit</div>
+          <div class="lsh chg">Change</div>
         </div>
         ${ledgerHTML}
         <div class="tb-footer">
           ${tbSideHTML(prevTB)}
           <div class="tb-div"></div>
           ${tbSideHTML(currTB)}
+          <div class="tb-chg-cell"></div>
         </div>
       </div>
 
@@ -1376,15 +1430,19 @@ Your previous response could not be parsed as JSON. Respond again with ONLY a si
   function buildLedgerTable() {
     const header = ['Category','Status',
       'Prior Acct #','Prior Account Name','Prior Debit','Prior Credit',
-      'Current Acct #','Current Account Name','Current Debit','Current Credit'];
+      'Current Acct #','Current Account Name','Current Debit','Current Credit','Change'];
     const rows = [header];
     for (const cat of lastResults.categories) {
       for (const row of cat.rows) {
         const p = row.prev, c = row.curr;
+        const chg = (row.status === 'matched' && p && c)
+          ? ((c.dr||0) - (c.cr||0)) - ((p.dr||0) - (p.cr||0))
+          : '';
         rows.push([
           cat.name, row.status,
           p ? (p.num||'') : '', p ? (p.name||'') : '', p ? (p.dr||0) : '', p ? (p.cr||0) : '',
-          c ? (c.num||'') : '', c ? (c.name||'') : '', c ? (c.dr||0) : '', c ? (c.cr||0) : ''
+          c ? (c.num||'') : '', c ? (c.name||'') : '', c ? (c.dr||0) : '', c ? (c.cr||0) : '',
+          chg
         ]);
       }
     }
@@ -1409,8 +1467,23 @@ Your previous response could not be parsed as JSON. Respond again with ONLY a si
 
   function exportCurrentLedger() {
     if (!lastResults) return;
+    const ledgerData = buildCurrentLedgerTable();
+    const ws = XLSX.utils.aoa_to_sheet(ledgerData);
+
+    ws['!cols'] = [{ wch: 22 }, { wch: 13 }, { wch: 36 }, { wch: 15 }, { wch: 15 }];
+    ws['!freeze'] = { xSplit: 0, ySplit: 1, topLeftCell: 'A2' };
+    ws['!autofilter'] = { ref: `A1:E${ledgerData.length}` };
+
+    const acctFmt = '#,##0.00';
+    for (let r = 1; r < ledgerData.length; r++) {
+      for (const c of [3, 4]) {
+        const ref = XLSX.utils.encode_cell({ r, c });
+        if (ws[ref]) ws[ref].z = acctFmt;
+      }
+    }
+
     const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(buildCurrentLedgerTable()), 'Current Ledger');
+    XLSX.utils.book_append_sheet(wb, ws, 'Current Ledger');
     XLSX.writeFile(wb, `${(lastResults.currFile || 'current_ledger').replace(/\.[^.]+$/, '')}_with_account_numbers.xlsx`);
   }
 
@@ -1434,35 +1507,82 @@ Your previous response could not be parsed as JSON. Respond again with ONLY a si
 
     const wb = XLSX.utils.book_new();
 
-    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(buildLedgerTable()), 'Reconciliation');
+    // ── Reconciliation sheet ──────────────────────────────────────────
+    const ledgerData = buildLedgerTable();
+    const wsRecon = XLSX.utils.aoa_to_sheet(ledgerData);
 
+    wsRecon['!cols'] = [
+      { wch: 22 }, // Category
+      { wch: 10 }, // Status
+      { wch: 12 }, // Prior Acct #
+      { wch: 32 }, // Prior Account Name
+      { wch: 15 }, // Prior Debit
+      { wch: 15 }, // Prior Credit
+      { wch: 12 }, // Current Acct #
+      { wch: 32 }, // Current Account Name
+      { wch: 15 }, // Current Debit
+      { wch: 15 }, // Current Credit
+      { wch: 15 }, // Change
+    ];
+    wsRecon['!freeze'] = { xSplit: 0, ySplit: 1, topLeftCell: 'A2' };
+    wsRecon['!autofilter'] = { ref: `A1:K${ledgerData.length}` };
+
+    const acctFmt = '#,##0.00';
+    for (let r = 1; r < ledgerData.length; r++) {
+      for (const c of [4, 5, 8, 9, 10]) {
+        const ref = XLSX.utils.encode_cell({ r, c });
+        if (wsRecon[ref]) wsRecon[ref].z = acctFmt;
+      }
+    }
+
+    XLSX.utils.book_append_sheet(wb, wsRecon, 'Reconciliation');
+
+    // ── Summary sheet ─────────────────────────────────────────────────
     const summaryRows = [
-      ['Reconciliation Summary'],
+      ['Reconciliation Summary', ''],
+      [],
       ['Prior Year File', prevFile],
       ['Current Year File', currFile],
       [],
-      ['Prior Year — Total Debits', prevTB.totalDr],
+      ['Prior Year — Total Debits',  prevTB.totalDr],
       ['Prior Year — Total Credits', prevTB.totalCr],
-      ['Prior Year — Balanced', prevTB.balanced ? 'Yes' : `No (off by ${prevTB.diff})`],
+      ['Prior Year — Balanced',      prevTB.balanced ? 'Yes' : `No (off by ${prevTB.diff})`],
       [],
-      ['Current Year — Total Debits', currTB.totalDr],
+      ['Current Year — Total Debits',  currTB.totalDr],
       ['Current Year — Total Credits', currTB.totalCr],
-      ['Current Year — Balanced', currTB.balanced ? 'Yes' : `No (off by ${currTB.diff})`],
+      ['Current Year — Balanced',      currTB.balanced ? 'Yes' : `No (off by ${currTB.diff})`],
       [],
       ['Matched Accounts', matchedCount],
-      ['Added Accounts', added.length],
-      ['Removed Accounts', removed.length]
+      ['Added Accounts',   added.length],
+      ['Removed Accounts', removed.length],
     ];
-    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(summaryRows), 'Summary');
+    const wsSummary = XLSX.utils.aoa_to_sheet(summaryRows);
 
-    const changesRows = [['Change', 'Account Name', 'Category']];
+    wsSummary['!cols'] = [{ wch: 30 }, { wch: 42 }];
+    wsSummary['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 1 } }];
+    for (const [r, c] of [[5,1],[6,1],[9,1],[10,1]]) {
+      const ref = XLSX.utils.encode_cell({ r, c });
+      if (wsSummary[ref]) wsSummary[ref].z = acctFmt;
+    }
+
+    XLSX.utils.book_append_sheet(wb, wsSummary, 'Summary');
+
+    // ── Added & Removed sheet ─────────────────────────────────────────
+    const changesRows = [['Change', 'Account #', 'Account Name', 'Category']];
     for (const cat of categories) {
       for (const row of cat.rows) {
-        if (row.status === 'added' && row.curr)  changesRows.push(['Added',   row.curr.name, cat.name]);
-        if (row.status === 'removed' && row.prev) changesRows.push(['Removed', row.prev.name, cat.name]);
+        if (row.status === 'added'   && row.curr) changesRows.push(['Added',   row.curr.num || '', row.curr.name, cat.name]);
+        if (row.status === 'removed' && row.prev) changesRows.push(['Removed', row.prev.num || '', row.prev.name, cat.name]);
       }
     }
-    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(changesRows), 'Added & Removed');
+    const wsChanges = XLSX.utils.aoa_to_sheet(changesRows);
+    wsChanges['!cols'] = [{ wch: 10 }, { wch: 13 }, { wch: 36 }, { wch: 22 }];
+    wsChanges['!freeze'] = { xSplit: 0, ySplit: 1, topLeftCell: 'A2' };
+    if (changesRows.length > 1) {
+      wsChanges['!autofilter'] = { ref: `A1:D${changesRows.length}` };
+    }
+
+    XLSX.utils.book_append_sheet(wb, wsChanges, 'Added & Removed');
 
     XLSX.writeFile(wb, 'reconciliation_results.xlsx');
   }

@@ -1,0 +1,1325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bank Reconciliation — SST</title>
+  <script>
+    if (localStorage.getItem('bankrec-theme') === 'dark')
+      document.documentElement.setAttribute('data-theme', 'dark');
+  </script>
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg:        #f4f6f5;
+      --surface:   #ffffff;
+      --surface2:  #f0f4f2;
+      --surface3:  #e4ede9;
+      --border:    #d0dbd6;
+      --border2:   #b0c4bc;
+      --text:      #0d2b24;
+      --text2:     #3d6055;
+      --text3:     #7a9e94;
+      --teal:      #0a3d32;
+      --teal-mid:  #0d5c49;
+      --teal-light:#1a7a61;
+      --teal-dim:  #e0eeea;
+      --teal-bg:   rgba(10,61,50,.08);
+      --green:     #16a34a;
+      --green-dim: #dcfce7;
+      --green-bg:  rgba(22,163,74,.10);
+      --red:       #dc2626;
+      --red-dim:   #fee2e2;
+      --red-bg:    rgba(220,38,38,.10);
+      --amber:     #d97706;
+      --amber-bg:  rgba(217,119,6,.10);
+      --amber-dim: #fef3c7;
+      --orange:    #c2410c;
+      --orange-bg: rgba(194,65,12,.09);
+      --orange-dim:#ffedd5;
+      --blue:      #2563eb;
+      --blue-bg:   rgba(37,99,235,.08);
+      --mono:      'JetBrains Mono', monospace;
+      --shadow:    0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
+    }
+
+    [data-theme="dark"] {
+      --bg:        #0d1a16;
+      --surface:   #141f1c;
+      --surface2:  #1a2d27;
+      --surface3:  #223830;
+      --border:    #28403a;
+      --border2:   #365c52;
+      --text:      #dff0ea;
+      --text2:     #96bfb4;
+      --text3:     #5e8c80;
+      --teal:      #4cbf9a;
+      --teal-mid:  #5dd4ac;
+      --teal-light:#78e0bc;
+      --teal-dim:  #1a3d32;
+      --teal-bg:   rgba(77,191,154,.1);
+      --green:     #4ade80;
+      --green-dim: #14532d;
+      --green-bg:  rgba(74,222,128,.08);
+      --red:       #f87171;
+      --red-dim:   #450a0a;
+      --red-bg:    rgba(248,113,113,.08);
+      --amber:     #fbbf24;
+      --amber-bg:  rgba(251,191,36,.08);
+      --amber-dim: #451a03;
+      --orange:    #fb923c;
+      --orange-bg: rgba(251,146,60,.09);
+      --orange-dim:#431407;
+      --blue:      #60a5fa;
+      --blue-bg:   rgba(96,165,250,.09);
+      --shadow:    0 1px 3px rgba(0,0,0,.3);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; -webkit-font-smoothing: antialiased; transition: background .2s, color .2s; }
+
+    /* ── Header ── */
+    header {
+      border-bottom: 1px solid var(--border); padding: 0 40px; height: 56px;
+      display: flex; align-items: center; gap: 14px;
+      background: var(--surface); position: sticky; top: 0; z-index: 100;
+      box-shadow: var(--shadow);
+    }
+    .logo-mark { width: 28px; height: 28px; background: var(--teal); border-radius: 6px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    header h1 { font-size: 1rem; font-weight: 600; letter-spacing: -.01em; color: var(--teal); }
+    header .sep { color: var(--border2); font-size: 1.2rem; font-weight: 200; }
+    header .sub { font-size: .82rem; color: var(--text3); }
+    .header-spacer { flex: 1; }
+    .badge { background: var(--teal-dim); color: var(--teal); border: 1px solid rgba(10,61,50,.2); font-size: .68rem; padding: 2px 8px; border-radius: 4px; font-weight: 600; letter-spacing: .8px; text-transform: uppercase; font-family: var(--mono); }
+    .nav-link { font-size: .8rem; color: var(--text3); text-decoration: none; padding: 5px 10px; border-radius: 5px; border: 1px solid var(--border); transition: color .15s, border-color .15s; white-space: nowrap; }
+    .nav-link:hover { color: var(--teal-mid); border-color: var(--border2); }
+    .icon-btn { background: none; border: 1px solid var(--border); border-radius: 6px; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--text3); transition: color .15s, border-color .15s, background .15s; flex-shrink: 0; }
+    .icon-btn:hover { color: var(--teal-mid); border-color: var(--border2); background: var(--surface2); }
+    .icon-btn .icon-sun  { display: none; }
+    .icon-btn .icon-moon { display: block; }
+    [data-theme="dark"] .icon-btn .icon-sun  { display: block; }
+    [data-theme="dark"] .icon-btn .icon-moon { display: none; }
+    .settings-btn-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--teal-mid); position: absolute; top: 5px; right: 5px; display: none; }
+    .settings-btn { position: relative; }
+    .settings-btn.has-changes .settings-btn-dot { display: block; }
+
+    /* ── Settings overlay & panel ── */
+    .settings-overlay {
+      display: none; position: fixed; inset: 0; background: rgba(0,0,0,.35);
+      z-index: 200; backdrop-filter: blur(2px);
+    }
+    .settings-overlay.open { display: block; }
+    .settings-panel {
+      position: fixed; top: 0; right: 0; bottom: 0; width: 320px;
+      background: var(--surface); border-left: 1px solid var(--border);
+      z-index: 201; display: flex; flex-direction: column;
+      transform: translateX(100%); transition: transform .25s cubic-bezier(.4,0,.2,1);
+      box-shadow: -4px 0 24px rgba(0,0,0,.12);
+    }
+    .settings-panel.open { transform: translateX(0); }
+    .settings-header {
+      display: flex; align-items: center; gap: 10px;
+      padding: 0 20px; height: 56px; border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .settings-header h3 { font-size: .95rem; font-weight: 600; flex: 1; }
+    .settings-close { background: none; border: none; cursor: pointer; color: var(--text3); padding: 6px; border-radius: 5px; display: flex; align-items: center; transition: color .15s, background .15s; }
+    .settings-close:hover { color: var(--text); background: var(--surface2); }
+    .settings-body { flex: 1; overflow-y: auto; padding: 8px 0 24px; }
+    .settings-section { padding: 16px 20px; }
+    .settings-section + .settings-section { border-top: 1px solid var(--border); }
+    .settings-section-title { font-size: .62rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--text3); font-family: var(--mono); margin-bottom: 14px; }
+    .setting-row { margin-bottom: 14px; }
+    .setting-row:last-child { margin-bottom: 0; }
+    .setting-label { font-size: .82rem; font-weight: 500; color: var(--text); margin-bottom: 6px; display: flex; align-items: center; justify-content: space-between; }
+    .setting-label .setting-val { font-family: var(--mono); font-size: .78rem; color: var(--teal-mid); font-weight: 600; }
+    .setting-hint { font-size: .72rem; color: var(--text3); margin-top: 5px; font-style: italic; }
+
+    /* Segmented control */
+    .seg-ctrl { display: flex; border: 1px solid var(--border2); border-radius: 6px; overflow: hidden; }
+    .seg-btn { flex: 1; border: none; padding: 7px 4px; font-size: .78rem; font-weight: 500; cursor: pointer; background: var(--surface2); color: var(--text3); font-family: 'Inter', sans-serif; transition: background .15s, color .15s; white-space: nowrap; }
+    .seg-btn + .seg-btn { border-left: 1px solid var(--border2); }
+    .seg-btn.active { background: var(--teal); color: #fff; }
+    .seg-btn:not(.active):hover { background: var(--surface3); color: var(--text2); }
+
+    /* Range slider */
+    .setting-slider {
+      width: 100%; height: 4px; border-radius: 2px; cursor: pointer; accent-color: var(--teal-mid);
+      appearance: none; -webkit-appearance: none;
+      background: linear-gradient(to right, var(--teal-mid) 0%, var(--teal-mid) var(--pct, 50%), var(--surface3) var(--pct, 50%));
+      outline: none; border: none; margin-top: 6px;
+    }
+    .setting-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; border-radius: 50%; background: var(--teal-mid); box-shadow: 0 1px 4px rgba(0,0,0,.2); cursor: pointer; }
+    .setting-slider::-moz-range-thumb { width: 16px; height: 16px; border-radius: 50%; background: var(--teal-mid); border: none; box-shadow: 0 1px 4px rgba(0,0,0,.2); cursor: pointer; }
+
+    /* Toggle switch */
+    .toggle-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .toggle-row .toggle-label-group { flex: 1; }
+    .toggle-label-group .setting-label { margin-bottom: 2px; }
+    .toggle { position: relative; width: 38px; height: 22px; flex-shrink: 0; }
+    .toggle input { opacity: 0; width: 0; height: 0; position: absolute; }
+    .toggle-track { position: absolute; inset: 0; background: var(--surface3); border-radius: 11px; cursor: pointer; transition: background .2s; border: 1px solid var(--border2); }
+    .toggle input:checked + .toggle-track { background: var(--teal-mid); border-color: var(--teal-mid); }
+    .toggle-thumb { position: absolute; top: 3px; left: 3px; width: 14px; height: 14px; background: #fff; border-radius: 50%; transition: transform .2s; pointer-events: none; box-shadow: 0 1px 3px rgba(0,0,0,.25); }
+    .toggle input:checked ~ .toggle-thumb { transform: translateX(16px); }
+
+    /* Text input */
+    .setting-text { width: 100%; border: 1px solid var(--border2); border-radius: 6px; padding: 8px 10px; font-size: .84rem; font-family: 'Inter', sans-serif; color: var(--text); background: var(--surface2); outline: none; transition: border-color .15s; }
+    .setting-text:focus { border-color: var(--teal-mid); background: var(--surface); }
+    .setting-text::placeholder { color: var(--text3); }
+
+    /* Reset button */
+    .settings-footer { padding: 12px 20px; border-top: 1px solid var(--border); flex-shrink: 0; }
+    .btn-reset-settings { width: 100%; background: transparent; border: 1px solid var(--border2); border-radius: 6px; padding: 8px; font-size: .8rem; color: var(--text3); cursor: pointer; font-family: 'Inter', sans-serif; transition: color .15s, border-color .15s; }
+    .btn-reset-settings:hover { color: var(--red); border-color: var(--red); }
+
+    /* ── Upload cards ── */
+    .upload-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; padding: 28px 40px 0; }
+    .upload-card { background: var(--surface); border-radius: 8px; padding: 24px; border: 1px solid var(--border); transition: border-color .15s, box-shadow .15s; cursor: pointer; box-shadow: var(--shadow); }
+    .upload-card.dragover { border-color: var(--teal-mid); box-shadow: 0 0 0 3px var(--teal-bg); }
+    .upload-card.loaded   { border-color: var(--green); cursor: default; }
+    .upload-card .year-label { font-size: .68rem; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: var(--text3); margin-bottom: 6px; font-family: var(--mono); }
+    .upload-card h2 { font-size: .95rem; font-weight: 600; margin-bottom: 16px; color: var(--text); }
+    .drop-zone { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; padding: 32px 20px; border-radius: 6px; background: var(--surface2); border: 1px dashed var(--border2); transition: border-color .15s; }
+    .upload-card.dragover .drop-zone { border-color: var(--teal-mid); }
+    .drop-zone svg { color: var(--text3); }
+    .drop-zone p { font-size: .88rem; color: var(--text2); text-align: center; }
+    .drop-zone p strong { color: var(--teal-mid); cursor: pointer; }
+    .drop-zone .file-types { font-size: .72rem; color: var(--text3); font-family: var(--mono); }
+    input[type="file"] { display: none; }
+    .file-info { display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: var(--green-bg); border: 1px solid rgba(34,197,94,.2); border-radius: 6px; margin-top: 4px; }
+    .file-info svg { color: var(--green); flex-shrink: 0; }
+    .file-info .fname { font-size: .84rem; font-weight: 500; color: var(--green); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-family: var(--mono); }
+    .file-info .fmeta { font-size: .72rem; color: var(--text3); }
+    .clear-btn { margin-left: auto; background: none; border: none; cursor: pointer; color: var(--text3); padding: 3px; border-radius: 4px; display: flex; align-items: center; flex-shrink: 0; }
+    .clear-btn:hover { color: var(--red); background: var(--red-bg); }
+    .col-pill { font-size: .68rem; font-weight: 500; padding: 2px 7px; border-radius: 4px; background: var(--surface3); color: var(--text2); border: 1px solid var(--border2); font-family: var(--mono); }
+    .detected-cols { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 8px; }
+
+    /* ── Balance inputs ── */
+    .balance-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; padding: 16px 40px 0; }
+    .balance-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 16px 20px; display: flex; flex-direction: column; gap: 6px; box-shadow: var(--shadow); }
+    .balance-card label { font-size: .72rem; font-weight: 600; letter-spacing: .8px; text-transform: uppercase; color: var(--text3); font-family: var(--mono); }
+    .balance-card input[type="number"] { width: 100%; border: 1px solid var(--border2); border-radius: 6px; padding: 8px 12px; font-size: .95rem; font-family: var(--mono); color: var(--text); background: var(--surface2); outline: none; transition: border-color .15s; }
+    .balance-card input[type="number"]:focus { border-color: var(--teal-mid); background: var(--surface); }
+    .balance-card .balance-hint { font-size: .72rem; color: var(--text3); }
+
+    /* ── Action buttons ── */
+    .actions { display: flex; justify-content: center; padding: 24px 40px 0; gap: 10px; }
+    .btn-primary { background: var(--teal); color: #fff; border: none; padding: 10px 28px; border-radius: 6px; font-size: .88rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 7px; transition: opacity .15s, transform .1s; font-family: 'Inter', sans-serif; }
+    .btn-primary:hover:not(:disabled) { opacity: .88; }
+    .btn-primary:active:not(:disabled) { transform: scale(.98); }
+    .btn-primary:disabled { opacity: .3; cursor: not-allowed; }
+    .btn-reset { background: transparent; color: var(--text3); border: 1px solid var(--border); padding: 10px 20px; border-radius: 6px; font-size: .88rem; font-weight: 500; cursor: pointer; font-family: 'Inter', sans-serif; }
+    .btn-reset:hover { color: var(--text2); border-color: var(--border2); }
+
+    /* ── Banners ── */
+    .error-banner { background: var(--red-bg); border: 1px solid rgba(239,68,68,.25); color: var(--red); padding: 11px 14px; border-radius: 6px; font-size: .84rem; margin: 12px 40px 0; }
+    .warn-banner  { background: var(--amber-bg); border: 1px solid rgba(217,119,6,.25); color: var(--amber); padding: 11px 14px; border-radius: 6px; font-size: .84rem; margin: 12px 40px 0; }
+
+    /* ── Results ── */
+    .results { padding: 28px 40px 56px; }
+
+    /* Status dashboard */
+    .stat-dashboard { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-bottom: 20px; }
+    .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 16px 18px; display: flex; flex-direction: column; gap: 3px; box-shadow: var(--shadow); }
+    .stat-card.status-ok  { border-color: rgba(22,163,74,.35);  background: var(--green-bg); }
+    .stat-card.status-err { border-color: rgba(220,38,38,.35);  background: var(--red-bg); }
+    .stat-label { font-size: .62rem; font-weight: 700; letter-spacing: .9px; text-transform: uppercase; color: var(--text3); font-family: var(--mono); }
+    .stat-value { font-size: 1.65rem; font-weight: 700; line-height: 1.1; font-family: var(--mono); color: var(--text); margin-top: 4px; }
+    .stat-value.green { color: var(--green); }
+    .stat-value.red   { color: var(--red); }
+    .stat-value.amber { color: var(--amber); }
+    .stat-value.blue  { color: var(--blue); }
+    .stat-sub { font-size: .7rem; color: var(--text3); margin-top: 2px; }
+
+    /* Reconciliation equation */
+    .rec-equation { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 20px 24px; margin-bottom: 20px; display: grid; grid-template-columns: 1fr 1px 1fr; gap: 0; box-shadow: var(--shadow); }
+    .rec-eq-side { padding: 0 20px; }
+    .rec-eq-side:first-child { padding-left: 0; }
+    .rec-eq-side:last-child { padding-right: 0; }
+    .rec-eq-divider { background: var(--border); }
+    .rec-eq-title { font-size: .68rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--text3); font-family: var(--mono); margin-bottom: 10px; }
+    .rec-eq-row { display: flex; align-items: baseline; gap: 8px; padding: 3px 0; font-size: .84rem; }
+    .rec-eq-row .label { color: var(--text2); flex: 1; }
+    .rec-eq-row .amount { font-family: var(--mono); font-size: .82rem; font-weight: 500; text-align: right; min-width: 100px; }
+    .rec-eq-row .amount.pos { color: var(--green); }
+    .rec-eq-row .amount.neg { color: var(--red); }
+    .rec-eq-divider-row { border-top: 1px solid var(--border); margin: 6px 0; }
+    .rec-eq-total { display: flex; align-items: baseline; gap: 8px; padding: 6px 0 0; font-size: .9rem; font-weight: 700; }
+    .rec-eq-total .label { color: var(--text); flex: 1; }
+    .rec-eq-total .amount { font-family: var(--mono); }
+    .rec-eq-total .amount.balanced   { color: var(--green); }
+    .rec-eq-total .amount.unbalanced { color: var(--red); }
+    .rec-status { margin-top: 10px; padding: 8px 12px; border-radius: 6px; font-size: .82rem; font-weight: 600; font-family: var(--mono); }
+    .rec-status.ok  { background: var(--green-bg); color: var(--green); border: 1px solid rgba(34,197,94,.2); }
+    .rec-status.err { background: var(--red-bg);   color: var(--red);   border: 1px solid rgba(239,68,68,.2); }
+
+    /* Buckets */
+    .bucket { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; margin-bottom: 14px; overflow: hidden; box-shadow: var(--shadow); }
+    .bucket-head { display: flex; align-items: center; gap: 10px; padding: 12px 16px; font-size: .76rem; font-weight: 700; letter-spacing: .8px; text-transform: uppercase; font-family: var(--mono); cursor: pointer; user-select: none; }
+    .bucket-head .bucket-title { flex: 1; }
+    .bucket-head .bucket-count { font-size: .72rem; padding: 2px 8px; border-radius: 4px; font-weight: 600; }
+    .bucket-head .bucket-total { font-family: var(--mono); font-size: .8rem; margin-left: 8px; }
+    .bucket-head .chevron { transition: transform .2s; flex-shrink: 0; }
+    .bucket.collapsed .chevron { transform: rotate(-90deg); }
+    .bucket.collapsed .bucket-body { display: none; }
+    .bucket.matched   .bucket-head { background: var(--green-bg); color: var(--green); }
+    .bucket.matched   .bucket-head .bucket-count { background: rgba(22,163,74,.15); color: var(--green); }
+    .bucket.bank-only .bucket-head { background: var(--amber-bg); color: var(--amber); }
+    .bucket.bank-only .bucket-head .bucket-count { background: rgba(217,119,6,.15); color: var(--amber); }
+    .bucket.book-only .bucket-head { background: var(--blue-bg);  color: var(--blue); }
+    .bucket.book-only .bucket-head .bucket-count { background: rgba(37,99,235,.12); color: var(--blue); }
+    .bucket-body { border-top: 1px solid var(--border); }
+
+    /* Transaction rows */
+    .txn-row { display: grid; gap: 0; border-top: 1px solid var(--border); }
+    .txn-row:first-child { border-top: none; }
+    .txn-row.single-side { grid-template-columns: 90px 1fr 120px 160px; }
+    .txn-row.dual-side   { grid-template-columns: 90px 1fr 1fr 120px 110px; }
+    .txn-cell { padding: 8px 12px; font-size: .82rem; background: var(--surface); transition: background .1s, padding .15s; }
+    .txn-cell.date   { font-family: var(--mono); font-size: .74rem; color: var(--text3); white-space: nowrap; }
+    .txn-cell.desc   { color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .txn-cell.desc2  { color: var(--text2); font-size: .78rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .txn-cell.amount { font-family: var(--mono); font-size: .8rem; text-align: right; font-weight: 500; white-space: nowrap; }
+    .txn-cell.amount.pos { color: var(--green); }
+    .txn-cell.amount.neg { color: var(--red); }
+    .txn-cell.badge-cell { display: flex; align-items: center; }
+    /* Compact density */
+    body.compact .txn-cell { padding: 5px 12px; }
+    body.compact .txn-sh   { padding: 3px 12px; }
+
+    /* Badges */
+    .type-badge { font-size: .62rem; font-weight: 700; padding: 2px 6px; border-radius: 3px; text-transform: uppercase; letter-spacing: .3px; font-family: var(--mono); white-space: nowrap; }
+    .type-badge.bank-fee        { background: var(--amber-dim); color: var(--amber); }
+    .type-badge.nsf             { background: var(--red-dim);   color: var(--red); }
+    .type-badge.interest        { background: var(--green-dim); color: var(--green); }
+    .type-badge.unrecorded-dep  { background: var(--green-dim); color: var(--green); }
+    .type-badge.unrecorded-chg  { background: var(--red-dim);   color: var(--red); }
+    .type-badge.outstanding-chk { background: var(--surface3);  color: var(--text2); border: 1px solid var(--border2); }
+    .type-badge.deposit-transit { background: #dbeafe;           color: var(--blue); }
+    .type-badge.outstanding-pmt { background: var(--surface3);  color: var(--text2); border: 1px solid var(--border2); }
+    /* Confidence badges */
+    .type-badge.conf-exact       { background: var(--green-dim);  color: var(--green); }
+    .type-badge.conf-near-date   { background: var(--amber-dim);  color: var(--amber); }
+    .type-badge.conf-wide-date   { background: var(--orange-dim); color: var(--orange); }
+    .type-badge.conf-near-amount { background: var(--red-dim);    color: var(--red); }
+    /* Row confidence tinting */
+    .txn-row.conf-near-date   .txn-cell { background: rgba(217,119,6,.04); }
+    .txn-row.conf-wide-date   .txn-cell { background: rgba(194,65,12,.06); }
+    .txn-row.conf-near-amount .txn-cell { background: rgba(220,38,38,.05); }
+    .txn-row:hover .txn-cell { background: var(--surface2) !important; }
+
+    /* Sub-headers */
+    .txn-sub-header { display: grid; background: var(--surface3); border-bottom: 1px solid var(--border); }
+    .txn-sub-header.single-side { grid-template-columns: 90px 1fr 120px 160px; }
+    .txn-sub-header.dual-side   { grid-template-columns: 90px 1fr 1fr 120px 110px; }
+    .txn-sh { padding: 5px 12px; font-size: .62rem; font-weight: 700; letter-spacing: .8px; text-transform: uppercase; color: var(--text3); font-family: var(--mono); }
+
+    /* Confidence legend */
+    .conf-legend { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; padding: 8px 14px; background: var(--surface2); border-bottom: 1px solid var(--border); font-size: .72rem; color: var(--text3); }
+    .conf-legend-item { display: flex; align-items: center; gap: 5px; }
+
+    .bucket-empty { padding: 14px 16px; font-size: .82rem; color: var(--text3); font-style: italic; }
+    .export-group { display: flex; gap: 8px; margin-bottom: 20px; }
+    .export-btn { background: var(--surface2); border: 1px solid var(--border2); padding: 7px 14px; border-radius: 6px; font-size: .8rem; font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 6px; color: var(--text2); transition: border-color .15s; }
+    .export-btn:hover { border-color: var(--border2); color: var(--text); }
+
+    /* ── Responsive ── */
+    @media (max-width: 900px) { .stat-dashboard { grid-template-columns: repeat(3, 1fr); } }
+    @media (max-width: 700px) {
+      .upload-row, .balance-row { grid-template-columns: 1fr; padding: 16px; }
+      .results { padding: 16px 16px 40px; }
+      header { padding: 0 16px; gap: 10px; }
+      header .sub { display: none; }
+      .actions { padding: 16px; }
+      .rec-equation { grid-template-columns: 1fr; }
+      .rec-eq-divider { height: 1px; width: 100%; margin: 12px 0; }
+      .txn-row.dual-side, .txn-sub-header.dual-side { grid-template-columns: 80px 1fr 100px 80px; }
+      .stat-dashboard { grid-template-columns: repeat(2, 1fr); }
+      .settings-panel { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo-mark">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4">
+      <path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v18m0 0h10a2 2 0 0 0 2-2V9M9 21H5a2 2 0 0 1-2-2V9m0 0h18"/>
+    </svg>
+  </div>
+  <h1>Bank Reconciliation</h1>
+  <span class="sep">|</span>
+  <span class="sub">SST Accountants &amp; Consultants</span>
+  <div class="header-spacer"></div>
+  <span class="badge">Financial</span>
+  <button class="icon-btn" onclick="toggleDark()" title="Toggle dark mode" aria-label="Toggle dark mode">
+    <svg class="icon-moon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    <svg class="icon-sun"  width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <circle cx="12" cy="12" r="5"/>
+      <line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+      <line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+    </svg>
+  </button>
+  <button class="icon-btn settings-btn" id="settings-btn" onclick="openSettings()" title="Settings" aria-label="Settings">
+    <div class="settings-btn-dot"></div>
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <circle cx="12" cy="12" r="3"/>
+      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+    </svg>
+  </button>
+  <a href="/" class="nav-link">← Ledger Compare</a>
+</header>
+
+<!-- Settings overlay + panel -->
+<div class="settings-overlay" id="settings-overlay" onclick="closeSettings()"></div>
+<div class="settings-panel" id="settings-panel">
+  <div class="settings-header">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--teal-mid)" stroke-width="2">
+      <circle cx="12" cy="12" r="3"/>
+      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+    </svg>
+    <h3>Settings</h3>
+    <button class="settings-close" onclick="closeSettings()" aria-label="Close settings">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+  </div>
+
+  <div class="settings-body">
+
+    <!-- Appearance -->
+    <div class="settings-section">
+      <div class="settings-section-title">Appearance</div>
+
+      <div class="setting-row">
+        <div class="setting-label">Theme</div>
+        <div class="seg-ctrl">
+          <button class="seg-btn" id="theme-light" onclick="setTheme('light')">☀ Light</button>
+          <button class="seg-btn" id="theme-dark"  onclick="setTheme('dark')">☾ Dark</button>
+        </div>
+      </div>
+
+      <div class="setting-row">
+        <div class="setting-label">Row Density</div>
+        <div class="seg-ctrl">
+          <button class="seg-btn" id="density-normal"  onclick="setDensity('normal')">Normal</button>
+          <button class="seg-btn" id="density-compact" onclick="setDensity('compact')">Compact</button>
+        </div>
+        <div class="setting-hint">Compact reduces row height for denser lists</div>
+      </div>
+    </div>
+
+    <!-- Matching Algorithm -->
+    <div class="settings-section">
+      <div class="settings-section-title">Matching Algorithm</div>
+
+      <div class="setting-row">
+        <div class="setting-label">
+          Near-date window
+          <span class="setting-val" id="near-date-val">±3 days</span>
+        </div>
+        <input type="range" class="setting-slider" id="near-date-slider"
+               min="1" max="7" step="1"
+               oninput="onSlider('nearDateDays', +this.value, 'near-date-val', '±{v} days', this)" />
+        <div class="setting-hint">Pass 2: tightest date match for ACH &amp; wire delays</div>
+      </div>
+
+      <div class="setting-row">
+        <div class="setting-label">
+          Wide-date window
+          <span class="setting-val" id="wide-date-val">±7 days</span>
+        </div>
+        <input type="range" class="setting-slider" id="wide-date-slider"
+               min="3" max="21" step="1"
+               oninput="onSlider('wideDateDays', +this.value, 'wide-date-val', '±{v} days', this)" />
+        <div class="setting-hint">Pass 3: catches checks &amp; slow-clearing items</div>
+      </div>
+
+      <div class="setting-row">
+        <div class="setting-label">Amount tolerance</div>
+        <div class="seg-ctrl">
+          <button class="seg-btn" id="tol-strict" onclick="setTolerance('strict')">Strict</button>
+          <button class="seg-btn" id="tol-normal" onclick="setTolerance('normal')">Normal</button>
+          <button class="seg-btn" id="tol-loose"  onclick="setTolerance('loose')">Loose</button>
+        </div>
+        <div class="setting-hint" id="tol-hint">Pass 4 tolerance: max($0.50, 1%)</div>
+      </div>
+
+      <div class="setting-hint" style="margin-top:8px; padding: 8px 10px; background: var(--teal-bg); border-radius: 5px; font-style:normal; color: var(--text2);">
+        Algorithm changes apply on next <strong>Reconcile</strong> run.
+      </div>
+    </div>
+
+    <!-- Display -->
+    <div class="settings-section">
+      <div class="settings-section-title">Display</div>
+
+      <div class="setting-row toggle-row">
+        <div class="toggle-label-group">
+          <div class="setting-label">Confidence legend</div>
+          <div class="setting-hint" style="margin-top:0">Show match-quality key in Matched bucket</div>
+        </div>
+        <label class="toggle">
+          <input type="checkbox" id="setting-legend" onchange="updateSetting('showConfLegend', this.checked)" />
+          <span class="toggle-track"></span>
+          <span class="toggle-thumb"></span>
+        </label>
+      </div>
+
+      <div class="setting-row toggle-row">
+        <div class="toggle-label-group">
+          <div class="setting-label">Start buckets expanded</div>
+          <div class="setting-hint" style="margin-top:0">All result sections open by default</div>
+        </div>
+        <label class="toggle">
+          <input type="checkbox" id="setting-expanded" onchange="updateSetting('defaultExpanded', this.checked)" />
+          <span class="toggle-track"></span>
+          <span class="toggle-thumb"></span>
+        </label>
+      </div>
+
+      <div class="setting-row toggle-row">
+        <div class="toggle-label-group">
+          <div class="setting-label">Highlight unmatched</div>
+          <div class="setting-hint" style="margin-top:0">Add subtle left border to unmatched rows</div>
+        </div>
+        <label class="toggle">
+          <input type="checkbox" id="setting-highlight" onchange="updateSetting('highlightUnmatched', this.checked)" />
+          <span class="toggle-track"></span>
+          <span class="toggle-thumb"></span>
+        </label>
+      </div>
+    </div>
+
+    <!-- Export -->
+    <div class="settings-section">
+      <div class="settings-section-title">Export</div>
+
+      <div class="setting-row">
+        <label class="setting-label" for="setting-company" style="display:block; margin-bottom:6px;">Company / Firm Name</label>
+        <input type="text" class="setting-text" id="setting-company"
+               placeholder="e.g. SST Accountants &amp; Consultants"
+               oninput="updateSetting('companyName', this.value)" />
+        <div class="setting-hint">Appears in the work paper header on export</div>
+      </div>
+
+      <div class="setting-row">
+        <label class="setting-label" for="setting-preparer" style="display:block; margin-bottom:6px;">Preparer Initials</label>
+        <input type="text" class="setting-text" id="setting-preparer"
+               placeholder="e.g. JDS"
+               oninput="updateSetting('preparer', this.value)" style="max-width:100px;" />
+        <div class="setting-hint">Shown on the Summary sheet for review trail</div>
+      </div>
+    </div>
+
+  </div><!-- end settings-body -->
+
+  <div class="settings-footer">
+    <button class="btn-reset-settings" onclick="resetSettings()">Reset all settings to defaults</button>
+  </div>
+</div>
+
+<div id="error-container"></div>
+
+<div class="upload-row">
+  <div class="upload-card" id="card-bank" ondragover="handleDragOver(event,'bank')" ondragleave="handleDragLeave('bank')" ondrop="handleDrop(event,'bank')">
+    <div class="year-label">Source 1</div>
+    <h2>Bank Statement</h2>
+    <input type="file" id="file-bank" accept=".csv,.xlsx,.xls" onchange="handleFile(event,'bank')" />
+    <div class="drop-zone" id="drop-bank" onclick="document.getElementById('file-bank').click()">
+      <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+      </svg>
+      <p>Drop your bank statement or <strong>browse</strong></p>
+      <span class="file-types">CSV · XLSX · XLS</span>
+    </div>
+    <div id="info-bank" style="display:none"></div>
+  </div>
+
+  <div class="upload-card" id="card-book" ondragover="handleDragOver(event,'book')" ondragleave="handleDragLeave('book')" ondrop="handleDrop(event,'book')">
+    <div class="year-label">Source 2</div>
+    <h2>Internal Records (GL / Books)</h2>
+    <input type="file" id="file-book" accept=".csv,.xlsx,.xls" onchange="handleFile(event,'book')" />
+    <div class="drop-zone" id="drop-book" onclick="document.getElementById('file-book').click()">
+      <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+      </svg>
+      <p>Drop your GL export or <strong>browse</strong></p>
+      <span class="file-types">CSV · XLSX · XLS</span>
+    </div>
+    <div id="info-book" style="display:none"></div>
+  </div>
+</div>
+
+<div class="balance-row" id="balance-row" style="display:none">
+  <div class="balance-card">
+    <label>Bank Statement Ending Balance</label>
+    <input type="number" id="bank-balance" placeholder="0.00" step="0.01" oninput="checkReady()" />
+    <span class="balance-hint">From the bottom of your bank statement</span>
+  </div>
+  <div class="balance-card">
+    <label>Book (GL) Ending Balance</label>
+    <input type="number" id="book-balance" placeholder="0.00" step="0.01" oninput="checkReady()" />
+    <span class="balance-hint">Cash account balance from your accounting software</span>
+  </div>
+</div>
+
+<div class="actions">
+  <button class="btn-primary" id="btn-rec" onclick="runReconciliation()" disabled>
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+      <polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/>
+      <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+    </svg>
+    Reconcile
+  </button>
+  <button class="btn-reset" onclick="resetAll()">Reset</button>
+</div>
+
+<div class="results" id="results" style="display:none"></div>
+
+<script>
+  /* ── Settings ─────────────────────────────────────────────────────────── */
+
+  const DEFAULT_SETTINGS = {
+    rowDensity:        'normal',
+    nearDateDays:      3,
+    wideDateDays:      7,
+    amtTolerance:      'normal',
+    showConfLegend:    true,
+    defaultExpanded:   true,
+    highlightUnmatched:false,
+    companyName:       '',
+    preparer:          '',
+  };
+
+  let settings = { ...DEFAULT_SETTINGS };
+
+  function loadSettings() {
+    try {
+      const saved = JSON.parse(localStorage.getItem('bankrec-settings') || '{}');
+      settings = { ...DEFAULT_SETTINGS, ...saved };
+    } catch(e) {}
+    applySettings();
+  }
+
+  function saveSettings() {
+    localStorage.setItem('bankrec-settings', JSON.stringify(settings));
+  }
+
+  function updateSetting(key, value) {
+    settings[key] = value;
+    saveSettings();
+    applySettings();
+    syncSettingsUI();
+  }
+
+  function applySettings() {
+    document.body.classList.toggle('compact', settings.rowDensity === 'compact');
+    document.body.classList.toggle('highlight-unmatched', settings.highlightUnmatched);
+  }
+
+  function syncSettingsUI() {
+    const theme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+    document.getElementById('theme-light')?.classList.toggle('active', theme === 'light');
+    document.getElementById('theme-dark')?.classList.toggle('active', theme === 'dark');
+    document.getElementById('density-normal')?.classList.toggle('active', settings.rowDensity === 'normal');
+    document.getElementById('density-compact')?.classList.toggle('active', settings.rowDensity === 'compact');
+
+    const ndSlider = document.getElementById('near-date-slider');
+    if (ndSlider) {
+      ndSlider.value = settings.nearDateDays;
+      updateSliderTrack(ndSlider, 1, 7);
+      document.getElementById('near-date-val').textContent = `±${settings.nearDateDays} days`;
+    }
+    const wdSlider = document.getElementById('wide-date-slider');
+    if (wdSlider) {
+      wdSlider.value = settings.wideDateDays;
+      updateSliderTrack(wdSlider, 3, 21);
+      document.getElementById('wide-date-val').textContent = `±${settings.wideDateDays} days`;
+    }
+
+    const tolHints = {
+      strict: 'Pass 4 disabled — amounts must match exactly',
+      normal: 'Pass 4 tolerance: max($0.50, 1% of amount)',
+      loose:  'Pass 4 tolerance: max($1.00, 2% of amount)',
+    };
+    ['strict','normal','loose'].forEach(t => document.getElementById('tol-'+t)?.classList.toggle('active', settings.amtTolerance === t));
+    const hintEl = document.getElementById('tol-hint');
+    if (hintEl) hintEl.textContent = tolHints[settings.amtTolerance];
+
+    const legendChk = document.getElementById('setting-legend');
+    if (legendChk) legendChk.checked = settings.showConfLegend;
+    const expandedChk = document.getElementById('setting-expanded');
+    if (expandedChk) expandedChk.checked = settings.defaultExpanded;
+    const highlightChk = document.getElementById('setting-highlight');
+    if (highlightChk) highlightChk.checked = settings.highlightUnmatched;
+
+    const companyInput = document.getElementById('setting-company');
+    if (companyInput && document.activeElement !== companyInput) companyInput.value = settings.companyName;
+    const preparerInput = document.getElementById('setting-preparer');
+    if (preparerInput && document.activeElement !== preparerInput) preparerInput.value = settings.preparer;
+  }
+
+  function updateSliderTrack(el, min, max) {
+    const pct = ((el.value - min) / (max - min)) * 100;
+    el.style.setProperty('--pct', pct + '%');
+  }
+
+  function onSlider(key, value, labelId, template, el) {
+    document.getElementById(labelId).textContent = template.replace('{v}', value);
+    updateSliderTrack(el, +el.min, +el.max);
+    updateSetting(key, value);
+  }
+
+  function openSettings() {
+    document.getElementById('settings-panel').classList.add('open');
+    document.getElementById('settings-overlay').classList.add('open');
+    syncSettingsUI();
+  }
+
+  function closeSettings() {
+    document.getElementById('settings-panel').classList.remove('open');
+    document.getElementById('settings-overlay').classList.remove('open');
+  }
+
+  function setTheme(t) {
+    document.documentElement.setAttribute('data-theme', t === 'dark' ? 'dark' : '');
+    localStorage.setItem('bankrec-theme', t);
+    syncSettingsUI();
+  }
+
+  function toggleDark() {
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    setTheme(isDark ? 'light' : 'dark');
+  }
+
+  function setDensity(d)   { updateSetting('rowDensity', d); }
+  function setTolerance(t) { updateSetting('amtTolerance', t); }
+
+  function resetSettings() {
+    if (!confirm('Reset all settings to defaults?')) return;
+    settings = { ...DEFAULT_SETTINGS };
+    saveSettings();
+    applySettings();
+    syncSettingsUI();
+    document.getElementById('settings-btn').classList.remove('has-changes');
+  }
+
+  /* ── App state ─────────────────────────────────────────────────────────── */
+
+  const state = {
+    bank: { rows: null, headers: [], cols: null, fileName: '' },
+    book: { rows: null, headers: [], cols: null, fileName: '' },
+  };
+  let lastResults = null;
+
+  /* ── Utilities ─────────────────────────────────────────────────────────── */
+
+  function showError(msg) {
+    document.getElementById('error-container').innerHTML = `<div class="error-banner">${escHtml(msg)}</div>`;
+    setTimeout(() => document.getElementById('error-container').innerHTML = '', 8000);
+  }
+  function escHtml(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+  function fmtAmt(n) {
+    if (n === null || n === undefined || isNaN(n)) return '';
+    const abs = Math.abs(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    return n < 0 ? `(${abs})` : abs;
+  }
+  function fmtDate(d) {
+    if (!d) return '';
+    return `${d.getMonth()+1}/${d.getDate()}/${String(d.getFullYear()).slice(-2)}`;
+  }
+  function parseNum(v) {
+    if (v === '' || v === null || v === undefined) return 0;
+    const s = String(v).trim();
+    const isParens = /^\(.*\)$/.test(s);
+    const n = parseFloat(s.replace(/[^0-9.\-eE+]/g, ''));
+    if (isNaN(n)) return 0;
+    return isParens ? -Math.abs(n) : n;
+  }
+
+  /* ── Column detection ─────────────────────────────────────────────────── */
+
+  function detectCols(headers) {
+    const h = headers.map(x => String(x).toLowerCase().trim());
+    const find = (...kws) => {
+      for (const kw of kws) {
+        const i = h.findIndex(x => x === kw || x.includes(kw));
+        if (i !== -1) return i;
+      }
+      return -1;
+    };
+    const debit  = find('withdrawal','withdrawals','debit','debits','payment','payments','spent','charges','dr','amount out','money out');
+    const credit = find('deposit','deposits','credit','credits','receipt','receipts','received','cr','amount in','money in');
+    const amount = (debit < 0 && credit < 0) ? find('amount','total','net','value','sum','transaction amount') : -1;
+    return {
+      date:    find('date','post date','posted','trans date','transaction date','value date','effective date','settlement date'),
+      desc:    find('description','memo','particulars','details','narration','payee','narrative','text','reference','remarks','note'),
+      debit, credit, amount,
+      balance: find('balance','running balance','ledger balance','available balance'),
+    };
+  }
+
+  /* ── Date parsing ─────────────────────────────────────────────────────── */
+
+  const MONTHS = { jan:0,feb:1,mar:2,apr:3,may:4,jun:5,jul:6,aug:7,sep:8,oct:9,nov:10,dec:11 };
+
+  function parseDate(val) {
+    if (val === null || val === undefined || val === '') return null;
+    if (typeof val === 'number' && val > 10000 && val < 100000)
+      return new Date(Math.round((val - 25569) * 86400 * 1000));
+    const s = String(val).trim();
+    if (!s) return null;
+    const serial = Number(s);
+    if (Number.isInteger(serial) && serial > 10000 && serial < 100000 && String(serial) === s)
+      return new Date(Math.round((serial - 25569) * 86400 * 1000));
+    const stripped = s.replace(/T\d{2}:\d{2}(:\d{2})?(\.\d+)?(Z|[+-]\d{2}:?\d{2})?$/, '').trim();
+    if (/^\d{4}-\d{2}-\d{2}$/.test(stripped)) {
+      const [y, m, d] = stripped.split('-').map(Number);
+      return new Date(y, m-1, d);
+    }
+    const slash = stripped.split(/[\/-]/);
+    if (slash.length === 3) {
+      const [a, b, c] = slash.map(Number);
+      if (a > 1900) return new Date(a, b-1, c);
+      const yr = c < 100 ? (c < 50 ? 2000+c : 1900+c) : c;
+      return new Date(yr, a-1, b);
+    }
+    const wordMatch = stripped.match(/(\d{1,2})[\- ]([A-Za-z]{3,})[\- ,]+(\d{4})|([A-Za-z]{3,})[\- ]+(\d{1,2})[,\- ]+(\d{4})/);
+    if (wordMatch) {
+      if (wordMatch[1]) {
+        const mo = MONTHS[wordMatch[2].toLowerCase().slice(0,3)];
+        if (mo !== undefined) return new Date(+wordMatch[3], mo, +wordMatch[1]);
+      } else {
+        const mo = MONTHS[wordMatch[4].toLowerCase().slice(0,3)];
+        if (mo !== undefined) return new Date(+wordMatch[6], mo, +wordMatch[5]);
+      }
+    }
+    const native = new Date(stripped);
+    if (!isNaN(native) && native.getFullYear() > 1970 && native.getFullYear() < 2100) return native;
+    return null;
+  }
+
+  /* ── Extract transactions ─────────────────────────────────────────────── */
+
+  function extractTxns(side) {
+    const { rows, cols } = state[side];
+    const out = [];
+    let lastBalance = null;
+    for (const r of rows) {
+      const dateVal = cols.date >= 0 ? r[cols.date] : null;
+      const date = parseDate(dateVal);
+      if (!date) continue;
+      const desc = cols.desc >= 0 ? String(r[cols.desc] ?? '').trim() : '';
+      let amount = 0;
+      if (cols.debit >= 0 || cols.credit >= 0) {
+        const credit = parseNum(cols.credit >= 0 ? r[cols.credit] : 0);
+        const debit  = parseNum(cols.debit  >= 0 ? r[cols.debit]  : 0);
+        amount = credit - debit;
+      } else if (cols.amount >= 0) {
+        amount = parseNum(r[cols.amount]);
+      }
+      if (cols.balance >= 0) lastBalance = parseNum(r[cols.balance]);
+      if (amount === 0 && !desc) continue;
+      out.push({ date, desc, amount, rawDate: String(dateVal ?? '') });
+    }
+    return { txns: out, lastBalance };
+  }
+
+  /* ── Matching ─────────────────────────────────────────────────────────── */
+
+  function datesEqual(a, b) {
+    if (!a || !b) return false;
+    return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+  }
+  function daysDiff(a, b) {
+    if (!a || !b) return Infinity;
+    return Math.abs(a - b) / 86400000;
+  }
+  function amountsMatch(a, b) {
+    return Math.abs(Math.abs(a) - Math.abs(b)) < 0.005;
+  }
+  function amountsNear(a, b) {
+    if (settings.amtTolerance === 'strict') return false;
+    const diff = Math.abs(Math.abs(a) - Math.abs(b));
+    const tol  = settings.amtTolerance === 'loose'
+      ? Math.max(1.00, Math.max(Math.abs(a), Math.abs(b)) * 0.02)
+      : Math.max(0.50, Math.max(Math.abs(a), Math.abs(b)) * 0.01);
+    return diff > 0.005 && diff <= tol;
+  }
+
+  const DESC_STOPWORDS = new Set(['the','and','for','from','via','ref','to','at','in','on','of','by','or','a','an','ltd','inc','llc','co']);
+  function tokenizeDesc(s) {
+    return String(s).toLowerCase().replace(/[^a-z0-9]/g,' ').split(/\s+/).filter(t => t.length > 1 && !DESC_STOPWORDS.has(t));
+  }
+  function descSimilarity(a, b) {
+    const tokA = tokenizeDesc(a), tokB = tokenizeDesc(b);
+    if (!tokA.length || !tokB.length) return 0;
+    const setA = new Set(tokA), setB = new Set(tokB);
+    let inter = 0;
+    for (const t of setA) {
+      if (setB.has(t)) { inter++; continue; }
+      if (t.length >= 4) for (const u of setB) if (u.length >= 4 && (u.startsWith(t) || t.startsWith(u))) { inter += 0.5; break; }
+    }
+    return inter / (setA.size + setB.size - inter);
+  }
+
+  function matchTxns(bankTxns, bookTxns) {
+    const usedBank = new Set(), usedBook = new Set(), matched = [];
+    const nd = settings.nearDateDays, wd = settings.wideDateDays;
+
+    function tryMatch(bi, ri, confidence, extra) {
+      matched.push({ bank: bankTxns[bi], book: bookTxns[ri], confidence, ...extra });
+      usedBank.add(bi); usedBook.add(ri);
+    }
+
+    // Pass 1: exact date + exact amount
+    for (let bi = 0; bi < bankTxns.length; bi++) {
+      const b = bankTxns[bi];
+      for (let ri = 0; ri < bookTxns.length; ri++) {
+        if (usedBook.has(ri)) continue;
+        if (datesEqual(b.date, bookTxns[ri].date) && amountsMatch(b.amount, bookTxns[ri].amount)) { tryMatch(bi, ri, 'exact', {}); break; }
+      }
+    }
+
+    // Pass 2: ±nearDateDays + exact amount
+    for (let bi = 0; bi < bankTxns.length; bi++) {
+      if (usedBank.has(bi)) continue;
+      const b = bankTxns[bi];
+      const cands = bookTxns
+        .map((r, ri) => ({ ri, diff: daysDiff(b.date, r.date) }))
+        .filter(c => !usedBook.has(c.ri) && c.diff > 0 && c.diff <= nd && amountsMatch(b.amount, bookTxns[c.ri].amount))
+        .sort((a, z) => a.diff - z.diff);
+      if (cands.length) tryMatch(bi, cands[0].ri, 'near_date', { daysDiff: Math.round(cands[0].diff) });
+    }
+
+    // Pass 3: ±wideDateDays + exact amount, ranked by description similarity
+    for (let bi = 0; bi < bankTxns.length; bi++) {
+      if (usedBank.has(bi)) continue;
+      const b = bankTxns[bi];
+      const cands = bookTxns
+        .map((r, ri) => ({ ri, diff: daysDiff(b.date, r.date), sim: descSimilarity(b.desc, r.desc) }))
+        .filter(c => !usedBook.has(c.ri) && c.diff > nd && c.diff <= wd && amountsMatch(b.amount, bookTxns[c.ri].amount))
+        .sort((a, z) => (z.sim - a.sim) || (a.diff - z.diff));
+      if (cands.length) tryMatch(bi, cands[0].ri, 'wide_date', { daysDiff: Math.round(cands[0].diff), simScore: Math.round(cands[0].sim*100) });
+    }
+
+    // Pass 4: ±nearDateDays + amount within tolerance
+    for (let bi = 0; bi < bankTxns.length; bi++) {
+      if (usedBank.has(bi)) continue;
+      const b = bankTxns[bi];
+      const cands = bookTxns
+        .map((r, ri) => ({ ri, diff: daysDiff(b.date, r.date), amtDiff: Math.abs(Math.abs(b.amount) - Math.abs(r.amount)) }))
+        .filter(c => !usedBook.has(c.ri) && c.diff <= nd && amountsNear(b.amount, bookTxns[c.ri].amount))
+        .sort((a, z) => a.amtDiff - z.amtDiff || a.diff - z.diff);
+      if (cands.length) tryMatch(bi, cands[0].ri, 'near_amount', { daysDiff: Math.round(cands[0].diff), amtDiff: +cands[0].amtDiff.toFixed(2) });
+    }
+
+    return { matched, bankOnly: bankTxns.filter((_,i)=>!usedBank.has(i)), bookOnly: bookTxns.filter((_,i)=>!usedBook.has(i)) };
+  }
+
+  /* ── Classification ───────────────────────────────────────────────────── */
+
+  const CLASSIFY_BANK = [
+    { re: /NSF|RETURN(ED)?|BOUNCED|INSUFFICIENT/i,             label: 'NSF / Returned',  cls: 'nsf' },
+    { re: /FEE|SERVICE.?CHG|MAINTENANCE|MONTHLY.?CHG|ANNUAL.?FEE/i, label: 'Bank Fee',   cls: 'bank-fee' },
+    { re: /INTEREST|INT.?EARN/i,                               label: 'Interest Income', cls: 'interest' },
+  ];
+  const CLASSIFY_BOOK = [
+    { re: /CHECK|CHK|CK\s|#\d{3}/i, label: 'Outstanding Check', cls: 'outstanding-chk' },
+  ];
+
+  function classifyItem(txn, side) {
+    const rules = side === 'bank' ? CLASSIFY_BANK : CLASSIFY_BOOK;
+    for (const rule of rules) if (rule.re.test(txn.desc)) return { label: rule.label, cls: rule.cls };
+    if (side === 'bank') return txn.amount >= 0 ? { label: 'Unrecorded Deposit', cls: 'unrecorded-dep' } : { label: 'Unrecorded Charge', cls: 'unrecorded-chg' };
+    return txn.amount >= 0 ? { label: 'Deposit in Transit', cls: 'deposit-transit' } : { label: 'Outstanding Payment', cls: 'outstanding-pmt' };
+  }
+
+  /* ── File handling ────────────────────────────────────────────────────── */
+
+  function handleDragOver(e, s) { e.preventDefault(); document.getElementById('card-'+s).classList.add('dragover'); }
+  function handleDragLeave(s)   { document.getElementById('card-'+s).classList.remove('dragover'); }
+  function handleDrop(e, s)     { e.preventDefault(); handleDragLeave(s); const f = e.dataTransfer.files[0]; if (f) processFile(f, s); }
+  function handleFile(e, s)     { const f = e.target.files[0]; if (f) processFile(f, s); }
+
+  function parseCSV(text) {
+    return text.trim().split('\n').map(line => {
+      const cols = []; let cur = ''; let inQ = false;
+      for (const ch of line) {
+        if (ch === '"') inQ = !inQ;
+        else if (ch === ',' && !inQ) { cols.push(cur.trim()); cur = ''; }
+        else cur += ch;
+      }
+      cols.push(cur.trim()); return cols;
+    });
+  }
+
+  function processFile(file, side) {
+    const ext = file.name.split('.').pop().toLowerCase();
+    if (!['csv','xlsx','xls'].includes(ext)) { showError('Unsupported file type — use CSV, XLSX, or XLS.'); return; }
+    const reader = new FileReader();
+    reader.onload = e => {
+      try {
+        let rows;
+        if (ext === 'csv') rows = parseCSV(e.target.result);
+        else {
+          const wb = XLSX.read(e.target.result, { type: 'array' });
+          rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1, defval: '' });
+        }
+        rows = rows.filter(r => r.some(c => String(c).trim() !== ''));
+        if (rows.length < 2) { showError('File appears empty or has only one row.'); return; }
+        const headers = rows[0].map(h => String(h).trim());
+        const cols = detectCols(headers);
+        if (cols.date < 0) { showError(`Could not detect a Date column in "${file.name}". Make sure your file has a date header.`); return; }
+        state[side] = { rows: rows.slice(1), headers, cols, fileName: file.name };
+        renderFileInfo(side, file.name, rows.length - 1, headers, cols);
+        checkReady();
+      } catch (err) { showError('Could not parse file: ' + err.message); }
+    };
+    if (ext === 'csv') reader.readAsText(file); else reader.readAsArrayBuffer(file);
+  }
+
+  function renderFileInfo(side, name, count, headers, cols) {
+    const el = document.getElementById('info-'+side);
+    el.style.display = 'block';
+    const pills = [];
+    if (cols.date   >= 0) pills.push(`Date → ${headers[cols.date]}`);
+    if (cols.desc   >= 0) pills.push(`Desc → ${headers[cols.desc]}`);
+    if (cols.debit  >= 0) pills.push(`Out → ${headers[cols.debit]}`);
+    if (cols.credit >= 0) pills.push(`In → ${headers[cols.credit]}`);
+    if (cols.amount >= 0 && cols.debit < 0) pills.push(`Amount → ${headers[cols.amount]}`);
+    el.innerHTML = `
+      <div class="file-info">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        <div><div class="fname">${escHtml(name)}</div><div class="fmeta">${count.toLocaleString()} rows</div></div>
+        <button class="clear-btn" onclick="clearSide('${side}')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="detected-cols">${pills.map(p => `<span class="col-pill">${escHtml(p)}</span>`).join('')}</div>`;
+    document.getElementById('drop-'+side).style.display = 'none';
+    document.getElementById('card-'+side).classList.add('loaded');
+  }
+
+  function clearSide(side) {
+    state[side] = { rows: null, headers: [], cols: null, fileName: '' };
+    document.getElementById('info-'+side).style.display = 'none';
+    document.getElementById('drop-'+side).style.display = 'flex';
+    document.getElementById('card-'+side).classList.remove('loaded');
+    document.getElementById('file-'+side).value = '';
+    document.getElementById('results').style.display = 'none';
+    checkReady();
+  }
+
+  function checkReady() {
+    const bothFiles = state.bank.rows && state.book.rows;
+    document.getElementById('balance-row').style.display = bothFiles ? 'grid' : 'none';
+    const bankBal = document.getElementById('bank-balance').value;
+    const bookBal = document.getElementById('book-balance').value;
+    document.getElementById('btn-rec').disabled = !bothFiles || !bankBal || !bookBal;
+  }
+
+  /* ── Reconciliation ───────────────────────────────────────────────────── */
+
+  function runReconciliation() {
+    document.getElementById('error-container').innerHTML = '';
+    const bankBalance = parseFloat(document.getElementById('bank-balance').value);
+    const bookBalance = parseFloat(document.getElementById('book-balance').value);
+
+    const { txns: bankTxns } = extractTxns('bank');
+    const { txns: bookTxns } = extractTxns('book');
+
+    if (!bankTxns.length) { showError('No valid transactions found in the bank statement.'); return; }
+    if (!bookTxns.length) { showError('No valid transactions found in the internal records.'); return; }
+
+    const { matched, bankOnly, bookOnly } = matchTxns(bankTxns, bookTxns);
+
+    const depositsInTransit = bookOnly.filter(t => t.amount > 0).reduce((s,t)=>s+t.amount, 0);
+    const outstandingPmts   = bookOnly.filter(t => t.amount < 0).reduce((s,t)=>s+t.amount, 0);
+    const adjustedBank      = bankBalance + depositsInTransit + outstandingPmts;
+
+    const unrecordedCredits = bankOnly.filter(t => t.amount > 0).reduce((s,t)=>s+t.amount, 0);
+    const unrecordedCharges = bankOnly.filter(t => t.amount < 0).reduce((s,t)=>s+t.amount, 0);
+    const adjustedBook      = bookBalance + unrecordedCredits + unrecordedCharges;
+
+    const difference = adjustedBank - adjustedBook;
+    const balanced   = Math.abs(difference) < 0.005;
+
+    lastResults = { matched, bankOnly, bookOnly, bankBalance, bookBalance, adjustedBank, adjustedBook,
+                    difference, balanced, depositsInTransit, outstandingPmts, unrecordedCredits, unrecordedCharges,
+                    bankFile: state.bank.fileName, bookFile: state.book.fileName };
+
+    renderResults(lastResults);
+  }
+
+  /* ── Render ───────────────────────────────────────────────────────────── */
+
+  function amtCell(amount) {
+    const cls = amount > 0 ? 'pos' : (amount < 0 ? 'neg' : '');
+    return `<div class="txn-cell amount ${cls}">${fmtAmt(amount)}</div>`;
+  }
+  function typeBadge(txn, side) {
+    const { label, cls } = classifyItem(txn, side);
+    return `<span class="type-badge ${cls}">${escHtml(label)}</span>`;
+  }
+  function confBadge(m) {
+    if (m.confidence === 'exact')       return `<span class="type-badge conf-exact">Exact</span>`;
+    if (m.confidence === 'near_date')   return `<span class="type-badge conf-near-date" title="Date differs by ${m.daysDiff} day(s)">±${m.daysDiff}d</span>`;
+    if (m.confidence === 'wide_date')   return `<span class="type-badge conf-wide-date" title="Date differs by ${m.daysDiff} days">±${m.daysDiff}d wide</span>`;
+    if (m.confidence === 'near_amount') return `<span class="type-badge conf-near-amount" title="Amount differs by $${m.amtDiff}">~$${m.amtDiff}</span>`;
+    return '';
+  }
+
+  function renderBucket(items, side, title) {
+    const bucketCls  = side === 'matched' ? 'matched' : (side === 'bank' ? 'bank-only' : 'book-only');
+    const collapsed  = !settings.defaultExpanded ? 'collapsed' : '';
+    const totalAmt   = side === 'matched' ? items.reduce((s,m)=>s+Math.abs(m.bank.amount),0) : items.reduce((s,t)=>s+t.amount,0);
+    const totalDisp  = side !== 'matched' && totalAmt < 0 ? `(${fmtAmt(Math.abs(totalAmt))})` : fmtAmt(totalAmt);
+
+    let body = '';
+    if (!items.length) {
+      body = `<div class="bucket-empty">No ${side === 'matched' ? 'matched' : 'unmatched'} items.</div>`;
+    } else if (side === 'matched') {
+      const legend = settings.showConfLegend ? `
+        <div class="conf-legend">
+          <span style="font-size:.7rem;color:var(--text3);margin-right:4px">Match quality:</span>
+          <span class="conf-legend-item"><span class="type-badge conf-exact">Exact</span> date &amp; amount</span>
+          <span class="conf-legend-item"><span class="type-badge conf-near-date">±Nd</span> within ${settings.nearDateDays}d</span>
+          <span class="conf-legend-item"><span class="type-badge conf-wide-date">±Nd wide</span> within ${settings.wideDateDays}d</span>
+          <span class="conf-legend-item"><span class="type-badge conf-near-amount">~$X</span> rounded amount</span>
+        </div>` : '';
+      body = legend +
+        `<div class="txn-sub-header dual-side">
+          <div class="txn-sh">Date</div><div class="txn-sh">Bank Description</div>
+          <div class="txn-sh">Book Description</div><div class="txn-sh" style="text-align:right">Amount</div>
+          <div class="txn-sh">Confidence</div>
+        </div>` +
+        items.map(m => {
+          const confCls = m.confidence === 'near_date' ? 'conf-near-date' : m.confidence === 'wide_date' ? 'conf-wide-date' : m.confidence === 'near_amount' ? 'conf-near-amount' : '';
+          return `<div class="txn-row dual-side ${confCls}">
+            <div class="txn-cell date">${escHtml(fmtDate(m.bank.date))}</div>
+            <div class="txn-cell desc" title="${escHtml(m.bank.desc)}">${escHtml(m.bank.desc)}</div>
+            <div class="txn-cell desc2" title="${escHtml(m.book.desc)}">${escHtml(m.book.desc)}</div>
+            ${amtCell(m.bank.amount)}<div class="txn-cell badge-cell">${confBadge(m)}</div>
+          </div>`;
+        }).join('');
+    } else {
+      body = `<div class="txn-sub-header single-side">
+          <div class="txn-sh">Date</div><div class="txn-sh">Description</div>
+          <div class="txn-sh" style="text-align:right">Amount</div><div class="txn-sh">Type</div>
+        </div>` +
+        items.map(t => `<div class="txn-row single-side">
+          <div class="txn-cell date">${escHtml(fmtDate(t.date))}</div>
+          <div class="txn-cell desc" title="${escHtml(t.desc)}">${escHtml(t.desc)}</div>
+          ${amtCell(t.amount)}<div class="txn-cell badge-cell">${typeBadge(t, side)}</div>
+        </div>`).join('');
+    }
+
+    return `<div class="bucket ${bucketCls} ${collapsed}">
+      <div class="bucket-head" onclick="this.closest('.bucket').classList.toggle('collapsed')">
+        <div class="bucket-title">${title}</div>
+        <span class="bucket-count">${items.length}</span>
+        <span class="bucket-total">${totalDisp}</span>
+        <svg class="chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+      <div class="bucket-body">${body}</div>
+    </div>`;
+  }
+
+  function renderResults(r) {
+    const el = document.getElementById('results');
+    el.style.display = 'block';
+
+    const balCls    = r.balanced ? 'balanced' : 'unbalanced';
+    const statusCls = r.balanced ? 'ok' : 'err';
+    const statusMsg = r.balanced ? '✓ Reconciled — adjusted balances agree' : `✕ Out of balance by ${fmtAmt(Math.abs(r.difference))}`;
+
+    const totalTxns  = r.matched.length + Math.max(r.bankOnly.length, r.bookOnly.length);
+    const matchRate  = totalTxns > 0 ? Math.round(r.matched.length / totalTxns * 100) : 0;
+    const rateColor  = matchRate >= 90 ? 'green' : matchRate >= 70 ? 'amber' : 'red';
+
+    el.innerHTML = `
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; flex-wrap:wrap; gap:10px;">
+        <h2 style="font-size:1rem; font-weight:600;">Reconciliation Results</h2>
+        <div class="export-group">
+          <button class="export-btn" onclick="exportExcel()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Export Work Paper
+          </button>
+        </div>
+      </div>
+
+      <div class="stat-dashboard">
+        <div class="stat-card ${r.balanced ? 'status-ok' : 'status-err'}">
+          <div class="stat-label">Status</div>
+          <div class="stat-value ${r.balanced ? 'green' : 'red'}">${r.balanced ? 'Balanced' : 'Off by'}</div>
+          <div class="stat-sub">${r.balanced ? 'Adjusted balances agree' : fmtAmt(Math.abs(r.difference)) + ' difference'}</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Match Rate</div>
+          <div class="stat-value ${rateColor}">${matchRate}%</div>
+          <div class="stat-sub">${r.matched.length} of ${totalTxns} transactions</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Matched</div>
+          <div class="stat-value green">${r.matched.length}</div>
+          <div class="stat-sub">transactions paired</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Bank Only</div>
+          <div class="stat-value ${r.bankOnly.length ? 'amber' : ''}">${r.bankOnly.length}</div>
+          <div class="stat-sub">not in books</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Books Only</div>
+          <div class="stat-value ${r.bookOnly.length ? 'blue' : ''}">${r.bookOnly.length}</div>
+          <div class="stat-sub">not on statement</div>
+        </div>
+      </div>
+
+      <div class="rec-equation">
+        <div class="rec-eq-side">
+          <div class="rec-eq-title">Bank Side</div>
+          <div class="rec-eq-row"><span class="label">Bank Statement Balance</span><span class="amount">${fmtAmt(r.bankBalance)}</span></div>
+          ${r.depositsInTransit ? `<div class="rec-eq-row"><span class="label">+ Deposits in Transit</span><span class="amount pos">+${fmtAmt(r.depositsInTransit)}</span></div>` : ''}
+          ${r.outstandingPmts   ? `<div class="rec-eq-row"><span class="label">− Outstanding Payments</span><span class="amount neg">${fmtAmt(r.outstandingPmts)}</span></div>` : ''}
+          <div class="rec-eq-divider-row"></div>
+          <div class="rec-eq-total"><span class="label">Adjusted Bank Balance</span><span class="amount ${balCls}">${fmtAmt(r.adjustedBank)}</span></div>
+          <div class="rec-status ${statusCls}">${statusMsg}</div>
+        </div>
+        <div class="rec-eq-divider"></div>
+        <div class="rec-eq-side">
+          <div class="rec-eq-title">Book Side</div>
+          <div class="rec-eq-row"><span class="label">Book (GL) Balance</span><span class="amount">${fmtAmt(r.bookBalance)}</span></div>
+          ${r.unrecordedCredits ? `<div class="rec-eq-row"><span class="label">+ Bank Credits (unrecorded)</span><span class="amount pos">+${fmtAmt(r.unrecordedCredits)}</span></div>` : ''}
+          ${r.unrecordedCharges ? `<div class="rec-eq-row"><span class="label">− Bank Charges (unrecorded)</span><span class="amount neg">${fmtAmt(r.unrecordedCharges)}</span></div>` : ''}
+          <div class="rec-eq-divider-row"></div>
+          <div class="rec-eq-total"><span class="label">Adjusted Book Balance</span><span class="amount ${balCls}">${fmtAmt(r.adjustedBook)}</span></div>
+        </div>
+      </div>
+
+      ${renderBucket(r.bankOnly, 'bank',    'In Bank Statement Only')}
+      ${renderBucket(r.bookOnly, 'book',    'In Books Only')}
+      ${renderBucket(r.matched,  'matched', 'Matched Transactions')}`;
+
+    el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  /* ── Export ───────────────────────────────────────────────────────────── */
+
+  function exportExcel() {
+    if (!lastResults) return;
+    const r = lastResults;
+    const wb = XLSX.utils.book_new();
+    const fmt = '#,##0.00';
+    const now = new Date().toLocaleDateString('en-US');
+
+    const summaryRows = [
+      [settings.companyName || 'Bank Reconciliation Work Paper'],
+      ['Bank Reconciliation Work Paper'],
+      ['Date', now],
+      settings.preparer ? ['Prepared by', settings.preparer] : null,
+      [],
+      ['Bank File', r.bankFile],
+      ['Book File', r.bookFile],
+      [],
+      ['── Bank Side ──', ''],
+      ['Bank Statement Balance', r.bankBalance],
+      ['+ Deposits in Transit', r.depositsInTransit],
+      ['− Outstanding Payments', r.outstandingPmts],
+      ['Adjusted Bank Balance', r.adjustedBank],
+      [],
+      ['── Book Side ──', ''],
+      ['Book (GL) Balance', r.bookBalance],
+      ['+ Unrecorded Bank Credits', r.unrecordedCredits],
+      ['− Unrecorded Bank Charges', r.unrecordedCharges],
+      ['Adjusted Book Balance', r.adjustedBook],
+      [],
+      ['Difference', r.difference],
+      ['Status', r.balanced ? 'RECONCILED' : 'OUT OF BALANCE'],
+      [],
+      ['Matched Transactions', r.matched.length],
+      ['Bank-Only Items', r.bankOnly.length],
+      ['Book-Only Items', r.bookOnly.length],
+    ].filter(row => row !== null);
+
+    const wsSummary = XLSX.utils.aoa_to_sheet(summaryRows);
+    wsSummary['!cols'] = [{ wch: 32 }, { wch: 20 }];
+    // Apply number format to all amount cells
+    summaryRows.forEach((row, ri) => {
+      if (row.length >= 2 && typeof row[1] === 'number') {
+        const ref = XLSX.utils.encode_cell({ r: ri, c: 1 });
+        if (wsSummary[ref]) wsSummary[ref].z = fmt;
+      }
+    });
+    XLSX.utils.book_append_sheet(wb, wsSummary, 'Summary');
+
+    const bankOnlyRows = [['Date','Description','Amount','Type']];
+    for (const t of r.bankOnly) {
+      const { label } = classifyItem(t, 'bank');
+      bankOnlyRows.push([fmtDate(t.date), t.desc, t.amount, label]);
+    }
+    const wsBankOnly = XLSX.utils.aoa_to_sheet(bankOnlyRows);
+    wsBankOnly['!cols'] = [{ wch:12 },{ wch:40 },{ wch:14 },{ wch:22 }];
+    wsBankOnly['!freeze'] = { xSplit: 0, ySplit: 1, topLeftCell: 'A2' };
+    for (let i = 1; i < bankOnlyRows.length; i++) { const ref = XLSX.utils.encode_cell({r:i,c:2}); if (wsBankOnly[ref]) wsBankOnly[ref].z = fmt; }
+    XLSX.utils.book_append_sheet(wb, wsBankOnly, 'Bank Only');
+
+    const bookOnlyRows = [['Date','Description','Amount','Type']];
+    for (const t of r.bookOnly) {
+      const { label } = classifyItem(t, 'book');
+      bookOnlyRows.push([fmtDate(t.date), t.desc, t.amount, label]);
+    }
+    const wsBookOnly = XLSX.utils.aoa_to_sheet(bookOnlyRows);
+    wsBookOnly['!cols'] = [{ wch:12 },{ wch:40 },{ wch:14 },{ wch:22 }];
+    wsBookOnly['!freeze'] = { xSplit: 0, ySplit: 1, topLeftCell: 'A2' };
+    for (let i = 1; i < bookOnlyRows.length; i++) { const ref = XLSX.utils.encode_cell({r:i,c:2}); if (wsBookOnly[ref]) wsBookOnly[ref].z = fmt; }
+    XLSX.utils.book_append_sheet(wb, wsBookOnly, 'Books Only');
+
+    const matchedRows = [['Date (Bank)','Bank Description','Date (Book)','Book Description','Amount','Match Type']];
+    for (const m of r.matched) {
+      const matchLabel = m.confidence === 'exact' ? 'Exact' :
+                         m.confidence === 'near_date'   ? `Near date (±${m.daysDiff}d)` :
+                         m.confidence === 'wide_date'   ? `Wide date (±${m.daysDiff}d)` :
+                         m.confidence === 'near_amount' ? `Near amount (~$${m.amtDiff})` : m.confidence;
+      matchedRows.push([fmtDate(m.bank.date), m.bank.desc, fmtDate(m.book.date), m.book.desc, m.bank.amount, matchLabel]);
+    }
+    const wsMatched = XLSX.utils.aoa_to_sheet(matchedRows);
+    wsMatched['!cols'] = [{ wch:12 },{ wch:36 },{ wch:12 },{ wch:36 },{ wch:14 },{ wch:22 }];
+    wsMatched['!freeze'] = { xSplit: 0, ySplit: 1, topLeftCell: 'A2' };
+    if (r.matched.length > 0) wsMatched['!autofilter'] = { ref: `A1:F${matchedRows.length}` };
+    for (let i = 1; i < matchedRows.length; i++) { const ref = XLSX.utils.encode_cell({r:i,c:4}); if (wsMatched[ref]) wsMatched[ref].z = fmt; }
+    XLSX.utils.book_append_sheet(wb, wsMatched, 'Matched');
+
+    const period = new Date().toISOString().slice(0,7);
+    XLSX.writeFile(wb, `bank_rec_${period}.xlsx`);
+  }
+
+  /* ── Reset ────────────────────────────────────────────────────────────── */
+
+  function resetAll() {
+    clearSide('bank'); clearSide('book');
+    document.getElementById('bank-balance').value = '';
+    document.getElementById('book-balance').value = '';
+    document.getElementById('balance-row').style.display = 'none';
+    document.getElementById('results').style.display = 'none';
+    document.getElementById('error-container').innerHTML = '';
+  }
+
+  /* ── Init ─────────────────────────────────────────────────────────────── */
+
+  loadSettings();
+</script>
+</body>
+</html>
