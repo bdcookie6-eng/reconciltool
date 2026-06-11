@@ -1,0 +1,190 @@
+Account Name,Debit,Credit
+Cash - Operating Account,1245678.00,
+Cash - Payroll Account,312450.00,
+Cash - Money Market,750000.00,
+Petty Cash,2500.00,
+Accounts Receivable,4187650.00,
+Allowance for Doubtful Accounts,,125630.00
+Unbilled Revenue,892400.00,
+Work in Process,445200.00,
+Employee Advances,12800.00,
+Prepaid Insurance - General Liability,18400.00,
+Prepaid Insurance - Professional Liability,24600.00,
+Prepaid Insurance - Workers Compensation,31200.00,
+Prepaid Insurance - Health,48500.00,
+Prepaid Software Licenses,76800.00,
+Prepaid Rent,45000.00,
+Prepaid Subscriptions,22400.00,
+Prepaid Directors & Officers Insurance,14800.00,
+Sales Tax Receivable,8450.00,
+Other Current Assets,15200.00,
+Security Deposits - Leases,125000.00,
+Note Receivable - Related Party,250000.00,
+Office Furniture & Fixtures,187500.00,
+Computer Equipment,892400.00,
+Server Equipment,445600.00,
+Office Equipment,67800.00,
+Leasehold Improvements,1245000.00,
+Vehicles,156000.00,
+Accumulated Depreciation - Office Furniture,,112500.00
+Accumulated Depreciation - Computer Equipment,,534400.00
+Accumulated Depreciation - Server Equipment,,267360.00
+Accumulated Depreciation - Office Equipment,,40680.00
+Accumulated Depreciation - Leasehold Improvements,,498000.00
+Accumulated Depreciation - Vehicles,,62400.00
+Goodwill,2500000.00,
+Intangible Assets - Customer Lists,450000.00,
+Intangible Assets - Software Development,380000.00,
+Accumulated Amortization - Customer Lists,,180000.00
+Accumulated Amortization - Software,,152000.00
+Long-term Notes Receivable,250000.00,
+Deferred Tax Asset - Federal,145600.00,
+Deferred Tax Asset - State,28400.00,
+Equity Method Investments,175000.00,
+Accounts Payable,,890450.00
+Accrued Payroll,,487600.00
+Accrued Vacation & PTO,,312400.00
+Accrued Bonuses,,245800.00
+Accrued Commissions,,87600.00
+Payroll Taxes Payable - Federal,,124500.00
+Payroll Taxes Payable - State,,38700.00
+Health Insurance Payable,,62400.00
+401k Contributions Payable,,45200.00
+Deferred Revenue - Current Portion,,487500.00
+Customer Deposits,,125000.00
+Sales Tax Payable,,18450.00
+Income Tax Payable - Federal,,124500.00
+Income Tax Payable - State,,38700.00
+Accrued Interest,,12400.00
+Line of Credit,,500000.00
+Current Portion of Long-Term Debt,,240000.00
+Accrued Professional Fees,,45600.00
+Other Accrued Liabilities,,78400.00
+Notes Payable - Bank,,1450000.00
+Equipment Financing Payable,,87600.00
+Deferred Tax Liability,,245600.00
+Deferred Revenue - Long Term,,125000.00
+Long-term Deferred Rent,,87500.00
+Capital Lease Obligations,,134500.00
+Pension Liability,,287600.00
+Common Stock,,1000000.00
+Additional Paid-in Capital,,4500000.00
+Retained Earnings,,5234567.00
+Treasury Stock,450000.00,
+Accumulated Other Comprehensive Loss,45600.00,
+Consulting Revenue - Advisory,,1245600.00
+Consulting Revenue - Implementation,,892400.00
+Consulting Revenue - Strategy,,456800.00
+Consulting Revenue - Technology,,687500.00
+Managed Services Revenue,,245600.00
+Software License Revenue,,124500.00
+Maintenance & Support Revenue,,87600.00
+Training Revenue,,45200.00
+Workshop & Seminar Revenue,,28400.00
+Government Contract Revenue,,312500.00
+Fixed Fee Project Revenue,,456800.00
+Time & Materials Revenue,,234500.00
+Retainer Revenue - Monthly,,187600.00
+Retainer Revenue - Annual,,98400.00
+Pass-through Revenue,,87500.00
+Reimbursable Expenses Revenue,,45600.00
+Subscription Revenue,,67800.00
+Referral Revenue,,12400.00
+Interest Income,,12400.00
+Other Revenue,,34500.00
+Sales Discounts,18400.00,
+Revenue Adjustments,8700.00,
+Direct Labor - Senior Consultants,687500.00,
+Direct Labor - Consultants,512400.00,
+Direct Labor - Project Managers,312500.00,
+Direct Labor - Analysts,245600.00,
+Subcontractor Costs,187500.00,
+Direct Software Costs,45600.00,
+Direct Hardware Costs,28700.00,
+Travel - Billable Projects,87600.00,
+Meals - Billable Projects,18400.00,
+Direct Materials,12400.00,
+License Fees - Project Delivery,34500.00,
+Cloud Infrastructure - Projects,56700.00,
+Project Quality Assurance,24500.00,
+Data & Research Costs,18700.00,
+Direct Printing & Reproduction,8700.00,
+Third-party Services - Direct,45600.00,
+Cost of Revenue - Other,12400.00,
+Salaries - Executive,298400.00,
+Salaries - Management,487600.00,
+Salaries - Sales,312500.00,
+Salaries - Marketing,98700.00,
+Salaries - Operations,245600.00,
+Salaries - Finance & Accounting,124500.00,
+Salaries - Human Resources,87600.00,
+Salaries - Information Technology,124500.00,
+Salaries - Administrative,78400.00,
+Overtime Pay,24500.00,
+Part-time & Temporary Labor,45600.00,
+Payroll Taxes - Employer Portion,187600.00,
+Health Insurance - Employer Portion,156800.00,
+Dental Insurance - Employer Portion,18700.00,
+Vision Insurance - Employer Portion,8400.00,
+Life Insurance - Employer Portion,12400.00,
+Disability Insurance - Employer Portion,18700.00,
+401k Match - Employer Contribution,78400.00,
+Workers Compensation Insurance,34500.00,
+Employee Assistance Program,4500.00,
+Training & Development,28700.00,
+Recruitment & Hiring Costs,34500.00,
+Relocation Expenses,12400.00,
+401k Administration Fees,3800.00,
+Rent - Primary Office,98400.00,
+Rent - Satellite Office,24500.00,
+Utilities - Electric,12400.00,
+Utilities - Gas,4500.00,
+Utilities - Water,2400.00,
+Janitorial & Cleaning Services,8700.00,
+Repairs & Maintenance - Office,12400.00,
+Office Supplies,18700.00,
+Postage & Shipping,6700.00,
+Security Services,8400.00,
+Software Subscriptions - Productivity,18700.00,
+Software Subscriptions - CRM,24500.00,
+Software Subscriptions - ERP,45600.00,
+Software Subscriptions - HR Platform,12400.00,
+Software Subscriptions - Finance,18700.00,
+IT Support Services,34500.00,
+Internet & Telephone,12400.00,
+Mobile Phone Plan,8700.00,
+Hardware Maintenance,6700.00,
+Sales Commissions,78400.00,
+Marketing - Digital Advertising,45600.00,
+Marketing - Content & SEO,18700.00,
+Marketing - Events & Conferences,34500.00,
+Marketing - Print & Collateral,12400.00,
+Business Development,24500.00,
+Client Entertainment,18700.00,
+Trade Show Expenses,12400.00,
+Accounting & Audit Fees,24500.00,
+Legal Fees,34500.00,
+Consulting Fees - External,18700.00,
+Insurance - General Liability,12400.00,
+Insurance - Professional Liability,24500.00,
+Insurance - Directors & Officers,18700.00,
+Bank Fees & Charges,4500.00,
+Recruiting Fees - Retained Search,28700.00,
+Depreciation Expense,87600.00,
+Amortization Expense - Customer Lists,30000.00,
+Amortization Expense - Software,25400.00,
+Bad Debt Expense,18700.00,
+Travel - Non-billable,28700.00,
+Meals & Entertainment - Non-billable,12400.00,
+Dues & Memberships,8700.00,
+Subscriptions & Publications,4500.00,
+Charitable Contributions,6700.00,
+Miscellaneous Expense,8700.00,
+Interest Expense - Line of Credit,4500.00,
+Interest Expense - Term Loans,12400.00,
+Interest Expense - Equipment Financing,2400.00,
+Gain on Sale of Assets,,8700.00
+Loss on Disposal of Assets,4500.00,
+Foreign Exchange Loss,2400.00,
+Income Tax Expense - Federal,87600.00,
+Income Tax Expense - State,24500.00,
