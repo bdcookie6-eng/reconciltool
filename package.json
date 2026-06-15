@@ -5,7 +5,8 @@
   "description": "Reconciliation tool with server-side AI proxy",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "test": "node test/bankrec-test.js && node test/ledger-test.js"
   },
   "dependencies": {
     "express": "^4.19.2",
