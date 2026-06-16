@@ -27,6 +27,10 @@ if (!ANTHROPIC_API_KEY) {
 
 const app = express();
 app.use(express.json({ limit: '10mb' }));
+
+// Block direct access to the data/ directory — it may contain API keys.
+app.use('/data', (req, res) => res.status(403).end());
+
 app.use(express.static(path.join(__dirname), { index: 'index.html' }));
 
 // Cap AI proxy usage per IP to control cost and abuse: 10 requests per 10 minutes.
