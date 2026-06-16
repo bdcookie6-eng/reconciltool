@@ -1,0 +1,1148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Marketing Intelligence — SST CPA</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <script>
+    if (localStorage.getItem('mktbot-theme') === 'dark')
+      document.documentElement.setAttribute('data-theme', 'dark');
+  </script>
+  <style>
+    /* ── SST CPA Design Tokens ── */
+    :root {
+      --bg:        #f4f6f5;
+      --surface:   #ffffff;
+      --surface2:  #f0f4f2;
+      --surface3:  #e4ede9;
+      --border:    #d0dbd6;
+      --border2:   #b0c4bc;
+      --text:      #0d2b24;
+      --text2:     #3d6055;
+      --text3:     #7a9e94;
+      --teal:      #0a3d32;
+      --teal-mid:  #0d5c49;
+      --teal-light:#1a7a61;
+      --teal-dim:  #e0eeea;
+      --teal-bg:   rgba(10,61,50,.08);
+      --green:     #16a34a;
+      --green-dim: #dcfce7;
+      --green-bg:  rgba(22,163,74,.10);
+      --red:       #dc2626;
+      --red-dim:   #fee2e2;
+      --red-bg:    rgba(220,38,38,.10);
+      --amber:     #d97706;
+      --amber-bg:  rgba(217,119,6,.10);
+      --amber-dim: #fef3c7;
+      --mono:      'JetBrains Mono', monospace;
+    }
+    [data-theme="dark"] {
+      --bg:        #0c1a16;
+      --surface:   #132219;
+      --surface2:  #1a2e24;
+      --surface3:  #223a2e;
+      --border:    #2d4a3c;
+      --border2:   #3d6050;
+      --text:      #d8ede6;
+      --text2:     #8cbfae;
+      --text3:     #557a6a;
+      --teal:      #4ecba0;
+      --teal-mid:  #3daf88;
+      --teal-light:#5ddbb0;
+      --teal-dim:  rgba(78,203,160,.15);
+      --teal-bg:   rgba(78,203,160,.08);
+      --green:     #34d399;
+      --green-dim: rgba(52,211,153,.15);
+      --green-bg:  rgba(52,211,153,.10);
+      --red:       #f87171;
+      --red-dim:   rgba(248,113,113,.15);
+      --red-bg:    rgba(248,113,113,.10);
+      --amber:     #fbbf24;
+      --amber-bg:  rgba(251,191,36,.10);
+      --amber-dim: rgba(251,191,36,.15);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; -webkit-font-smoothing: antialiased; }
+
+    /* ── Header ── */
+    header {
+      border-bottom: 1px solid var(--border);
+      padding: 0 28px;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: var(--surface);
+      position: sticky; top: 0; z-index: 100;
+    }
+    .logo-mark {
+      width: 28px; height: 28px;
+      background: var(--teal);
+      border-radius: 6px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .logo-mark svg { color: #fff; }
+    header h1 { font-size: 1rem; font-weight: 600; letter-spacing: -.01em; color: var(--teal); }
+    header .sep { color: var(--border2); font-size: 1.2rem; font-weight: 200; }
+    header .sub { font-size: .82rem; color: var(--text3); }
+    .header-badges { display: flex; gap: 6px; }
+    .badge {
+      background: var(--teal-dim);
+      color: var(--teal);
+      border: 1px solid rgba(10,61,50,.2);
+      font-size: .67rem; padding: 2px 7px; border-radius: 4px;
+      font-weight: 600; letter-spacing: .8px; text-transform: uppercase;
+      font-family: var(--mono);
+    }
+    [data-theme="dark"] .badge { border-color: rgba(78,203,160,.25); }
+    .ai-badge {
+      background: var(--green-bg);
+      color: var(--green);
+      border: 1px solid rgba(22,163,74,.25);
+      font-size: .67rem; padding: 2px 7px; border-radius: 4px;
+      font-weight: 600; letter-spacing: .8px; text-transform: uppercase;
+      font-family: var(--mono);
+    }
+    .header-right { margin-left: auto; display: flex; align-items: center; gap: 6px; }
+    .icon-btn {
+      background: none; border: 1px solid var(--border); border-radius: 6px;
+      width: 32px; height: 32px; cursor: pointer; color: var(--text3);
+      display: flex; align-items: center; justify-content: center;
+      transition: color .15s, background .15s, border-color .15s;
+    }
+    .icon-btn:hover { color: var(--text2); background: var(--surface2); border-color: var(--border2); }
+    [data-theme="dark"] .icon-btn .icon-sun  { display: block; }
+    [data-theme="dark"] .icon-btn .icon-moon { display: none; }
+    .icon-btn .icon-sun { display: none; }
+    .icon-btn .icon-moon { display: block; }
+    .settings-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--amber); position: absolute; top: 5px; right: 5px; display: none; }
+    .settings-btn { position: relative; }
+    .settings-btn.needs-config .settings-dot { display: block; }
+    .nav-link {
+      font-size: .78rem; font-weight: 500; color: var(--text3);
+      text-decoration: none; padding: 4px 8px; border-radius: 5px;
+      transition: color .15s, background .15s;
+    }
+    .nav-link:hover { color: var(--text2); background: var(--surface2); }
+
+    /* ── Settings overlay ── */
+    .settings-overlay {
+      display: none; position: fixed; inset: 0; background: rgba(0,0,0,.3);
+      z-index: 200; backdrop-filter: blur(2px);
+    }
+    .settings-overlay.open { display: block; }
+    .settings-panel {
+      position: fixed; top: 0; right: 0; bottom: 0; width: 360px;
+      background: var(--surface); border-left: 1px solid var(--border);
+      z-index: 201; display: flex; flex-direction: column;
+      transform: translateX(100%); transition: transform .2s ease;
+    }
+    .settings-panel.open { transform: translateX(0); }
+    .settings-header {
+      display: flex; align-items: center; gap: 10px;
+      padding: 16px 20px; border-bottom: 1px solid var(--border); flex-shrink: 0;
+    }
+    .settings-header h3 { font-size: .95rem; font-weight: 600; flex: 1; }
+    .settings-close {
+      background: none; border: none; cursor: pointer; color: var(--text3);
+      padding: 6px; border-radius: 5px; display: flex; align-items: center;
+      transition: color .15s, background .15s;
+    }
+    .settings-close:hover { color: var(--text); background: var(--surface2); }
+    .settings-body { flex: 1; overflow-y: auto; padding: 0; }
+    .settings-section { padding: 18px 20px; }
+    .settings-section + .settings-section { border-top: 1px solid var(--border); }
+    .settings-section-title {
+      font-size: .62rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;
+      color: var(--text3); font-family: var(--mono); margin-bottom: 14px;
+    }
+    .settings-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+    .settings-row:last-child { margin-bottom: 0; }
+    .settings-label { font-size: .84rem; color: var(--text2); }
+    .settings-label small { display: block; font-size: .72rem; color: var(--text3); margin-top: 2px; }
+    .settings-input {
+      width: 100%; padding: 7px 10px; border: 1px solid var(--border2);
+      border-radius: 6px; font-size: .82rem; color: var(--text);
+      background: var(--surface2); font-family: var(--mono);
+      margin-top: 6px; transition: border-color .15s;
+    }
+    .settings-input:focus { outline: none; border-color: var(--teal-mid); box-shadow: 0 0 0 2px var(--teal-bg); }
+    .seg-group { display: flex; border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
+    .seg-btn {
+      flex: 1; padding: 6px 0; font-size: .78rem; font-weight: 500;
+      background: none; border: none; cursor: pointer; color: var(--text3);
+      transition: background .15s, color .15s;
+    }
+    .seg-btn + .seg-btn { border-left: 1px solid var(--border); }
+    .seg-btn.active { background: var(--teal); color: #fff; }
+    .settings-hint {
+      font-size: .75rem; color: var(--text3); margin-top: 8px;
+      padding: 8px 10px; background: var(--surface2); border-radius: 5px;
+      line-height: 1.5;
+    }
+    .settings-hint a { color: var(--teal-mid); text-decoration: none; }
+    .settings-hint a:hover { text-decoration: underline; }
+    .settings-save-btn {
+      width: 100%; background: var(--teal); color: #fff; border: none;
+      border-radius: 6px; padding: 9px; font-size: .84rem; font-weight: 600;
+      cursor: pointer; font-family: 'Inter', sans-serif; margin-top: 14px;
+      transition: opacity .15s;
+    }
+    .settings-save-btn:hover { opacity: .88; }
+    .settings-status { font-size: .78rem; color: var(--green); text-align: center; margin-top: 8px; min-height: 18px; }
+
+    /* ── Main layout ── */
+    .main-wrap {
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      gap: 0;
+      min-height: calc(100vh - 56px);
+    }
+
+    /* ── Sidebar ── */
+    .sidebar {
+      border-right: 1px solid var(--border);
+      background: var(--surface);
+      display: flex; flex-direction: column;
+    }
+    .sidebar-header {
+      padding: 18px 18px 12px;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .sidebar-title { font-size: .72rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--text3); font-family: var(--mono); margin-bottom: 10px; }
+    .btn-add-firm {
+      width: 100%; display: flex; align-items: center; justify-content: center; gap: 7px;
+      padding: 8px 12px; background: var(--teal-bg); border: 1px dashed var(--teal-mid);
+      border-radius: 6px; font-size: .82rem; font-weight: 600; color: var(--teal-mid);
+      cursor: pointer; transition: background .15s, border-color .15s;
+      font-family: 'Inter', sans-serif;
+    }
+    .btn-add-firm:hover { background: var(--teal-dim); border-style: solid; }
+    .firms-list { flex: 1; overflow-y: auto; padding: 10px 0; }
+    .firm-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 9px 18px; cursor: pointer;
+      transition: background .12s;
+      border-left: 3px solid transparent;
+    }
+    .firm-item:hover { background: var(--surface2); }
+    .firm-item.active { background: var(--teal-bg); border-left-color: var(--teal-mid); }
+    .firm-avatar {
+      width: 30px; height: 30px; border-radius: 6px;
+      background: var(--teal-dim); color: var(--teal);
+      display: flex; align-items: center; justify-content: center;
+      font-size: .72rem; font-weight: 700; font-family: var(--mono);
+      flex-shrink: 0; text-transform: uppercase;
+    }
+    .firm-info { flex: 1; min-width: 0; }
+    .firm-name { font-size: .84rem; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .firm-meta { font-size: .72rem; color: var(--text3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .firm-delete {
+      opacity: 0; background: none; border: none; cursor: pointer;
+      color: var(--text3); padding: 3px; border-radius: 4px;
+      display: flex; align-items: center; flex-shrink: 0;
+      transition: color .15s, background .15s, opacity .15s;
+    }
+    .firm-item:hover .firm-delete { opacity: 1; }
+    .firm-delete:hover { color: var(--red); background: var(--red-bg); }
+
+    .sidebar-footer { padding: 14px 18px; border-top: 1px solid var(--border); flex-shrink: 0; }
+    .last-scan-info { font-size: .72rem; color: var(--text3); margin-bottom: 8px; font-family: var(--mono); }
+    .btn-scan {
+      width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px;
+      padding: 10px; background: var(--teal); border: none; border-radius: 6px;
+      font-size: .84rem; font-weight: 600; color: #fff; cursor: pointer;
+      font-family: 'Inter', sans-serif; transition: opacity .15s, transform .1s;
+    }
+    .btn-scan:hover:not(:disabled) { opacity: .88; }
+    .btn-scan:active:not(:disabled) { transform: scale(.98); }
+    .btn-scan:disabled { opacity: .4; cursor: not-allowed; }
+
+    /* ── Content area ── */
+    .content { padding: 28px 32px 60px; overflow-y: auto; }
+
+    /* ── Empty state ── */
+    .empty-state {
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      padding: 80px 40px; text-align: center; gap: 16px;
+    }
+    .empty-icon {
+      width: 64px; height: 64px; border-radius: 16px;
+      background: var(--surface2); border: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: center; color: var(--text3);
+    }
+    .empty-state h2 { font-size: 1.1rem; font-weight: 600; color: var(--text); }
+    .empty-state p { font-size: .88rem; color: var(--text3); max-width: 360px; line-height: 1.6; }
+    .empty-state .btn-ai {
+      background: var(--teal); color: #fff; border: none;
+      padding: 10px 24px; border-radius: 6px; font-size: .88rem;
+      font-weight: 600; cursor: pointer; display: flex; align-items: center;
+      gap: 8px; font-family: 'Inter', sans-serif; transition: opacity .15s;
+    }
+    .empty-state .btn-ai:hover { opacity: .88; }
+
+    /* ── Scan progress ── */
+    .scan-progress {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 8px; padding: 20px 22px; margin-bottom: 20px; display: none;
+    }
+    .scan-progress.visible { display: block; }
+    .scan-progress-title {
+      font-size: .84rem; font-weight: 600; color: var(--teal);
+      display: flex; align-items: center; gap: 8px; margin-bottom: 14px;
+    }
+    .scan-steps { display: flex; flex-direction: column; gap: 8px; }
+    .scan-step { display: flex; align-items: center; gap: 10px; font-size: .82rem; color: var(--text3); }
+    .scan-step-icon {
+      width: 18px; height: 18px; border-radius: 50%; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center; font-size: .65rem;
+      background: var(--surface3); color: var(--text3);
+    }
+    .scan-step.done   { color: var(--green); }
+    .scan-step.done .scan-step-icon   { background: var(--green-bg); color: var(--green); }
+    .scan-step.active { color: var(--teal-mid); font-weight: 500; }
+    .scan-step.active .scan-step-icon { background: var(--teal-bg); color: var(--teal-mid); }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .spinning { animation: spin .8s linear infinite; display: inline-block; }
+
+    /* ── Digest card ── */
+    .digest-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 8px; margin-bottom: 20px; overflow: hidden;
+    }
+    .digest-header {
+      display: flex; align-items: center; gap: 10px;
+      padding: 14px 18px; background: var(--teal-bg);
+      border-bottom: 1px solid var(--border); cursor: pointer;
+    }
+    .digest-header:hover { background: var(--teal-dim); }
+    .digest-header-icon { color: var(--teal-mid); display: flex; }
+    .digest-header-text { flex: 1; }
+    .digest-header-text h3 { font-size: .9rem; font-weight: 600; color: var(--teal); }
+    .digest-header-text span { font-size: .74rem; color: var(--text3); font-family: var(--mono); }
+    .digest-chevron { color: var(--text3); transition: transform .2s; }
+    .digest-card.collapsed .digest-chevron { transform: rotate(-90deg); }
+    .digest-body { padding: 18px 20px; }
+    .digest-card.collapsed .digest-body { display: none; }
+    .digest-text { font-size: .88rem; line-height: 1.7; color: var(--text2); white-space: pre-wrap; }
+
+    /* ── Report cards ── */
+    .reports-grid { display: flex; flex-direction: column; gap: 16px; }
+    .report-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 8px; overflow: hidden;
+    }
+    .report-card-header {
+      display: flex; align-items: center; gap: 12px;
+      padding: 14px 18px; border-bottom: 1px solid var(--border);
+      cursor: pointer;
+    }
+    .report-card-header:hover { background: var(--surface2); }
+    .report-firm-avatar {
+      width: 34px; height: 34px; border-radius: 7px;
+      background: var(--teal-dim); color: var(--teal);
+      display: flex; align-items: center; justify-content: center;
+      font-size: .74rem; font-weight: 700; font-family: var(--mono);
+      flex-shrink: 0; text-transform: uppercase;
+    }
+    .report-firm-info { flex: 1; }
+    .report-firm-name { font-size: .9rem; font-weight: 600; color: var(--text); }
+    .report-firm-meta { font-size: .74rem; color: var(--text3); font-family: var(--mono); display: flex; gap: 10px; flex-wrap: wrap; margin-top: 2px; }
+    .platform-pill {
+      display: inline-flex; align-items: center; gap: 4px;
+      font-size: .66rem; padding: 1px 6px; border-radius: 3px;
+      background: var(--surface3); color: var(--text3);
+      border: 1px solid var(--border); font-family: var(--mono);
+    }
+    .platform-pill.found { background: var(--green-bg); color: var(--green); border-color: rgba(22,163,74,.25); }
+    .report-chevron { color: var(--text3); transition: transform .2s; }
+    .report-card.collapsed .report-chevron { transform: rotate(-90deg); }
+    .report-body { padding: 18px 20px; }
+    .report-card.collapsed .report-body { display: none; }
+    .report-analysis { font-size: .86rem; line-height: 1.75; color: var(--text2); white-space: pre-wrap; }
+    .report-analysis strong { color: var(--text); font-weight: 600; }
+
+    /* ── History selector ── */
+    .toolbar {
+      display: flex; align-items: center; gap: 10px;
+      margin-bottom: 20px; flex-wrap: wrap;
+    }
+    .toolbar-label { font-size: .78rem; color: var(--text3); font-family: var(--mono); }
+    .history-select {
+      padding: 5px 10px; border: 1px solid var(--border); border-radius: 6px;
+      font-size: .8rem; color: var(--text2); background: var(--surface2);
+      cursor: pointer; font-family: 'Inter', sans-serif;
+    }
+    .history-select:focus { outline: none; border-color: var(--teal-mid); }
+    .google-status {
+      margin-left: auto; display: flex; align-items: center; gap: 6px;
+      font-size: .74rem; color: var(--text3); font-family: var(--mono);
+    }
+    .status-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--text3); }
+    .status-dot.on  { background: var(--green); }
+    .status-dot.off { background: var(--amber); }
+
+    /* ── Add Firm modal ── */
+    .modal-overlay {
+      display: none; position: fixed; inset: 0; background: rgba(0,0,0,.35);
+      z-index: 300; backdrop-filter: blur(2px);
+      align-items: center; justify-content: center;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: var(--surface); border-radius: 10px;
+      border: 1px solid var(--border); width: 480px; max-width: calc(100vw - 40px);
+      max-height: calc(100vh - 60px); overflow-y: auto;
+      box-shadow: 0 20px 60px rgba(0,0,0,.2);
+      animation: modal-in .15s ease;
+    }
+    @keyframes modal-in { from { opacity: 0; transform: scale(.96) translateY(-8px); } to { opacity: 1; transform: none; } }
+    .modal-header {
+      display: flex; align-items: center; gap: 10px;
+      padding: 18px 20px; border-bottom: 1px solid var(--border);
+    }
+    .modal-header h3 { font-size: .95rem; font-weight: 600; flex: 1; }
+    .modal-close {
+      background: none; border: none; cursor: pointer; color: var(--text3);
+      padding: 6px; border-radius: 5px; display: flex; align-items: center;
+      transition: color .15s, background .15s;
+    }
+    .modal-close:hover { color: var(--text); background: var(--surface2); }
+    .modal-body { padding: 20px; }
+    .form-row { margin-bottom: 14px; }
+    .form-row:last-child { margin-bottom: 0; }
+    .form-label { font-size: .78rem; font-weight: 600; color: var(--text2); margin-bottom: 5px; display: block; }
+    .form-label span { font-weight: 400; color: var(--text3); }
+    .form-input {
+      width: 100%; padding: 8px 11px; border: 1px solid var(--border2);
+      border-radius: 6px; font-size: .84rem; color: var(--text);
+      background: var(--surface2); font-family: 'Inter', sans-serif;
+      transition: border-color .15s;
+    }
+    .form-input:focus { outline: none; border-color: var(--teal-mid); box-shadow: 0 0 0 2px var(--teal-bg); }
+    .form-input::placeholder { color: var(--text3); }
+    .form-divider { font-size: .66rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--text3); font-family: var(--mono); padding: 8px 0 4px; border-top: 1px solid var(--border); margin-top: 16px; }
+    .modal-footer {
+      display: flex; gap: 8px; justify-content: flex-end;
+      padding: 14px 20px; border-top: 1px solid var(--border);
+    }
+    .btn-cancel {
+      background: transparent; border: 1px solid var(--border); color: var(--text3);
+      padding: 8px 18px; border-radius: 6px; font-size: .84rem;
+      cursor: pointer; font-family: 'Inter', sans-serif;
+      transition: color .15s, border-color .15s;
+    }
+    .btn-cancel:hover { color: var(--text2); border-color: var(--border2); }
+    .btn-submit {
+      background: var(--teal); color: #fff; border: none;
+      padding: 8px 22px; border-radius: 6px; font-size: .84rem;
+      font-weight: 600; cursor: pointer; font-family: 'Inter', sans-serif;
+      transition: opacity .15s;
+    }
+    .btn-submit:hover { opacity: .88; }
+    .modal-error { font-size: .8rem; color: var(--red); margin-top: 10px; display: none; }
+    .modal-error.visible { display: block; }
+
+    /* ── Error/info banners ── */
+    .banner {
+      padding: 11px 14px; border-radius: 6px; font-size: .84rem;
+      margin-bottom: 16px; display: none;
+    }
+    .banner.visible { display: block; }
+    .banner.error { background: var(--red-bg); border: 1px solid rgba(220,38,38,.25); color: var(--red); }
+    .banner.warn  { background: var(--amber-bg); border: 1px solid rgba(217,119,6,.3); color: var(--amber); }
+    .banner.info  { background: var(--teal-bg); border: 1px solid rgba(10,61,50,.2); color: var(--teal-mid); }
+
+    /* ── No reports yet state ── */
+    .no-reports {
+      display: flex; flex-direction: column; align-items: center; gap: 12px;
+      padding: 60px 20px; text-align: center;
+    }
+    .no-reports-icon { color: var(--text3); opacity: .5; }
+    .no-reports h3 { font-size: .95rem; font-weight: 600; color: var(--text2); }
+    .no-reports p { font-size: .84rem; color: var(--text3); line-height: 1.6; max-width: 320px; }
+
+    @media (max-width: 768px) {
+      .main-wrap { grid-template-columns: 1fr; }
+      .sidebar { border-right: none; border-bottom: 1px solid var(--border); max-height: 280px; }
+      .content { padding: 20px 16px 40px; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo-mark">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3l18 18M10.5 10.677a2 2 0 1 0 2.823 2.823M6.362 6.359A8 8 0 0 0 12 20a8 8 0 0 0 7.638-5.641M6.362 6.359A8 8 0 0 1 12 4a8 8 0 0 1 7.638 5.641"/></svg>
+  </div>
+  <h1>SST CPA</h1>
+  <span class="sep">|</span>
+  <span class="sub">Marketing Intelligence</span>
+  <div class="header-badges">
+    <span class="badge">BETA</span>
+    <span class="ai-badge">AI&#x2011;POWERED</span>
+  </div>
+  <div class="header-right">
+    <a class="nav-link" href="/">Ledger Compare</a>
+    <a class="nav-link" href="/bankrec.html">Bank Rec</a>
+    <button class="icon-btn" onclick="toggleDark()" title="Toggle dark mode">
+      <svg class="icon-moon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      <svg class="icon-sun"  width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+    </button>
+    <button class="icon-btn settings-btn" id="settings-btn" onclick="openSettings()" title="Settings">
+      <div class="settings-dot"></div>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    </button>
+  </div>
+</header>
+
+<!-- Settings overlay + panel -->
+<div class="settings-overlay" id="settings-overlay" onclick="closeSettings()"></div>
+<div class="settings-panel" id="settings-panel">
+  <div class="settings-header">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    <h3>Settings</h3>
+    <button class="settings-close" onclick="closeSettings()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+  </div>
+  <div class="settings-body">
+    <div class="settings-section">
+      <div class="settings-section-title">Appearance</div>
+      <div class="settings-row">
+        <span class="settings-label">Theme</span>
+        <div class="seg-group">
+          <button class="seg-btn" id="theme-light" onclick="setTheme('light')">&#9788; Light</button>
+          <button class="seg-btn" id="theme-dark"  onclick="setTheme('dark')">&#9790; Dark</button>
+        </div>
+      </div>
+    </div>
+    <div class="settings-section">
+      <div class="settings-section-title">Google Custom Search API</div>
+      <p style="font-size:.8rem;color:var(--text3);margin-bottom:12px;line-height:1.5;">
+        Optional — enables scanning LinkedIn, Facebook, Instagram, and Google Reviews. Without it, only website content is analyzed.
+      </p>
+      <div class="form-row">
+        <label class="form-label">API Key</label>
+        <input type="password" class="settings-input" id="s-google-key" placeholder="AIzaSy…" autocomplete="off" />
+      </div>
+      <div class="form-row">
+        <label class="form-label">Search Engine ID (cx)</label>
+        <input type="text" class="settings-input" id="s-google-cx" placeholder="017576662512468239146:omuauf_lfve" autocomplete="off" />
+      </div>
+      <div class="settings-hint">
+        Create a free Programmable Search Engine at
+        <a href="https://programmablesearchengine.google.com" target="_blank" rel="noopener">programmablesearchengine.google.com</a>.
+        Enable "Search the entire web" and get the API key from
+        <a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noopener">Google Cloud Console</a>.
+        Free tier: 100 queries/day.
+      </div>
+      <button class="settings-save-btn" onclick="saveGoogleConfig()">Save API Settings</button>
+      <div class="settings-status" id="settings-status"></div>
+    </div>
+    <div class="settings-section">
+      <div class="settings-section-title">Scan Schedule</div>
+      <div class="settings-row">
+        <span class="settings-label">Frequency<small>Used as a reminder — manual scan via sidebar button</small></span>
+        <div class="seg-group">
+          <button class="seg-btn" id="freq-daily"  onclick="setFrequency('daily')">Daily</button>
+          <button class="seg-btn" id="freq-weekly" onclick="setFrequency('weekly')">Weekly</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add Firm modal -->
+<div class="modal-overlay" id="modal-overlay" onclick="handleModalOverlayClick(event)">
+  <div class="modal" id="modal">
+    <div class="modal-header">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      <h3>Add Competitor Firm</h3>
+      <button class="modal-close" onclick="closeModal()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <label class="form-label" for="f-name">Firm Name <span style="color:var(--red);">*</span></label>
+        <input type="text" class="form-input" id="f-name" placeholder="e.g. Smith &amp; Jones CPA" />
+      </div>
+      <div class="form-row">
+        <label class="form-label" for="f-website">Website URL <span>(optional — for direct content scan)</span></label>
+        <input type="url" class="form-input" id="f-website" placeholder="https://smithjones.com" />
+      </div>
+      <div class="form-divider">Social handles / profile URLs (optional)</div>
+      <div class="form-row">
+        <label class="form-label" for="f-linkedin">LinkedIn</label>
+        <input type="text" class="form-input" id="f-linkedin" placeholder="smith-jones-cpa  or full URL" />
+      </div>
+      <div class="form-row">
+        <label class="form-label" for="f-facebook">Facebook</label>
+        <input type="text" class="form-input" id="f-facebook" placeholder="SmithJonesCPA  or full URL" />
+      </div>
+      <div class="form-row">
+        <label class="form-label" for="f-instagram">Instagram</label>
+        <input type="text" class="form-input" id="f-instagram" placeholder="@smithjonescpa  or full URL" />
+      </div>
+      <div class="form-row">
+        <label class="form-label" for="f-google">Google Business Name <span>(for review search)</span></label>
+        <input type="text" class="form-input" id="f-google" placeholder="Smith &amp; Jones CPA" />
+      </div>
+      <div class="form-row">
+        <label class="form-label" for="f-notes">Notes <span>(optional)</span></label>
+        <input type="text" class="form-input" id="f-notes" placeholder="e.g. Main competitor in tax season, focuses on small biz" />
+      </div>
+      <div class="modal-error" id="modal-error"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+      <button class="btn-submit" onclick="addFirm()">Add Firm</button>
+    </div>
+  </div>
+</div>
+
+<!-- Main layout -->
+<div class="main-wrap">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-title">Tracked Competitors</div>
+      <button class="btn-add-firm" onclick="openModal()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Add Competitor
+      </button>
+    </div>
+    <div class="firms-list" id="firms-list">
+      <!-- Populated by JS -->
+    </div>
+    <div class="sidebar-footer">
+      <div class="last-scan-info" id="last-scan-info">No scans yet</div>
+      <button class="btn-scan" id="scan-btn" onclick="runScan()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+        <span id="scan-btn-label">Run Scan Now</span>
+      </button>
+    </div>
+  </aside>
+
+  <!-- Content -->
+  <main class="content">
+    <div class="banner error" id="error-banner"></div>
+    <div class="banner warn"  id="warn-banner"></div>
+
+    <!-- Empty state: no firms yet -->
+    <div class="empty-state" id="empty-state" style="display:none;">
+      <div class="empty-icon">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      </div>
+      <h2>No competitors tracked yet</h2>
+      <p>Add other CPA firms in your market to start monitoring their marketing activity, content strategy, and online presence.</p>
+      <button class="btn-ai" onclick="openModal()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Add Your First Competitor
+      </button>
+    </div>
+
+    <!-- Scan progress -->
+    <div class="scan-progress" id="scan-progress">
+      <div class="scan-progress-title">
+        <span class="spinning">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+        </span>
+        Scanning competitors…
+      </div>
+      <div class="scan-steps" id="scan-steps">
+        <!-- Populated dynamically -->
+      </div>
+    </div>
+
+    <!-- Reports area (shown when there are reports) -->
+    <div id="reports-area" style="display:none;">
+      <div class="toolbar">
+        <span class="toolbar-label">Report:</span>
+        <select class="history-select" id="history-select" onchange="loadReport(this.value)">
+        </select>
+        <div class="google-status" id="google-status">
+          <div class="status-dot off" id="google-dot"></div>
+          <span id="google-label">Website only</span>
+        </div>
+      </div>
+
+      <!-- Overall digest -->
+      <div class="digest-card" id="digest-card">
+        <div class="digest-header" onclick="toggleDigest()">
+          <div class="digest-header-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+          </div>
+          <div class="digest-header-text">
+            <h3>Executive Digest</h3>
+            <span id="digest-meta">AI-generated summary across all tracked firms</span>
+          </div>
+          <svg class="digest-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+        <div class="digest-body">
+          <div class="digest-text" id="digest-text"></div>
+        </div>
+      </div>
+
+      <!-- Per-firm report cards -->
+      <div class="reports-grid" id="reports-grid">
+        <!-- Populated by JS -->
+      </div>
+    </div>
+
+    <!-- No reports yet (firms added but not scanned) -->
+    <div class="no-reports" id="no-reports" style="display:none;">
+      <div class="no-reports-icon">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      </div>
+      <h3>Ready to scan</h3>
+      <p>You've added competitor firms. Click <strong>Run Scan Now</strong> to fetch their latest marketing activity and get an AI-powered digest.</p>
+    </div>
+  </main>
+</div>
+
+<script>
+  // ── State ───────────────────────────────────────────────────────────────────
+  let firms = [];
+  let reports = [];
+  let config = { hasGoogleApiKey: false, hasGoogleCxId: false, scheduleFrequency: 'weekly' };
+  let scanning = false;
+  let currentReportId = null;
+
+  // ── Init ────────────────────────────────────────────────────────────────────
+  async function init() {
+    await Promise.all([loadConfig(), loadFirms(), loadReports()]);
+    applyThemeButtons();
+    render();
+  }
+
+  async function loadConfig() {
+    try {
+      const r = await fetch('/api/marketing/config');
+      config = await r.json();
+    } catch {}
+    const needsConfig = !config.hasGoogleApiKey || !config.hasGoogleCxId;
+    document.getElementById('settings-btn').classList.toggle('needs-config', needsConfig);
+    const dot = document.getElementById('google-dot');
+    const lbl = document.getElementById('google-label');
+    if (dot && lbl) {
+      dot.className = 'status-dot ' + (config.hasGoogleApiKey && config.hasGoogleCxId ? 'on' : 'off');
+      lbl.textContent = config.hasGoogleApiKey && config.hasGoogleCxId ? 'Google Search on' : 'Website only';
+    }
+    const freqBtn = document.getElementById('freq-' + (config.scheduleFrequency || 'weekly'));
+    if (freqBtn) {
+      document.querySelectorAll('#freq-daily,#freq-weekly').forEach(b => b.classList.remove('active'));
+      freqBtn.classList.add('active');
+    }
+  }
+
+  async function loadFirms() {
+    try {
+      const r = await fetch('/api/marketing/firms');
+      const data = await r.json();
+      firms = data.firms || [];
+    } catch { firms = []; }
+  }
+
+  async function loadReports() {
+    try {
+      const r = await fetch('/api/marketing/reports');
+      const data = await r.json();
+      reports = data.reports || [];
+    } catch { reports = []; }
+  }
+
+  // ── Render ──────────────────────────────────────────────────────────────────
+  function render() {
+    renderSidebar();
+    renderContent();
+  }
+
+  function renderSidebar() {
+    const list = document.getElementById('firms-list');
+    if (!firms.length) {
+      list.innerHTML = '<div style="padding:20px 18px;font-size:.8rem;color:var(--text3);text-align:center;">No competitors tracked yet</div>';
+    } else {
+      list.innerHTML = firms.map(f => `
+        <div class="firm-item" id="firm-${f.id}" onclick="selectFirm('${f.id}')">
+          <div class="firm-avatar">${initials(f.name)}</div>
+          <div class="firm-info">
+            <div class="firm-name">${escHtml(f.name)}</div>
+            <div class="firm-meta">${f.website ? domainOf(f.website) : 'No website set'}</div>
+          </div>
+          <button class="firm-delete" onclick="deleteFirm(event,'${f.id}')" title="Remove firm">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+      `).join('');
+    }
+
+    const lastScanEl = document.getElementById('last-scan-info');
+    if (reports.length) {
+      const latest = reports[0];
+      lastScanEl.textContent = 'Last scan: ' + relTime(latest.scannedAt);
+    } else {
+      lastScanEl.textContent = 'No scans yet';
+    }
+  }
+
+  function renderContent() {
+    const emptyState  = document.getElementById('empty-state');
+    const noReports   = document.getElementById('no-reports');
+    const reportsArea = document.getElementById('reports-area');
+
+    if (!firms.length) {
+      emptyState.style.display  = '';
+      noReports.style.display   = 'none';
+      reportsArea.style.display = 'none';
+      return;
+    }
+    emptyState.style.display = 'none';
+
+    if (!reports.length) {
+      noReports.style.display   = '';
+      reportsArea.style.display = 'none';
+      return;
+    }
+    noReports.style.display   = 'none';
+    reportsArea.style.display = '';
+
+    renderHistorySelector();
+    const report = currentReportId
+      ? reports.find(r => r.id === currentReportId)
+      : reports[0];
+    if (report) renderReport(report);
+  }
+
+  function renderHistorySelector() {
+    const sel = document.getElementById('history-select');
+    sel.innerHTML = reports.map((r, i) => {
+      const label = (i === 0 ? 'Latest — ' : '') + fmtDate(r.scannedAt) + ` (${r.firmCount} firm${r.firmCount !== 1 ? 's' : ''})`;
+      return `<option value="${r.id}" ${r.id === (currentReportId || reports[0].id) ? 'selected' : ''}>${escHtml(label)}</option>`;
+    }).join('');
+  }
+
+  function renderReport(report) {
+    // Digest
+    document.getElementById('digest-meta').textContent =
+      fmtDate(report.scannedAt) + ' · ' + report.firmCount + ' firm' + (report.firmCount !== 1 ? 's' : '') +
+      (report.hasGoogleData ? ' · Google Search data' : ' · Website data only');
+
+    const digestText = document.getElementById('digest-text');
+    if (report.digest) {
+      digestText.innerHTML = formatAnalysis(report.digest);
+    } else {
+      digestText.textContent = 'No digest available for this report.';
+    }
+
+    // Firm report cards
+    const grid = document.getElementById('reports-grid');
+    grid.innerHTML = (report.firmReports || []).map(fr => {
+      const platforms = ['website','linkedin','facebook','instagram','google'];
+      const platformPills = platforms.map(p => {
+        const found = fr.platformsFound && fr.platformsFound.includes(p);
+        return `<span class="platform-pill ${found ? 'found' : ''}">${p}</span>`;
+      }).join('');
+      return `
+        <div class="report-card" id="rc-${fr.firmId}">
+          <div class="report-card-header" onclick="toggleCard('rc-${fr.firmId}')">
+            <div class="report-firm-avatar">${initials(fr.firmName)}</div>
+            <div class="report-firm-info">
+              <div class="report-firm-name">${escHtml(fr.firmName)}</div>
+              <div class="report-firm-meta">
+                <span>${fmtDate(fr.scannedAt)}</span>
+                ${platformPills}
+              </div>
+            </div>
+            <svg class="report-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+          </div>
+          <div class="report-body">
+            <div class="report-analysis">${formatAnalysis(fr.analysis)}</div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function loadReport(id) {
+    currentReportId = id;
+    const report = reports.find(r => r.id === id);
+    if (report) renderReport(report);
+  }
+
+  // ── Firm actions ────────────────────────────────────────────────────────────
+  function openModal() {
+    clearModalForm();
+    document.getElementById('modal-overlay').classList.add('open');
+    setTimeout(() => document.getElementById('f-name').focus(), 50);
+  }
+  function closeModal() {
+    document.getElementById('modal-overlay').classList.remove('open');
+  }
+  function handleModalOverlayClick(e) {
+    if (e.target === document.getElementById('modal-overlay')) closeModal();
+  }
+  function clearModalForm() {
+    ['f-name','f-website','f-linkedin','f-facebook','f-instagram','f-google','f-notes']
+      .forEach(id => document.getElementById(id).value = '');
+    const err = document.getElementById('modal-error');
+    err.textContent = '';
+    err.classList.remove('visible');
+  }
+
+  async function addFirm() {
+    const name = document.getElementById('f-name').value.trim();
+    if (!name) {
+      const err = document.getElementById('modal-error');
+      err.textContent = 'Firm name is required.';
+      err.classList.add('visible');
+      document.getElementById('f-name').focus();
+      return;
+    }
+    const payload = {
+      name,
+      website:       document.getElementById('f-website').value.trim(),
+      linkedin:      document.getElementById('f-linkedin').value.trim(),
+      facebook:      document.getElementById('f-facebook').value.trim(),
+      instagram:     document.getElementById('f-instagram').value.trim(),
+      googleBusiness:document.getElementById('f-google').value.trim(),
+      notes:         document.getElementById('f-notes').value.trim(),
+    };
+    try {
+      const r = await fetch('/api/marketing/firms', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await r.json();
+      if (!r.ok) throw new Error(data.error || 'Failed to add firm.');
+      firms.push(data);
+      closeModal();
+      render();
+    } catch (e) {
+      const err = document.getElementById('modal-error');
+      err.textContent = e.message;
+      err.classList.add('visible');
+    }
+  }
+
+  async function deleteFirm(event, id) {
+    event.stopPropagation();
+    const firm = firms.find(f => f.id === id);
+    if (!confirm(`Remove "${firm?.name}" from tracking?`)) return;
+    try {
+      const r = await fetch('/api/marketing/firms/' + id, { method: 'DELETE' });
+      if (!r.ok) throw new Error('Delete failed.');
+      firms = firms.filter(f => f.id !== id);
+      render();
+    } catch (e) { showBanner('error', e.message); }
+  }
+
+  function selectFirm(id) {
+    document.querySelectorAll('.firm-item').forEach(el => el.classList.remove('active'));
+    document.getElementById('firm-' + id)?.classList.add('active');
+    if (currentReportId) {
+      const report = reports.find(r => r.id === currentReportId) || reports[0];
+      if (report) {
+        const card = document.getElementById('rc-' + id);
+        card?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }
+  }
+
+  // ── Scan ────────────────────────────────────────────────────────────────────
+  async function runScan() {
+    if (scanning) return;
+    if (!firms.length) { showBanner('warn', 'Add at least one competitor firm before scanning.'); return; }
+    scanning = true;
+    hideBanners();
+
+    const btn = document.getElementById('scan-btn');
+    const label = document.getElementById('scan-btn-label');
+    btn.disabled = true;
+    label.textContent = 'Scanning…';
+
+    // Show progress
+    const prog = document.getElementById('scan-progress');
+    prog.classList.add('visible');
+    const stepsEl = document.getElementById('scan-steps');
+    const steps = [
+      ...firms.map(f => ({ id: 'step-' + f.id, label: `Fetching ${f.name}` })),
+      { id: 'step-digest', label: 'Generating executive digest' }
+    ];
+    stepsEl.innerHTML = steps.map(s =>
+      `<div class="scan-step" id="${s.id}"><div class="scan-step-icon">—</div><span>${escHtml(s.label)}</span></div>`
+    ).join('');
+
+    // Animate first step
+    setStepActive('step-' + (firms[0]?.id || 'digest'));
+
+    try {
+      const r = await fetch('/api/marketing/scan', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' }
+      });
+      const data = await r.json();
+      if (!r.ok) throw new Error(data.error || 'Scan failed.');
+
+      // Mark all done
+      steps.forEach(s => setStepDone(s.id));
+
+      reports.unshift(data);
+      if (reports.length > 20) reports = reports.slice(0, 20);
+      currentReportId = data.id;
+
+      await loadConfig(); // refresh google status
+      render();
+
+      setTimeout(() => { prog.classList.remove('visible'); }, 1500);
+    } catch (e) {
+      showBanner('error', 'Scan failed: ' + e.message);
+      prog.classList.remove('visible');
+    }
+
+    btn.disabled = false;
+    label.textContent = 'Run Scan Now';
+    scanning = false;
+  }
+
+  function setStepActive(id) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.className = 'scan-step active';
+    el.querySelector('.scan-step-icon').innerHTML = '<span class="spinning">◌</span>';
+  }
+  function setStepDone(id) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.className = 'scan-step done';
+    el.querySelector('.scan-step-icon').innerHTML = '✓';
+  }
+
+  // ── Settings ─────────────────────────────────────────────────────────────────
+  function openSettings() {
+    document.getElementById('settings-overlay').classList.add('open');
+    document.getElementById('settings-panel').classList.add('open');
+  }
+  function closeSettings() {
+    document.getElementById('settings-overlay').classList.remove('open');
+    document.getElementById('settings-panel').classList.remove('open');
+  }
+
+  async function saveGoogleConfig() {
+    const key = document.getElementById('s-google-key').value.trim();
+    const cx  = document.getElementById('s-google-cx').value.trim();
+    const status = document.getElementById('settings-status');
+    try {
+      const r = await fetch('/api/marketing/config', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ googleApiKey: key, googleCxId: cx })
+      });
+      if (!r.ok) throw new Error('Save failed.');
+      status.textContent = '✓ Saved';
+      status.style.color = 'var(--green)';
+      setTimeout(() => { status.textContent = ''; }, 3000);
+      await loadConfig();
+    } catch (e) {
+      status.textContent = e.message;
+      status.style.color = 'var(--red)';
+    }
+  }
+
+  function setFrequency(f) {
+    document.querySelectorAll('#freq-daily,#freq-weekly').forEach(b => b.classList.remove('active'));
+    document.getElementById('freq-' + f)?.classList.add('active');
+    fetch('/api/marketing/config', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ scheduleFrequency: f })
+    });
+  }
+
+  // ── Theme ───────────────────────────────────────────────────────────────────
+  function toggleDark() {
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    setTheme(isDark ? 'light' : 'dark');
+  }
+  function setTheme(t) {
+    document.documentElement.setAttribute('data-theme', t === 'dark' ? 'dark' : '');
+    localStorage.setItem('mktbot-theme', t);
+    applyThemeButtons();
+  }
+  function applyThemeButtons() {
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    document.getElementById('theme-light')?.classList.toggle('active', !isDark);
+    document.getElementById('theme-dark')?.classList.toggle('active', isDark);
+  }
+
+  // ── UI helpers ───────────────────────────────────────────────────────────────
+  function toggleDigest() {
+    document.getElementById('digest-card').classList.toggle('collapsed');
+  }
+  function toggleCard(id) {
+    document.getElementById(id)?.classList.toggle('collapsed');
+  }
+
+  function showBanner(type, msg) {
+    const el = document.getElementById(type + '-banner');
+    if (!el) return;
+    el.textContent = msg;
+    el.classList.add('visible');
+  }
+  function hideBanners() {
+    document.querySelectorAll('.banner').forEach(b => b.classList.remove('visible'));
+  }
+
+  function formatAnalysis(text) {
+    if (!text) return '';
+    return escHtml(text)
+      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+      .replace(/^#{1,3} (.+)$/gm, '<strong>$1</strong>')
+      .replace(/\n/g, '<br>');
+  }
+
+  function escHtml(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+  function initials(name) {
+    return name.trim().split(/\s+/).slice(0,2).map(w => w[0]).join('').toUpperCase();
+  }
+  function domainOf(url) {
+    try { return new URL(url).hostname.replace(/^www\./, ''); } catch { return url; }
+  }
+  function fmtDate(iso) {
+    if (!iso) return '';
+    const d = new Date(iso);
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' });
+  }
+  function relTime(iso) {
+    const diff = Date.now() - new Date(iso).getTime();
+    const mins = Math.floor(diff / 60000);
+    if (mins < 1)   return 'just now';
+    if (mins < 60)  return mins + 'm ago';
+    const hrs = Math.floor(mins / 60);
+    if (hrs < 24)   return hrs + 'h ago';
+    return Math.floor(hrs / 24) + 'd ago';
+  }
+
+  // Keyboard shortcuts
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') { closeModal(); closeSettings(); }
+    if (e.key === 'Enter' && document.getElementById('modal-overlay').classList.contains('open')) {
+      if (document.activeElement.tagName !== 'BUTTON') addFirm();
+    }
+  });
+
+  init();
+</script>
+</body>
+</html>
