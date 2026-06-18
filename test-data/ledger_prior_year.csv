@@ -1,0 +1,32 @@
+Account #,Account Name,Debit,Credit
+1000,Cash,58000.00,
+1010,Accounts Receivable,142000.00,
+1020,Prepaid Insurance,5400.00,
+1030,Office Supplies,1100.00,
+1500,Office Furniture,18000.00,
+1510,Computer Equipment,50000.00,
+1520,Accumulated Depreciation - Furniture,,7800.00
+1530,Accumulated Depreciation - Equipment,,18200.00
+2000,Accounts Payable,,35000.00
+2010,Accrued Payroll,,15400.00
+2020,Accrued Liabilities,,8600.00
+2030,Deferred Revenue,,13000.00
+2100,Notes Payable,,48000.00
+3000,Common Stock,,10000.00
+3010,Retained Earnings,,82000.00
+4000,Consulting Revenue,,198000.00
+4010,Software License Revenue,,28500.00
+4020,Maintenance Revenue,,20800.00
+5000,Salaries Expense,104000.00,
+5010,Payroll Taxes Expense,9360.00,
+5020,Health Insurance Expense,10400.00,
+5030,Rent Expense,19200.00,
+5040,Utilities Expense,3800.00,
+5050,Office Supplies Expense,2600.00,
+5060,Software Subscriptions,6600.00,
+5070,Marketing Expense,14400.00,
+5080,Travel Expense,5200.00,
+5090,Professional Fees,9200.00,
+5100,Depreciation Expense,8200.00,
+5110,Interest Expense,2300.00,
+5120,Income Tax Expense,15600.00,
