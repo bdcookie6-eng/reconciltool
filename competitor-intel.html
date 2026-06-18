@@ -221,7 +221,24 @@
     .sentiment-review-text { font-size: .79rem; color: var(--text2); line-height: 1.5; margin-bottom: 3px; font-style: italic; }
     .sentiment-review-meta { font-size: .68rem; color: var(--text3); font-family: var(--mono); }
 
-    /* ── Post cards ── */
+    /* ── Reviews card tabs (Summary / All Reviews) ── */
+    .reviews-tabs { display: flex; gap: 6px; margin-left: auto; }
+    .reviews-tab {
+      font-size: .68rem; font-weight: 600; padding: 4px 10px; border-radius: 5px;
+      border: 1px solid var(--border); background: var(--surface); color: var(--text3);
+      cursor: pointer; font-family: var(--mono); transition: all .15s; white-space: nowrap;
+    }
+    .reviews-tab:hover:not(.active) { border-color: var(--border2); color: var(--text2); }
+    .reviews-tab.active { background: var(--teal); color: #fff; border-color: var(--teal); }
+    .reviews-view { display: none; }
+    .reviews-view.active { display: block; }
+    .all-reviews-list { display: flex; flex-direction: column; gap: 10px; max-height: 360px; overflow-y: auto; padding-right: 2px; }
+    .all-review-item { border: 1px solid var(--border); border-radius: 6px; padding: 10px 12px; }
+    .all-review-item .sentiment-review-stars { margin-bottom: 4px; }
+    .all-review-item .sentiment-review-text { font-style: normal; font-size: .82rem; margin-bottom: 5px; }
+    .all-review-item-foot { display: flex; align-items: center; justify-content: space-between; }
+    .all-review-link { font-size: .68rem; color: var(--teal-mid); text-decoration: none; font-family: var(--mono); }
+    .all-review-link:hover { text-decoration: underline; }
     .post-list { display: flex; flex-direction: column; gap: 10px; }
     .post-item { border: 1px solid var(--border); border-radius: 6px; padding: 12px 14px; }
     .post-meta { display: flex; align-items: center; gap: 8px; margin-bottom: 7px; flex-wrap: wrap; }
@@ -465,8 +482,13 @@
           <div class="card-header-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div>
           <div class="card-title">Google Reviews</div>
           <div class="card-meta">103 total · 4.7★</div>
+          <div class="reviews-tabs">
+            <button class="reviews-tab active" onclick="showReviewsView(this,'weaver-summary')">Summary</button>
+            <button class="reviews-tab" onclick="showReviewsView(this,'weaver-all')">See all reviews</button>
+          </div>
         </div>
         <div class="card-body">
+          <div class="reviews-view active" id="weaver-summary">
           <div class="star-row">
             <div class="star-num">4.7</div>
             <div class="stars">★★★★★</div>
@@ -525,6 +547,56 @@
                   <div class="sentiment-review"><div class="sentiment-review-stars">★★★★☆</div><div class="sentiment-review-text">"Quality is there, just wish pricing was discussed before the engagement letter instead of after."</div><div class="sentiment-review-meta">— Pat W. · 2 months ago</div></div>
                 </div>
               </span>
+            </div>
+          </div>
+          </div>
+          <div class="reviews-view" id="weaver-all">
+            <div class="all-reviews-list">
+              <div class="all-review-item">
+                <div class="sentiment-review-stars">★★★★★</div>
+                <div class="sentiment-review-text">"Our partner replies to emails the same day, even during busy season. Never had that with our last firm."</div>
+                <div class="all-review-item-foot"><span class="sentiment-review-meta">Rachel M. · 2 weeks ago</span><a class="all-review-link" href="https://www.google.com/maps/search/Weaver+CPA+Dallas+reviews" target="_blank" rel="noopener noreferrer">View on Google ↗</a></div>
+              </div>
+              <div class="all-review-item">
+                <div class="sentiment-review-stars">★★★★★</div>
+                <div class="sentiment-review-text">"They actually understand depletion allowances and IDCs — most firms in Dallas don't have anyone who works oil & gas."</div>
+                <div class="all-review-item-foot"><span class="sentiment-review-meta">Tom B., Operator · 1 month ago</span><a class="all-review-link" href="https://www.google.com/maps/search/Weaver+CPA+Dallas+reviews" target="_blank" rel="noopener noreferrer">View on Google ↗</a></div>
+              </div>
+              <div class="all-review-item">
+                <div class="sentiment-review-stars">★★★★★</div>
+                <div class="sentiment-review-text">"Multi-state filing for our business used to be a nightmare. Weaver untangled three years of mess in one quarter."</div>
+                <div class="all-review-item-foot"><span class="sentiment-review-meta">Janet H. · 3 weeks ago</span><a class="all-review-link" href="https://www.google.com/maps/search/Weaver+CPA+Dallas+reviews" target="_blank" rel="noopener noreferrer">View on Google ↗</a></div>
+              </div>
+              <div class="all-review-item">
+                <div class="sentiment-review-stars">★★★★★</div>
+                <div class="sentiment-review-text">"They picked up the phone on a Friday afternoon before a deadline. That alone is worth the fee."</div>
+                <div class="all-review-item-foot"><span class="sentiment-review-meta">David K. · 5 weeks ago</span><a class="all-review-link" href="https://www.google.com/maps/search/Weaver+CPA+Dallas+reviews" target="_blank" rel="noopener noreferrer">View on Google ↗</a></div>
+              </div>
+              <div class="all-review-item">
+                <div class="sentiment-review-stars">★★★★★</div>
+                <div class="sentiment-review-text">"Switched from a generalist CPA and immediately got better guidance on our energy royalty structure."</div>
+                <div class="all-review-item-foot"><span class="sentiment-review-meta">Lisa P. · 2 months ago</span><a class="all-review-link" href="https://www.google.com/maps/search/Weaver+CPA+Dallas+reviews" target="_blank" rel="noopener noreferrer">View on Google ↗</a></div>
+              </div>
+              <div class="all-review-item">
+                <div class="sentiment-review-stars">★★★★☆</div>
+                <div class="sentiment-review-text">"They handled our M&A due diligence tax questions better than the deal lawyers did."</div>
+                <div class="all-review-item-foot"><span class="sentiment-review-meta">Carlos R. · 6 weeks ago</span><a class="all-review-link" href="https://www.google.com/maps/search/Weaver+CPA+Dallas+reviews" target="_blank" rel="noopener noreferrer">View on Google ↗</a></div>
+              </div>
+              <div class="all-review-item">
+                <div class="sentiment-review-stars">★★★☆☆</div>
+                <div class="sentiment-review-text">"Good work but the invoice had several line items we weren't told about upfront. Would like clearer estimates."</div>
+                <div class="all-review-item-foot"><span class="sentiment-review-meta">Anonymous · 1 month ago</span><a class="all-review-link" href="https://www.google.com/maps/search/Weaver+CPA+Dallas+reviews" target="_blank" rel="noopener noreferrer">View on Google ↗</a></div>
+              </div>
+              <div class="all-review-item">
+                <div class="sentiment-review-stars">★★★★☆</div>
+                <div class="sentiment-review-text">"Quality is there, just wish pricing was discussed before the engagement letter instead of after."</div>
+                <div class="all-review-item-foot"><span class="sentiment-review-meta">Pat W. · 2 months ago</span><a class="all-review-link" href="https://www.google.com/maps/search/Weaver+CPA+Dallas+reviews" target="_blank" rel="noopener noreferrer">View on Google ↗</a></div>
+              </div>
+              <div class="all-review-item">
+                <div class="sentiment-review-stars">★★☆☆☆</div>
+                <div class="sentiment-review-text">"Solid technical work but our engagement letter took three rounds of back-and-forth to finalize. Slowed down our start."</div>
+                <div class="all-review-item-foot"><span class="sentiment-review-meta">Anonymous · 7 weeks ago</span><a class="all-review-link" href="https://www.google.com/maps/search/Weaver+CPA+Dallas+reviews" target="_blank" rel="noopener noreferrer">View on Google ↗</a></div>
+              </div>
             </div>
           </div>
         </div>
@@ -702,8 +774,13 @@
         <div class="card-header">
           <div class="card-header-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div>
           <div class="card-title">Google Reviews</div><div class="card-meta">64 total · 4.5★</div>
+          <div class="reviews-tabs">
+            <button class="reviews-tab active" onclick="showReviewsView(this,'lgt-summary')">Summary</button>
+            <button class="reviews-tab" onclick="showReviewsView(this,'lgt-all')">See all reviews</button>
+          </div>
         </div>
         <div class="card-body">
+          <div class="reviews-view active" id="lgt-summary">
           <div class="star-row"><div class="star-num">4.5</div><div class="stars">★★★★☆</div><div class="review-count">64 reviews</div></div>
           <div class="review-chart">
             <div class="review-bar-row"><div class="review-bar-label">5★</div><div class="review-bar-track"><div class="review-bar-fill" style="width:67%"></div></div><div class="review-bar-count">43</div></div>
@@ -742,6 +819,51 @@
                   <div class="sentiment-review"><div class="sentiment-review-stars">★★★☆☆</div><div class="sentiment-review-text">"Good firm but the staff churn means you're never quite sure who's handling your file this year."</div><div class="sentiment-review-meta">— Steve O. · 2 months ago</div></div>
                 </div>
               </span>
+            </div>
+          </div>
+          </div>
+          <div class="reviews-view" id="lgt-all">
+            <div class="all-reviews-list">
+              <div class="all-review-item">
+                <div class="sentiment-review-stars">★★★★★</div>
+                <div class="sentiment-review-text">"They know dealership floor plan financing inside and out. Our last CPA had to look everything up."</div>
+                <div class="all-review-item-foot"><span class="sentiment-review-meta">Greg N. · 1 month ago</span><a class="all-review-link" href="https://www.google.com/maps/search/Lane+Gorman+Trubitt+Dallas+reviews" target="_blank" rel="noopener noreferrer">View on Google ↗</a></div>
+              </div>
+              <div class="all-review-item">
+                <div class="sentiment-review-stars">★★★★★</div>
+                <div class="sentiment-review-text">"We've been with LGT for almost 15 years. Same trust, same quality the whole time."</div>
+                <div class="all-review-item-foot"><span class="sentiment-review-meta">Marjorie S. · 3 weeks ago</span><a class="all-review-link" href="https://www.google.com/maps/search/Lane+Gorman+Trubitt+Dallas+reviews" target="_blank" rel="noopener noreferrer">View on Google ↗</a></div>
+              </div>
+              <div class="all-review-item">
+                <div class="sentiment-review-stars">★★★★★</div>
+                <div class="sentiment-review-text">"Our family business has used them since the 90s — they know our history better than we do."</div>
+                <div class="all-review-item-foot"><span class="sentiment-review-meta">Bill F. · 2 months ago</span><a class="all-review-link" href="https://www.google.com/maps/search/Lane+Gorman+Trubitt+Dallas+reviews" target="_blank" rel="noopener noreferrer">View on Google ↗</a></div>
+              </div>
+              <div class="all-review-item">
+                <div class="sentiment-review-stars">★★★★☆</div>
+                <div class="sentiment-review-text">"LIFO inventory accounting for our lot is exactly the kind of thing they handle without hand-holding."</div>
+                <div class="all-review-item-foot"><span class="sentiment-review-meta">Auto Group Owner · 2 months ago</span><a class="all-review-link" href="https://www.google.com/maps/search/Lane+Gorman+Trubitt+Dallas+reviews" target="_blank" rel="noopener noreferrer">View on Google ↗</a></div>
+              </div>
+              <div class="all-review-item">
+                <div class="sentiment-review-stars">★★★☆☆</div>
+                <div class="sentiment-review-text">"Took almost a week to hear back during tax season. Understandable but frustrating when the deadline is close."</div>
+                <div class="all-review-item-foot"><span class="sentiment-review-meta">Anonymous · 1 month ago</span><a class="all-review-link" href="https://www.google.com/maps/search/Lane+Gorman+Trubitt+Dallas+reviews" target="_blank" rel="noopener noreferrer">View on Google ↗</a></div>
+              </div>
+              <div class="all-review-item">
+                <div class="sentiment-review-stars">★★★☆☆</div>
+                <div class="sentiment-review-text">"Quality work, just wish emails didn't sit for 3-4 days before a reply."</div>
+                <div class="all-review-item-foot"><span class="sentiment-review-meta">Nancy T. · 6 weeks ago</span><a class="all-review-link" href="https://www.google.com/maps/search/Lane+Gorman+Trubitt+Dallas+reviews" target="_blank" rel="noopener noreferrer">View on Google ↗</a></div>
+              </div>
+              <div class="all-review-item">
+                <div class="sentiment-review-stars">★★☆☆☆</div>
+                <div class="sentiment-review-text">"Our third account manager in two years. Every time someone new takes over, we have to re-explain everything."</div>
+                <div class="all-review-item-foot"><span class="sentiment-review-meta">Frustrated Client · 5 weeks ago</span><a class="all-review-link" href="https://www.google.com/maps/search/Lane+Gorman+Trubitt+Dallas+reviews" target="_blank" rel="noopener noreferrer">View on Google ↗</a></div>
+              </div>
+              <div class="all-review-item">
+                <div class="sentiment-review-stars">★★★☆☆</div>
+                <div class="sentiment-review-text">"Good firm but the staff churn means you're never quite sure who's handling your file this year."</div>
+                <div class="all-review-item-foot"><span class="sentiment-review-meta">Steve O. · 2 months ago</span><a class="all-review-link" href="https://www.google.com/maps/search/Lane+Gorman+Trubitt+Dallas+reviews" target="_blank" rel="noopener noreferrer">View on Google ↗</a></div>
+              </div>
             </div>
           </div>
         </div>
@@ -849,8 +971,14 @@
         </div>
       </div>
       <div class="card reviews-card">
-        <div class="card-header"><div class="card-header-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div><div class="card-title">Google Reviews</div><div class="card-meta">48 total · 4.1★</div></div>
+        <div class="card-header"><div class="card-header-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div><div class="card-title">Google Reviews</div><div class="card-meta">48 total · 4.1★</div>
+          <div class="reviews-tabs">
+            <button class="reviews-tab active" onclick="showReviewsView(this,'hmm-summary')">Summary</button>
+            <button class="reviews-tab" onclick="showReviewsView(this,'hmm-all')">See all reviews</button>
+          </div>
+        </div>
         <div class="card-body">
+          <div class="reviews-view active" id="hmm-summary">
           <div class="star-row"><div class="star-num">4.1</div><div class="stars" style="color:#f59e0b;">★★★★☆</div><div class="review-count">48 reviews</div></div>
           <div class="review-chart">
             <div class="review-bar-row"><div class="review-bar-label">5★</div><div class="review-bar-track"><div class="review-bar-fill" style="width:54%"></div></div><div class="review-bar-count">26</div></div>
@@ -882,6 +1010,46 @@
                   <div class="sentiment-review"><div class="sentiment-review-stars">★★☆☆☆</div><div class="sentiment-review-text">"Asked to escalate a complex issue to a partner and was told to 'submit it through the portal.' Not what we signed up for."</div><div class="sentiment-review-meta">— Mike A. · 2 months ago</div></div>
                 </div>
               </span>
+            </div>
+          </div>
+          </div>
+          <div class="reviews-view" id="hmm-all">
+            <div class="all-reviews-list">
+              <div class="all-review-item">
+                <div class="sentiment-review-stars">★☆☆☆☆</div>
+                <div class="sentiment-review-text">"Sent three emails over two weeks before anyone responded. Found out our extension wasn't filed."</div>
+                <div class="all-review-item-foot"><span class="sentiment-review-meta">Angry Client · 3 weeks ago</span><a class="all-review-link" href="https://www.google.com/maps/search/HM%26M+CPAs+Dallas+reviews" target="_blank" rel="noopener noreferrer">View on Google ↗</a></div>
+              </div>
+              <div class="all-review-item">
+                <div class="sentiment-review-stars">★★☆☆☆</div>
+                <div class="sentiment-review-text">"Used to be responsive. Last two years it's been radio silence until we call repeatedly."</div>
+                <div class="all-review-item-foot"><span class="sentiment-review-meta">Robert D. · 6 weeks ago</span><a class="all-review-link" href="https://www.google.com/maps/search/HM%26M+CPAs+Dallas+reviews" target="_blank" rel="noopener noreferrer">View on Google ↗</a></div>
+              </div>
+              <div class="all-review-item">
+                <div class="sentiment-review-stars">★★☆☆☆</div>
+                <div class="sentiment-review-text">"Final invoice was nearly double the original estimate with zero heads-up. Won't be back."</div>
+                <div class="all-review-item-foot"><span class="sentiment-review-meta">Former Client · 1 month ago</span><a class="all-review-link" href="https://www.google.com/maps/search/HM%26M+CPAs+Dallas+reviews" target="_blank" rel="noopener noreferrer">View on Google ↗</a></div>
+              </div>
+              <div class="all-review-item">
+                <div class="sentiment-review-stars">★☆☆☆☆</div>
+                <div class="sentiment-review-text">"Charged for a consultation we were told was complimentary. Had to dispute it."</div>
+                <div class="all-review-item-foot"><span class="sentiment-review-meta">Karen L. · 2 months ago</span><a class="all-review-link" href="https://www.google.com/maps/search/HM%26M+CPAs+Dallas+reviews" target="_blank" rel="noopener noreferrer">View on Google ↗</a></div>
+              </div>
+              <div class="all-review-item">
+                <div class="sentiment-review-stars">★★☆☆☆</div>
+                <div class="sentiment-review-text">"Haven't spoken to the partner on our account in over a year — it's all juniors now, and they don't know our history."</div>
+                <div class="all-review-item-foot"><span class="sentiment-review-meta">Long-time Client · 5 weeks ago</span><a class="all-review-link" href="https://www.google.com/maps/search/HM%26M+CPAs+Dallas+reviews" target="_blank" rel="noopener noreferrer">View on Google ↗</a></div>
+              </div>
+              <div class="all-review-item">
+                <div class="sentiment-review-stars">★★☆☆☆</div>
+                <div class="sentiment-review-text">"Asked to escalate a complex issue to a partner and was told to 'submit it through the portal.' Not what we signed up for."</div>
+                <div class="all-review-item-foot"><span class="sentiment-review-meta">Mike A. · 2 months ago</span><a class="all-review-link" href="https://www.google.com/maps/search/HM%26M+CPAs+Dallas+reviews" target="_blank" rel="noopener noreferrer">View on Google ↗</a></div>
+              </div>
+              <div class="all-review-item">
+                <div class="sentiment-review-stars">★★★★★</div>
+                <div class="sentiment-review-text">"Been a client for years and the real estate team has always done solid work on our 1031 exchanges."</div>
+                <div class="all-review-item-foot"><span class="sentiment-review-meta">Long-time Client · 2 months ago</span><a class="all-review-link" href="https://www.google.com/maps/search/HM%26M+CPAs+Dallas+reviews" target="_blank" rel="noopener noreferrer">View on Google ↗</a></div>
+              </div>
             </div>
           </div>
         </div>
@@ -967,6 +1135,13 @@
     const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
     document.documentElement.setAttribute('data-theme', isDark ? '' : 'dark');
     localStorage.setItem('intel-theme', isDark ? 'light' : 'dark');
+  }
+  function showReviewsView(btn, viewId) {
+    const card = btn.closest('.card');
+    card.querySelectorAll('.reviews-tab').forEach(t => t.classList.remove('active'));
+    btn.classList.add('active');
+    card.querySelectorAll('.reviews-view').forEach(v => v.classList.remove('active'));
+    document.getElementById(viewId).classList.add('active');
   }
 </script>
 </body>
