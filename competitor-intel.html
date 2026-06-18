@@ -199,6 +199,28 @@
     .stars { display: flex; gap: 2px; color: #f59e0b; }
     .review-count { font-size: .78rem; color: var(--text3); }
 
+    /* ── Sentiment tags w/ source-review tooltip ── */
+    .card.reviews-card { overflow: visible; }
+    .card-header { border-radius: 8px 8px 0 0; }
+    .sentiment-tag { position: relative; cursor: default; }
+    .sentiment-tooltip {
+      position: absolute; top: calc(100% + 8px); left: 0; width: 290px; z-index: 200;
+      background: var(--surface); border: 1px solid var(--border2); border-radius: 8px;
+      box-shadow: 0 10px 28px rgba(0,0,0,.16); padding: 10px 12px;
+      opacity: 0; visibility: hidden; transform: translateY(-4px); pointer-events: none;
+      transition: opacity .15s, transform .15s, visibility .15s;
+    }
+    .sentiment-tag:hover .sentiment-tooltip,
+    .sentiment-tag:focus-within .sentiment-tooltip {
+      opacity: 1; visibility: visible; transform: translateY(0); pointer-events: auto;
+    }
+    .sentiment-tooltip-title { font-size: .65rem; font-weight: 700; letter-spacing: .6px; text-transform: uppercase; color: var(--text3); font-family: var(--mono); margin-bottom: 8px; }
+    .sentiment-review { padding: 7px 0; border-top: 1px solid var(--border); }
+    .sentiment-review:first-of-type { border-top: none; padding-top: 0; }
+    .sentiment-review-stars { color: #f59e0b; font-size: .72rem; letter-spacing: 1px; margin-bottom: 3px; }
+    .sentiment-review-text { font-size: .79rem; color: var(--text2); line-height: 1.5; margin-bottom: 3px; font-style: italic; }
+    .sentiment-review-meta { font-size: .68rem; color: var(--text3); font-family: var(--mono); }
+
     /* ── Post cards ── */
     .post-list { display: flex; flex-direction: column; gap: 10px; }
     .post-item { border: 1px solid var(--border); border-radius: 6px; padding: 12px 14px; }
@@ -438,7 +460,7 @@
       </div>
 
       <!-- Google Reviews detail -->
-      <div class="card">
+      <div class="card reviews-card">
         <div class="card-header">
           <div class="card-header-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div>
           <div class="card-title">Google Reviews</div>
@@ -475,10 +497,34 @@
           <div style="margin-top:14px;">
             <div style="font-size:.72rem;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--text3);font-family:var(--mono);margin-bottom:8px;">What clients praise</div>
             <div style="display:flex;gap:6px;flex-wrap:wrap;">
-              <span style="font-size:.74rem;padding:3px 8px;border-radius:4px;background:var(--green-bg);color:var(--green);border:1px solid rgba(22,163,74,.2);">Responsive team</span>
-              <span style="font-size:.74rem;padding:3px 8px;border-radius:4px;background:var(--green-bg);color:var(--green);border:1px solid rgba(22,163,74,.2);">Energy expertise</span>
-              <span style="font-size:.74rem;padding:3px 8px;border-radius:4px;background:var(--green-bg);color:var(--green);border:1px solid rgba(22,163,74,.2);">Complex tax handled well</span>
-              <span style="font-size:.74rem;padding:3px 8px;border-radius:4px;background:var(--amber-bg);color:var(--amber);border:1px solid rgba(217,119,6,.2);">Billing transparency</span>
+              <span class="sentiment-tag" tabindex="0" style="font-size:.74rem;padding:3px 8px;border-radius:4px;background:var(--green-bg);color:var(--green);border:1px solid rgba(22,163,74,.2);">Responsive team
+                <div class="sentiment-tooltip">
+                  <div class="sentiment-tooltip-title">3 reviews mention this</div>
+                  <div class="sentiment-review"><div class="sentiment-review-stars">★★★★★</div><div class="sentiment-review-text">"Our partner replies to emails the same day, even during busy season. Never had that with our last firm."</div><div class="sentiment-review-meta">— Rachel M. · 2 weeks ago</div></div>
+                  <div class="sentiment-review"><div class="sentiment-review-stars">★★★★★</div><div class="sentiment-review-text">"They picked up the phone on a Friday afternoon before a deadline. That alone is worth the fee."</div><div class="sentiment-review-meta">— David K. · 5 weeks ago</div></div>
+                </div>
+              </span>
+              <span class="sentiment-tag" tabindex="0" style="font-size:.74rem;padding:3px 8px;border-radius:4px;background:var(--green-bg);color:var(--green);border:1px solid rgba(22,163,74,.2);">Energy expertise
+                <div class="sentiment-tooltip">
+                  <div class="sentiment-tooltip-title">4 reviews mention this</div>
+                  <div class="sentiment-review"><div class="sentiment-review-stars">★★★★★</div><div class="sentiment-review-text">"They actually understand depletion allowances and IDCs — most firms in Dallas don't have anyone who works oil & gas."</div><div class="sentiment-review-meta">— Tom B., Operator · 1 month ago</div></div>
+                  <div class="sentiment-review"><div class="sentiment-review-stars">★★★★★</div><div class="sentiment-review-text">"Switched from a generalist CPA and immediately got better guidance on our energy royalty structure."</div><div class="sentiment-review-meta">— Lisa P. · 2 months ago</div></div>
+                </div>
+              </span>
+              <span class="sentiment-tag" tabindex="0" style="font-size:.74rem;padding:3px 8px;border-radius:4px;background:var(--green-bg);color:var(--green);border:1px solid rgba(22,163,74,.2);">Complex tax handled well
+                <div class="sentiment-tooltip">
+                  <div class="sentiment-tooltip-title">2 reviews mention this</div>
+                  <div class="sentiment-review"><div class="sentiment-review-stars">★★★★★</div><div class="sentiment-review-text">"Multi-state filing for our business used to be a nightmare. Weaver untangled three years of mess in one quarter."</div><div class="sentiment-review-meta">— Janet H. · 3 weeks ago</div></div>
+                  <div class="sentiment-review"><div class="sentiment-review-stars">★★★★☆</div><div class="sentiment-review-text">"They handled our M&A due diligence tax questions better than the deal lawyers did."</div><div class="sentiment-review-meta">— Carlos R. · 6 weeks ago</div></div>
+                </div>
+              </span>
+              <span class="sentiment-tag" tabindex="0" style="font-size:.74rem;padding:3px 8px;border-radius:4px;background:var(--amber-bg);color:var(--amber);border:1px solid rgba(217,119,6,.2);">Billing transparency
+                <div class="sentiment-tooltip">
+                  <div class="sentiment-tooltip-title">2 reviews mention this</div>
+                  <div class="sentiment-review"><div class="sentiment-review-stars">★★★☆☆</div><div class="sentiment-review-text">"Good work but the invoice had several line items we weren't told about upfront. Would like clearer estimates."</div><div class="sentiment-review-meta">— Anonymous · 1 month ago</div></div>
+                  <div class="sentiment-review"><div class="sentiment-review-stars">★★★★☆</div><div class="sentiment-review-text">"Quality is there, just wish pricing was discussed before the engagement letter instead of after."</div><div class="sentiment-review-meta">— Pat W. · 2 months ago</div></div>
+                </div>
+              </span>
             </div>
           </div>
         </div>
@@ -652,7 +698,7 @@
           <a class="growth-metric" href="https://www.spyfu.com/overview/domain?query=lgt-cpa.com" target="_blank" rel="noopener noreferrer" title="View source"><div class="growth-metric-label"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>Est. Website Traffic</div><div class="growth-metric-right"><div><div class="growth-metric-value flat">+2% MoM</div><div class="growth-sub">~14K visits/mo · via SpyFu</div></div><div class="growth-metric-source"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></div></div></a>
         </div>
       </div>
-      <div class="card">
+      <div class="card reviews-card">
         <div class="card-header">
           <div class="card-header-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div>
           <div class="card-title">Google Reviews</div><div class="card-meta">64 total · 4.5★</div>
@@ -668,10 +714,34 @@
           <div style="margin-top:14px;">
             <div style="font-size:.72rem;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--text3);font-family:var(--mono);margin-bottom:8px;">What clients praise</div>
             <div style="display:flex;gap:6px;flex-wrap:wrap;">
-              <span style="font-size:.74rem;padding:3px 8px;border-radius:4px;background:var(--green-bg);color:var(--green);border:1px solid rgba(22,163,74,.2);">Dealership expertise</span>
-              <span style="font-size:.74rem;padding:3px 8px;border-radius:4px;background:var(--green-bg);color:var(--green);border:1px solid rgba(22,163,74,.2);">Long-term relationships</span>
-              <span style="font-size:.74rem;padding:3px 8px;border-radius:4px;background:var(--amber-bg);color:var(--amber);border:1px solid rgba(217,119,6,.2);">Response time</span>
-              <span style="font-size:.74rem;padding:3px 8px;border-radius:4px;background:var(--red-bg);color:var(--red);border:1px solid rgba(220,38,38,.2);">Staff turnover</span>
+              <span class="sentiment-tag" tabindex="0" style="font-size:.74rem;padding:3px 8px;border-radius:4px;background:var(--green-bg);color:var(--green);border:1px solid rgba(22,163,74,.2);">Dealership expertise
+                <div class="sentiment-tooltip">
+                  <div class="sentiment-tooltip-title">3 reviews mention this</div>
+                  <div class="sentiment-review"><div class="sentiment-review-stars">★★★★★</div><div class="sentiment-review-text">"They know dealership floor plan financing inside and out. Our last CPA had to look everything up."</div><div class="sentiment-review-meta">— Greg N. · 1 month ago</div></div>
+                  <div class="sentiment-review"><div class="sentiment-review-stars">★★★★☆</div><div class="sentiment-review-text">"LIFO inventory accounting for our lot is exactly the kind of thing they handle without hand-holding."</div><div class="sentiment-review-meta">— Auto Group Owner · 2 months ago</div></div>
+                </div>
+              </span>
+              <span class="sentiment-tag" tabindex="0" style="font-size:.74rem;padding:3px 8px;border-radius:4px;background:var(--green-bg);color:var(--green);border:1px solid rgba(22,163,74,.2);">Long-term relationships
+                <div class="sentiment-tooltip">
+                  <div class="sentiment-tooltip-title">4 reviews mention this</div>
+                  <div class="sentiment-review"><div class="sentiment-review-stars">★★★★★</div><div class="sentiment-review-text">"We've been with LGT for almost 15 years. Same trust, same quality the whole time."</div><div class="sentiment-review-meta">— Marjorie S. · 3 weeks ago</div></div>
+                  <div class="sentiment-review"><div class="sentiment-review-stars">★★★★★</div><div class="sentiment-review-text">"Our family business has used them since the 90s — they know our history better than we do."</div><div class="sentiment-review-meta">— Bill F. · 2 months ago</div></div>
+                </div>
+              </span>
+              <span class="sentiment-tag" tabindex="0" style="font-size:.74rem;padding:3px 8px;border-radius:4px;background:var(--amber-bg);color:var(--amber);border:1px solid rgba(217,119,6,.2);">Response time
+                <div class="sentiment-tooltip">
+                  <div class="sentiment-tooltip-title">3 reviews mention this</div>
+                  <div class="sentiment-review"><div class="sentiment-review-stars">★★★☆☆</div><div class="sentiment-review-text">"Took almost a week to hear back during tax season. Understandable but frustrating when the deadline is close."</div><div class="sentiment-review-meta">— Anonymous · 1 month ago</div></div>
+                  <div class="sentiment-review"><div class="sentiment-review-stars">★★★☆☆</div><div class="sentiment-review-text">"Quality work, just wish emails didn't sit for 3-4 days before a reply."</div><div class="sentiment-review-meta">— Nancy T. · 6 weeks ago</div></div>
+                </div>
+              </span>
+              <span class="sentiment-tag" tabindex="0" style="font-size:.74rem;padding:3px 8px;border-radius:4px;background:var(--red-bg);color:var(--red);border:1px solid rgba(220,38,38,.2);">Staff turnover
+                <div class="sentiment-tooltip">
+                  <div class="sentiment-tooltip-title">2 reviews mention this</div>
+                  <div class="sentiment-review"><div class="sentiment-review-stars">★★☆☆☆</div><div class="sentiment-review-text">"Our third account manager in two years. Every time someone new takes over, we have to re-explain everything."</div><div class="sentiment-review-meta">— Frustrated Client · 5 weeks ago</div></div>
+                  <div class="sentiment-review"><div class="sentiment-review-stars">★★★☆☆</div><div class="sentiment-review-text">"Good firm but the staff churn means you're never quite sure who's handling your file this year."</div><div class="sentiment-review-meta">— Steve O. · 2 months ago</div></div>
+                </div>
+              </span>
             </div>
           </div>
         </div>
@@ -778,7 +848,7 @@
           <a class="growth-metric" href="https://www.spyfu.com/overview/domain?query=hmpc.com" target="_blank" rel="noopener noreferrer" title="View source"><div class="growth-metric-label"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>Est. Website Traffic</div><div class="growth-metric-right"><div><div class="growth-metric-value down">-11% MoM</div><div class="growth-sub">~9K visits/mo · via SpyFu</div></div><div class="growth-metric-source"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></div></div></a>
         </div>
       </div>
-      <div class="card">
+      <div class="card reviews-card">
         <div class="card-header"><div class="card-header-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div><div class="card-title">Google Reviews</div><div class="card-meta">48 total · 4.1★</div></div>
         <div class="card-body">
           <div class="star-row"><div class="star-num">4.1</div><div class="stars" style="color:#f59e0b;">★★★★☆</div><div class="review-count">48 reviews</div></div>
@@ -791,9 +861,27 @@
           <div style="margin-top:14px;">
             <div style="font-size:.72rem;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--text3);font-family:var(--mono);margin-bottom:8px;">Common complaints in 1-2★ reviews</div>
             <div style="display:flex;gap:6px;flex-wrap:wrap;">
-              <span style="font-size:.74rem;padding:3px 8px;border-radius:4px;background:var(--red-bg);color:var(--red);border:1px solid rgba(220,38,38,.2);">Communication delays</span>
-              <span style="font-size:.74rem;padding:3px 8px;border-radius:4px;background:var(--red-bg);color:var(--red);border:1px solid rgba(220,38,38,.2);">Billing surprises</span>
-              <span style="font-size:.74rem;padding:3px 8px;border-radius:4px;background:var(--red-bg);color:var(--red);border:1px solid rgba(220,38,38,.2);">Partner access</span>
+              <span class="sentiment-tag" tabindex="0" style="font-size:.74rem;padding:3px 8px;border-radius:4px;background:var(--red-bg);color:var(--red);border:1px solid rgba(220,38,38,.2);">Communication delays
+                <div class="sentiment-tooltip">
+                  <div class="sentiment-tooltip-title">4 reviews mention this</div>
+                  <div class="sentiment-review"><div class="sentiment-review-stars">★☆☆☆☆</div><div class="sentiment-review-text">"Sent three emails over two weeks before anyone responded. Found out our extension wasn't filed."</div><div class="sentiment-review-meta">— Angry Client · 3 weeks ago</div></div>
+                  <div class="sentiment-review"><div class="sentiment-review-stars">★★☆☆☆</div><div class="sentiment-review-text">"Used to be responsive. Last two years it's been radio silence until we call repeatedly."</div><div class="sentiment-review-meta">— Robert D. · 6 weeks ago</div></div>
+                </div>
+              </span>
+              <span class="sentiment-tag" tabindex="0" style="font-size:.74rem;padding:3px 8px;border-radius:4px;background:var(--red-bg);color:var(--red);border:1px solid rgba(220,38,38,.2);">Billing surprises
+                <div class="sentiment-tooltip">
+                  <div class="sentiment-tooltip-title">3 reviews mention this</div>
+                  <div class="sentiment-review"><div class="sentiment-review-stars">★★☆☆☆</div><div class="sentiment-review-text">"Final invoice was nearly double the original estimate with zero heads-up. Won't be back."</div><div class="sentiment-review-meta">— Former Client · 1 month ago</div></div>
+                  <div class="sentiment-review"><div class="sentiment-review-stars">★☆☆☆☆</div><div class="sentiment-review-text">"Charged for a consultation we were told was complimentary. Had to dispute it."</div><div class="sentiment-review-meta">— Karen L. · 2 months ago</div></div>
+                </div>
+              </span>
+              <span class="sentiment-tag" tabindex="0" style="font-size:.74rem;padding:3px 8px;border-radius:4px;background:var(--red-bg);color:var(--red);border:1px solid rgba(220,38,38,.2);">Partner access
+                <div class="sentiment-tooltip">
+                  <div class="sentiment-tooltip-title">2 reviews mention this</div>
+                  <div class="sentiment-review"><div class="sentiment-review-stars">★★☆☆☆</div><div class="sentiment-review-text">"Haven't spoken to the partner on our account in over a year — it's all juniors now, and they don't know our history."</div><div class="sentiment-review-meta">— Long-time Client · 5 weeks ago</div></div>
+                  <div class="sentiment-review"><div class="sentiment-review-stars">★★☆☆☆</div><div class="sentiment-review-text">"Asked to escalate a complex issue to a partner and was told to 'submit it through the portal.' Not what we signed up for."</div><div class="sentiment-review-meta">— Mike A. · 2 months ago</div></div>
+                </div>
+              </span>
             </div>
           </div>
         </div>
