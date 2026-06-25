@@ -284,6 +284,20 @@
     [data-theme="dark"] .digest-box { border-color: rgba(78,203,160,.2); }
     .digest-box strong { color: var(--teal); }
     .digest-label { font-size: .65rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--teal-mid); font-family: var(--mono); margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+    .digest-regen-btn {
+      font-size: .68rem; font-weight: 600; padding: 4px 10px; border-radius: 5px;
+      border: 1px solid var(--border); background: var(--surface); color: var(--text2);
+      cursor: pointer; font-family: var(--mono); transition: all .15s; white-space: nowrap;
+      display: flex; align-items: center; gap: 5px;
+    }
+    .digest-regen-btn:hover:not(:disabled) { border-color: var(--teal-mid); color: var(--teal-mid); background: var(--teal-bg); }
+    .digest-regen-btn:disabled { opacity: .6; cursor: default; }
+    .digest-regen-btn .spinning { display: inline-block; animation: spin 0.8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .digest-error {
+      font-size: .8rem; color: var(--red); background: var(--red-bg);
+      border: 1px solid rgba(220,38,38,.2); border-radius: 6px; padding: 8px 10px; margin-top: 10px;
+    }
 
     /* ── Keyword table ── */
     .kw-table { width: 100%; border-collapse: collapse; }
@@ -722,7 +736,8 @@
       <div class="card-header">
         <div class="card-header-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg></div>
         <div class="card-title">AI Weekly Digest</div>
-        <div class="card-meta">Generated Jun 16, 2026</div>
+        <div class="card-meta" id="digest-meta-weaver">Generated Jun 16, 2026</div>
+        <button class="digest-regen-btn" onclick="regenerateDigest('weaver', this)" title="Regenerate this analysis live with Claude"><span class="regen-icon">↻</span> Regenerate</button>
       </div>
       <div class="card-body">
         <div class="digest-box">
@@ -730,10 +745,13 @@
             <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/></svg>
             What they're doing & why
           </div>
+          <div id="digest-content-weaver">
           Weaver is executing a clear double-down on the energy sector this month — their most-engaged LinkedIn post was a growth announcement tied explicitly to energy, and their highest-traffic blog post was an oil & gas tax guide. This isn't accidental: they're reinforcing an owned position ahead of Q3 estimated tax deadlines when energy clients are most likely to be evaluating advisors. <strong>The 11 open roles, including a new Tax Director in energy, confirm this is a funded expansion, not just marketing noise.</strong>
           <br/><br/>
           Their M&A content is newer and likely an upsell play targeting existing clients considering exits in the current PE-active market. Watch this space — if they publish 2–3 more pieces on transaction readiness in the next 60 days, they're building a practice. <strong>Recommendation for SST: Weaver is moving upstream into high-value advisory. The opportunity is the mid-market clients they're leaving behind — businesses under $20M that want senior attention, not a firm this large.</strong>
+          </div>
         </div>
+        <div class="digest-error" id="digest-error-weaver" style="display:none;"></div>
       </div>
     </div>
   </div>
@@ -872,15 +890,19 @@
     <div class="card">
       <div class="card-header">
         <div class="card-header-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg></div>
-        <div class="card-title">AI Weekly Digest</div><div class="card-meta">Generated Jun 16, 2026</div>
+        <div class="card-title">AI Weekly Digest</div><div class="card-meta" id="digest-meta-lgt">Generated Jun 16, 2026</div>
+        <button class="digest-regen-btn" onclick="regenerateDigest('lgt', this)" title="Regenerate this analysis live with Claude"><span class="regen-icon">↻</span> Regenerate</button>
       </div>
       <div class="card-body">
         <div class="digest-box">
           <div class="digest-label"><svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/></svg>What they're doing & why</div>
+          <div id="digest-content-lgt">
           LGT is coasting on its 70-year legacy but showing few signs of active client acquisition push. Review velocity (+3 in 60 days) is the lowest of the tracked Dallas firms — either they're not asking for reviews or client inflow has slowed. Recurring complaints about staff turnover in reviews are a vulnerability worth noting: <strong>clients who feel their relationship has changed due to staffing may be open to switching.</strong>
           <br/><br/>
           Their LinkedIn content is largely firm news and industry awards — there's minimal thought leadership or niche-specific content targeted at prospects. <strong>Recommendation for SST: LGT's auto dealership clients are loyal but aging relationships. If SST develops any dealership-specific content or expertise signal, LGT clients who have experienced staff changes are the most likely to be receptive.</strong>
+          </div>
         </div>
+        <div class="digest-error" id="digest-error-lgt" style="display:none;"></div>
       </div>
     </div>
   </div>
@@ -935,14 +957,18 @@
       </div>
     </div>
     <div class="card">
-      <div class="card-header"><div class="card-header-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg></div><div class="card-title">AI Weekly Digest</div><div class="card-meta">Generated Jun 16, 2026</div></div>
+      <div class="card-header"><div class="card-header-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg></div><div class="card-title">AI Weekly Digest</div><div class="card-meta" id="digest-meta-saville">Generated Jun 16, 2026</div>
+        <button class="digest-regen-btn" onclick="regenerateDigest('saville', this)" title="Regenerate this analysis live with Claude"><span class="regen-icon">↻</span> Regenerate</button></div>
       <div class="card-body">
         <div class="digest-box">
           <div class="digest-label"><svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/></svg>What they're doing & why</div>
+          <div id="digest-content-saville">
           Saville is executing the clearest content strategy of any DFW mid-size firm right now. Their messaging has a consistent thesis: <strong>traditional accounting is slow, cloud tools fix it, and they're the firm that bridges that gap.</strong> The blog post targeting "hidden cost of in-house bookkeeping" is a direct acquisition play — they're not competing with other CPA firms, they're competing with the client's own internal hire decision. That's a smart angle with a wide addressable market.
           <br/><br/>
           Review velocity (+14 in 60 days) and 4.8★ average are the strongest of any tracked firm. The 3 "accounting technology" job postings suggest they're scaling the outsourced bookkeeping line specifically. <strong>Recommendation for SST: Saville is winning on the outsourced accounting pitch to SMBs under $5M revenue. SST should evaluate whether this market is worth competing in, or whether ceding it and focusing on mid-market ($10M–$50M) creates a cleaner differentiation.</strong>
+          </div>
         </div>
+        <div class="digest-error" id="digest-error-saville" style="display:none;"></div>
       </div>
     </div>
   </div>
@@ -1056,14 +1082,18 @@
       </div>
     </div>
     <div class="card">
-      <div class="card-header"><div class="card-header-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg></div><div class="card-title">AI Weekly Digest</div><div class="card-meta">Generated Jun 16, 2026</div></div>
+      <div class="card-header"><div class="card-header-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg></div><div class="card-title">AI Weekly Digest</div><div class="card-meta" id="digest-meta-hmm">Generated Jun 16, 2026</div>
+        <button class="digest-regen-btn" onclick="regenerateDigest('hmm', this)" title="Regenerate this analysis live with Claude"><span class="regen-icon">↻</span> Regenerate</button></div>
       <div class="card-body">
         <div class="digest-box">
           <div class="digest-label"><svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/></svg>What they're doing & why</div>
+          <div id="digest-content-hmm">
           HM&M is showing a cluster of warning signals that typically precede client attrition: near-zero review velocity, follower decline on LinkedIn, no open job postings for 90+ days, and falling website traffic. The 1–2★ reviews share a consistent theme — billing surprises and difficulty accessing partners — which suggests a service delivery issue that marketing won't solve. <strong>They are not actively marketing.</strong>
           <br/><br/>
           Their last LinkedIn post was 23 days ago (firm anniversary announcement). No new blog content in 45 days. <strong>Recommendation for SST: HM&M's real estate and construction clients are potentially available. Their clients in those verticals who've left 3★ reviews in the last 6 months are the warmest possible prospect list — they're unhappy but haven't left yet. A targeted outreach to DFW real estate developers and construction firms with a "what a responsive CPA relationship looks like" message could convert directly.</strong>
+          </div>
         </div>
+        <div class="digest-error" id="digest-error-hmm" style="display:none;"></div>
       </div>
     </div>
   </div>
@@ -1110,14 +1140,18 @@
       </div>
     </div>
     <div class="card">
-      <div class="card-header"><div class="card-header-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg></div><div class="card-title">AI Weekly Digest</div><div class="card-meta">Generated Jun 16, 2026</div></div>
+      <div class="card-header"><div class="card-header-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg></div><div class="card-title">AI Weekly Digest</div><div class="card-meta" id="digest-meta-pkf">Generated Jun 16, 2026</div>
+        <button class="digest-regen-btn" onclick="regenerateDigest('pkf', this)" title="Regenerate this analysis live with Claude"><span class="regen-icon">↻</span> Regenerate</button></div>
       <div class="card-body">
         <div class="digest-box">
           <div class="digest-label"><svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/></svg>What they're doing & why</div>
+          <div id="digest-content-pkf">
           PKF Texas is the most active content marketer of the tracked firms but with modest returns relative to effort. They post consistently (3–4x/week on LinkedIn) but engagement per post is lower than Weaver or Saville — suggesting their content isn't differentiated enough to stand out. The R&D tax credit angle is smart and conversion-focused, but they're not the only firm running it. <strong>Their one marketing hire (open role) signals they're aware of this and investing in fixing it.</strong>
           <br/><br/>
           Notable: PKF is testing a manufacturing niche push in Houston. If they commit to it, they'll own that keyword space in 6–12 months. <strong>Recommendation for SST: PKF is a good benchmark for what "active but undifferentiated" marketing looks like and why volume alone doesn't drive growth. Their R&D credit content could be adapted for a Dallas market with stronger calls to action.</strong>
+          </div>
         </div>
+        <div class="digest-error" id="digest-error-pkf" style="display:none;"></div>
       </div>
     </div>
   </div>
@@ -1142,6 +1176,106 @@
     btn.classList.add('active');
     card.querySelectorAll('.reviews-view').forEach(v => v.classList.remove('active'));
     document.getElementById(viewId).classList.add('active');
+  }
+
+  // Calls our own server-side proxy at /api/claude — the Anthropic API key lives
+  // only on the server and is never exposed to the browser.
+  async function callClaude(prompt, maxTokens = 700, timeoutMs = 60000) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
+    try {
+      const res = await fetch('/api/claude', {
+        method: 'POST',
+        signal: controller.signal,
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ prompt, maxTokens })
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || `Server error (${res.status})`);
+      if (!data.text) throw new Error('AI returned an empty response.');
+      return data.text;
+    } catch (err) {
+      if (err.name === 'AbortError') throw new Error('The AI took too long to respond. Please try again.');
+      throw err;
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+
+  // Pulls the tracked signals already rendered in a firm's panel so the AI
+  // analysis is grounded in the same data the user sees on screen.
+  function extractFirmData(panel) {
+    const text = el => (el ? el.textContent.replace(/\s+/g, ' ').trim() : '');
+    const name = text(panel.querySelector('.firm-profile-name')) || 'This firm';
+
+    const growth = [...panel.querySelectorAll('.growth-metric')].map(m =>
+      `${text(m.querySelector('.growth-metric-label'))}: ${text(m.querySelector('.growth-metric-value'))} (${text(m.querySelector('.growth-sub'))})`
+    ).join('\n');
+
+    const reviewSummary = `${text(panel.querySelector('.star-num'))} stars, ${text(panel.querySelector('.review-count'))}`;
+    const sentimentTags = [...panel.querySelectorAll('.sentiment-tag')]
+      .map(t => text({ textContent: t.childNodes[0] ? t.childNodes[0].textContent : '' }))
+      .filter(Boolean);
+
+    const posts = [...panel.querySelectorAll('.post-item')].map(p =>
+      `[${text(p.querySelector('.post-platform'))} · ${text(p.querySelector('.post-date'))} · ${text(p.querySelector('.post-engagement'))}] ${text(p.querySelector('.post-text'))}`
+    ).join('\n');
+
+    const jobs = [...panel.querySelectorAll('.job-item')].map(j =>
+      `${text(j.querySelector('.job-title'))} (${text(j.querySelector('.job-sub'))}) — ${text(j.querySelector('.job-signal'))}`
+    ).join('\n');
+
+    const keywords = [...panel.querySelectorAll('.kw-table tbody tr')]
+      .map(r => [...r.querySelectorAll('td')].map(td => text(td)).join(' | '))
+      .join('\n');
+
+    return { name, growth, reviewSummary, sentimentTags, posts, jobs, keywords };
+  }
+
+  async function regenerateDigest(firmId, btn) {
+    const panel = document.getElementById('panel-' + firmId);
+    const contentEl = document.getElementById('digest-content-' + firmId);
+    const metaEl = document.getElementById('digest-meta-' + firmId);
+    const errorEl = document.getElementById('digest-error-' + firmId);
+    if (!panel || !contentEl) return;
+
+    const original = contentEl.innerHTML;
+    errorEl.style.display = 'none';
+    btn.disabled = true;
+    const icon = btn.querySelector('.regen-icon');
+    if (icon) icon.classList.add('spinning');
+
+    try {
+      const data = extractFirmData(panel);
+      const prompt = `You are a competitive intelligence analyst for SST CPA, a Dallas-based accounting firm. Based on the tracked data below about a competitor, ${data.name}, write a "What they're doing & why" analysis in exactly two short paragraphs separated by <br/><br/>. Use <strong> tags around the 1-2 most important takeaways. Cite specific numbers/signals from the data. End with a concrete, specific recommendation for SST. Output raw HTML only (no markdown, no headings, no code fences).
+
+Growth signals:
+${data.growth || 'none tracked'}
+
+Reviews: ${data.reviewSummary}
+Review themes: ${data.sentimentTags.join(', ') || 'none tracked'}
+
+Recent posts/content:
+${data.posts || 'none tracked'}
+
+Hiring activity:
+${data.jobs || 'none tracked'}
+
+SEO keywords:
+${data.keywords || 'none tracked'}`;
+
+      const result = await callClaude(prompt, 700, 60000);
+      contentEl.innerHTML = result;
+      const now = new Date();
+      metaEl.textContent = 'Generated ' + now.toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' }) + ' · live AI';
+    } catch (err) {
+      contentEl.innerHTML = original;
+      errorEl.textContent = 'Could not regenerate: ' + err.message;
+      errorEl.style.display = 'block';
+    } finally {
+      btn.disabled = false;
+      if (icon) icon.classList.remove('spinning');
+    }
   }
 </script>
 </body>
