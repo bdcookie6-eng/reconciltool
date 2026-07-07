@@ -5,7 +5,7 @@ WORKDIR /app
 COPY package.json package-lock.json* ./
 RUN npm install --omit=dev
 
-COPY index.html bankrec.html competitor-intel.html server.js ./
+COPY index.html server.js ./
 
 EXPOSE 80
 CMD ["node", "server.js"]

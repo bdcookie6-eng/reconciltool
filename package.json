@@ -1,12 +1,12 @@
 {
-  "name": "reconciltool",
+  "name": "clean-match",
   "version": "1.0.0",
   "private": true,
-  "description": "Reconciliation tool with server-side AI proxy",
+  "description": "Clean Match — cleans ledger files and fuzzy-matches accounts side by side, preparing them for the Trial Balance vs Internal reconciliation tool",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "test": "node test/bankrec-test.js && node test/ledger-test.js"
+    "test": "node test/ledger-test.js"
   },
   "dependencies": {
     "express": "^4.19.2",

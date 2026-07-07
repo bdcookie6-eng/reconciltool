@@ -79,5 +79,5 @@ app.post('/api/claude', claudeLimiter, async (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`Reconcile Tool listening on port ${PORT}`);
+  console.log(`Clean Match listening on port ${PORT}`);
 });

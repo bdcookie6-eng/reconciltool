@@ -1,4 +1,4 @@
-/* ── Ledger Compare Tool — Unit Tests ───────────────────────────────────────
+/* ── Clean Match — Unit Tests ───────────────────────────────────────────────
    Tests all core parsing, detection, extraction, and matching logic extracted
    from index.html. No browser APIs required — runs in plain Node.js.          */
 
@@ -149,6 +149,68 @@ function matchAccounts(prevRows, currRows) {
     }
   }
   return { matched, unmatchedPrev, unmatchedCurr: [...unmatchedCurrSet.keys()] };
+}
+
+const tokenSort = s => normName(s).split(' ').filter(Boolean).sort().join(' ');
+
+function levenshtein(a, b) {
+  if (a === b) return 0;
+  if (!a.length) return b.length;
+  if (!b.length) return a.length;
+  let prev = Array.from({ length: b.length + 1 }, (_, i) => i);
+  for (let i = 1; i <= a.length; i++) {
+    const cur = [i];
+    for (let j = 1; j <= b.length; j++) {
+      cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+    }
+    prev = cur;
+  }
+  return prev[b.length];
+}
+
+function nameSimilarity(a, b) {
+  const x = tokenSort(a), y = tokenSort(b);
+  const maxLen = Math.max(x.length, y.length);
+  if (!maxLen) return 0;
+  return 1 - levenshtein(x, y) / maxLen;
+}
+
+const FUZZY_THRESHOLD = 0.85;
+
+function fuzzyMatchAccounts(prevPool, currPool) {
+  const pairs = [];
+  const usedPrev = new Set(), usedCurr = new Set();
+
+  const currByNum = new Map();
+  for (const c of currPool) {
+    const num = String(c.num || '').trim();
+    if (num && !currByNum.has(num)) currByNum.set(num, c);
+  }
+  for (const p of prevPool) {
+    const num = String(p.num || '').trim();
+    const c = num ? currByNum.get(num) : undefined;
+    if (c && !usedCurr.has(c)) {
+      pairs.push({ prev: p, curr: c });
+      usedPrev.add(p); usedCurr.add(c);
+    }
+  }
+
+  const candidates = [];
+  for (const p of prevPool) {
+    if (usedPrev.has(p)) continue;
+    for (const c of currPool) {
+      if (usedCurr.has(c)) continue;
+      const score = nameSimilarity(p.name, c.name);
+      if (score >= FUZZY_THRESHOLD) candidates.push({ p, c, score });
+    }
+  }
+  candidates.sort((a, b) => b.score - a.score);
+  for (const { p, c } of candidates) {
+    if (usedPrev.has(p) || usedCurr.has(c)) continue;
+    pairs.push({ prev: p, curr: c });
+    usedPrev.add(p); usedCurr.add(c);
+  }
+  return { pairs, usedPrev, usedCurr };
 }
 
 /* ══════════════════════════════════════════════════════════════════════════
@@ -438,7 +500,78 @@ section('9. Account Matching');
   assert(unmatchedPrev.length === 1, 'second prev Cash left unmatched');
 })();
 
-section('10. End-to-End CSV → Extraction → Trial Balance');
+section('10. Fuzzy Matching');
+
+assert(levenshtein('cash', 'cash') === 0, 'identical strings → distance 0');
+assert(levenshtein('cash', '')     === 4, 'empty vs non-empty → full length');
+assert(levenshtein('cash', 'csah') === 2, 'transposition counted as 2 edits');
+assert(levenshtein('receivable', 'receiveable') === 1, 'single insertion → 1');
+
+assert(nameSimilarity('Prepaid Insurance', 'Insurance - Prepaid') === 1, 'reordered tokens → similarity 1');
+assert(nameSimilarity('Accounts Receivable', 'Accounts Receiveable') >= FUZZY_THRESHOLD, 'minor typo above threshold');
+assert(nameSimilarity('Cash', 'Accounts Payable') < FUZZY_THRESHOLD, 'unrelated names below threshold');
+assert(nameSimilarity('', '') === 0, 'both empty → 0, not a match');
+
+(() => {
+  // Same account number, renamed account — should pair by number
+  const prev = [{ num: '6100', name: 'Marketing Expense',      dr: 5000, cr: '' }];
+  const curr = [{ num: '6100', name: 'Advertising & Promotion', dr: 7000, cr: '' }];
+  const { pairs } = fuzzyMatchAccounts(prev, curr);
+  assert(pairs.length === 1, 'renamed account paired by exact account number');
+})();
+
+(() => {
+  // No numbers — near-identical names should pair, unrelated ones should not
+  const prev = [
+    { num: '', name: 'Office Supplies Expense', dr: 1200, cr: '' },
+    { num: '', name: 'Legal Fees',              dr: 3000, cr: '' },
+  ];
+  const curr = [
+    { num: '', name: 'Office Supplies Expenses', dr: 1400, cr: '' },
+    { num: '', name: 'Equipment Rental',         dr: 900,  cr: '' },
+  ];
+  const { pairs, usedPrev, usedCurr } = fuzzyMatchAccounts(prev, curr);
+  assert(pairs.length === 1, 'one fuzzy name pair found');
+  assert(pairs[0].prev.name === 'Office Supplies Expense', 'correct prev side paired');
+  assert(pairs[0].curr.name === 'Office Supplies Expenses', 'correct curr side paired');
+  assert(!usedPrev.has(prev[1]) && !usedCurr.has(curr[1]), 'unrelated accounts left unmatched');
+})();
+
+(() => {
+  // User workflow: prior year has account numbers, current year has none —
+  // fuzzy name matching pairs them so numbers can be carried forward
+  const prev = [
+    { num: '1010', name: 'Cash - Operating',    dr: 45000, cr: '' },
+    { num: '1200', name: 'Accounts Receivable', dr: 12000, cr: '' },
+  ];
+  const curr = [
+    { num: '', name: 'Operating Cash',            dr: 51000, cr: '' },
+    { num: '', name: 'Accounts Receiveable',      dr: 15000, cr: '' },
+  ];
+  const { pairs } = fuzzyMatchAccounts(prev, curr);
+  assert(pairs.length === 2, 'both accounts paired despite missing numbers');
+  const cash = pairs.find(p => p.prev.num === '1010');
+  assert(cash && cash.curr.name === 'Operating Cash', 'reordered name paired to numbered prior account');
+})();
+
+(() => {
+  // Each account consumed at most once — best score wins
+  const prev = [{ num: '', name: 'Rent Expense', dr: 1000, cr: '' }];
+  const curr = [
+    { num: '', name: 'Rent Expenses', dr: 1100, cr: '' },
+    { num: '', name: 'Rent Expense',  dr: 1200, cr: '' },
+  ];
+  const { pairs } = fuzzyMatchAccounts(prev, curr);
+  assert(pairs.length === 1, 'single prev account pairs only once');
+  assert(pairs[0].curr.name === 'Rent Expense', 'exact-scoring candidate wins over weaker one');
+})();
+
+(() => {
+  const { pairs } = fuzzyMatchAccounts([], []);
+  assert(pairs.length === 0, 'empty pools — no crash, no pairs');
+})();
+
+section('11. End-to-End CSV → Extraction → Trial Balance');
 
 (() => {
   const csv = [

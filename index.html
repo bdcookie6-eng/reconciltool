@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Reconcile Tool</title>
+  <title>Clean Match</title>
   <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -427,13 +427,11 @@
       <path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v18m0 0h10a2 2 0 0 0 2-2V9M9 21H5a2 2 0 0 1-2-2V9m0 0h18"/>
     </svg>
   </div>
-  <h1>Reconcile Tool</h1>
+  <h1>Clean Match</h1>
   <span class="sep">|</span>
-  <span class="sub">SST Accountants &amp; Consultants</span>
+  <span class="sub">SST Accountants &amp; Consultants — Step 1: clean &amp; match, then reconcile in Trial Balance vs Internal</span>
   <span class="badge">Financial</span>
   <span class="ai-badge">AI</span>
-  <a href="/bankrec.html" class="nav-link">Bank Rec →</a>
-  <a href="/competitor-intel.html" class="nav-link">Competitor Intel →</a>
 </header>
 
 <div id="error-container"></div>
@@ -710,6 +708,79 @@
     return { totalDr, totalCr, diff, balanced };
   }
 
+  /* ── Account matching helpers ───────────────────────────────────── */
+
+  const normName = s => String(s||'').trim().toLowerCase()
+    .replace(/[-–—]/g,' ').replace(/[^a-z0-9 ]/g,' ').replace(/\s+/g,' ').trim();
+
+  // Word order must not affect matching ("Operating Cash" vs "Cash - Operating").
+  const tokenSort = s => normName(s).split(' ').filter(Boolean).sort().join(' ');
+
+  function levenshtein(a, b) {
+    if (a === b) return 0;
+    if (!a.length) return b.length;
+    if (!b.length) return a.length;
+    let prev = Array.from({ length: b.length + 1 }, (_, i) => i);
+    for (let i = 1; i <= a.length; i++) {
+      const cur = [i];
+      for (let j = 1; j <= b.length; j++) {
+        cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+      }
+      prev = cur;
+    }
+    return prev[b.length];
+  }
+
+  function nameSimilarity(a, b) {
+    const x = tokenSort(a), y = tokenSort(b);
+    const maxLen = Math.max(x.length, y.length);
+    if (!maxLen) return 0;
+    return 1 - levenshtein(x, y) / maxLen;
+  }
+
+  // Minimum token-sorted name similarity for two accounts to be treated as the
+  // same account when their names aren't an exact match.
+  const FUZZY_THRESHOLD = 0.85;
+
+  // Pairs up two pools of accounts that exact-name matching couldn't resolve:
+  // exact account-number matches first, then fuzzy name matches best-score-first.
+  // Each account is consumed at most once.
+  function fuzzyMatchAccounts(prevPool, currPool) {
+    const pairs = [];
+    const usedPrev = new Set(), usedCurr = new Set();
+
+    const currByNum = new Map();
+    for (const c of currPool) {
+      const num = String(c.num || '').trim();
+      if (num && !currByNum.has(num)) currByNum.set(num, c);
+    }
+    for (const p of prevPool) {
+      const num = String(p.num || '').trim();
+      const c = num ? currByNum.get(num) : undefined;
+      if (c && !usedCurr.has(c)) {
+        pairs.push({ prev: p, curr: c });
+        usedPrev.add(p); usedCurr.add(c);
+      }
+    }
+
+    const candidates = [];
+    for (const p of prevPool) {
+      if (usedPrev.has(p)) continue;
+      for (const c of currPool) {
+        if (usedCurr.has(c)) continue;
+        const score = nameSimilarity(p.name, c.name);
+        if (score >= FUZZY_THRESHOLD) candidates.push({ p, c, score });
+      }
+    }
+    candidates.sort((a, b) => b.score - a.score);
+    for (const { p, c } of candidates) {
+      if (usedPrev.has(p) || usedCurr.has(c)) continue;
+      pairs.push({ prev: p, curr: c });
+      usedPrev.add(p); usedCurr.add(c);
+    }
+    return { pairs, usedPrev, usedCurr };
+  }
+
   /* ── AI run ─────────────────────────────────────────────────────── */
 
   const STEPS = [
@@ -746,7 +817,7 @@
 
         if (!res.ok) {
           const msg = res.status === 413
-            ? 'These files are too large to reconcile in a single AI run. Try splitting them into smaller batches (e.g. by account range or category) and running each separately.'
+            ? 'These files are too large to process in a single AI run. Try splitting them into smaller batches (e.g. by account range or category) and running each separately.'
             : (data.error || `Server error (${res.status})`);
           // Retry on rate limit / transient server errors only
           if ((res.status === 429 || res.status >= 500) && attempt < retries) {
@@ -812,8 +883,6 @@
       // ── PHASE 1: code-based exact matching (deterministic) ───────────────────
       // Matching is too important to leave to an LLM. Exact-name matches are
       // identified here in code — the AI's only remaining job is category assignment.
-      const normName = s => String(s||'').trim().toLowerCase()
-        .replace(/[-–—]/g,' ').replace(/[^a-z0-9 ]/g,' ').replace(/\s+/g,' ').trim();
 
       if (prevDupes.length || currDupes.length) {
         const parts = [];
@@ -847,10 +916,21 @@
       }
       const unmatchedCurrArr = [...unmatchedCurr.keys()];
 
+      // ── PHASE 1.5: deterministic fuzzy matching ──────────────────────────────
+      // Pair the remaining accounts by exact account number first, then by
+      // near-identical names, so renamed or renumbered accounts still line up
+      // side by side without relying on the AI. Matched pairs join preMatched
+      // and are enforced through all post-processing passes (including the
+      // account-number carry-forward when the current file has no numbers).
+      const fuzzy = fuzzyMatchAccounts(unmatchedPrev, unmatchedCurrArr);
+      preMatched.push(...fuzzy.pairs);
+      const remainingPrev = unmatchedPrev.filter(p => !fuzzy.usedPrev.has(p));
+      const remainingCurr = unmatchedCurrArr.filter(c => !fuzzy.usedCurr.has(c));
+
       // ── PHASE 2: AI assigns categories (not matching) ────────────────────────
       // The AI sees three labelled groups and must ONLY assign a category to each.
-      // Statuses are already decided: preMatched=matched, unmatchedPrev=removed,
-      // unmatchedCurrArr=added (unless AI finds a fuzzy match among unmatched only).
+      // Statuses are already decided: preMatched=matched, remainingPrev=removed,
+      // remainingCurr=added (unless AI finds a clear match among the remainders).
       const buildPrompt = (matchedSlice, prevSlice, currSlice, isBatch) => {
         const matchedLines = matchedSlice.map(({prev,curr}) =>
           `  ${fmtRow(prev)}  ↔  ${fmtRow(curr)}`).join('\n') || '  (none)';
@@ -886,8 +966,8 @@ Rules:
         normName(a.name||'').localeCompare(normName(b.name||'')));
 
       const preMatchedSorted  = sortByName(preMatched.map(m=>({...m, _key: normName(m.prev.name)}))).map(m=>({prev:m.prev,curr:m.curr}));
-      const unmatchedPrevSorted = sortByName(unmatchedPrev);
-      const unmatchedCurrSorted = sortByName(unmatchedCurrArr);
+      const unmatchedPrevSorted = sortByName(remainingPrev);
+      const unmatchedCurrSorted = sortByName(remainingCurr);
 
       const totalSlots = preMatchedSorted.length + unmatchedPrevSorted.length + unmatchedCurrSorted.length;
       const numBatches = Math.max(1, Math.ceil(totalSlots / BATCH_SIZE));
@@ -929,7 +1009,7 @@ Your previous response could not be parsed as JSON. Respond again with ONLY a si
           const trimmed = raw.trim();
           const looksTruncated = !trimmed.endsWith('}') && !trimmed.endsWith('```');
           throw new Error(looksTruncated
-            ? 'The AI response was too large and got cut off. Try reconciling smaller files or fewer accounts at a time.'
+            ? 'The AI response was too large and got cut off. Try smaller files or fewer accounts at a time.'
             : 'AI returned an unexpected format. Please try again — if this keeps happening, try smaller files.');
         }
 
@@ -1342,7 +1422,7 @@ Your previous response could not be parsed as JSON. Respond again with ONLY a si
 
     el.innerHTML = `
       <div class="results-header">
-        <h2>Reconciliation Results</h2>
+        <h2>Clean &amp; Match Results</h2>
         <div class="export-group">
           <button class="export-btn" onclick="exportCSV()">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -1499,7 +1579,7 @@ Your previous response could not be parsed as JSON. Respond again with ONLY a si
     if (!lastResults) return;
     const rows = buildLedgerTable();
     const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
-    downloadBlob(new Blob([csv], { type: 'text/csv' }), 'reconciliation_results.csv');
+    downloadBlob(new Blob([csv], { type: 'text/csv' }), 'clean_match_results.csv');
   }
 
   function exportExcel() {
@@ -1536,11 +1616,11 @@ Your previous response could not be parsed as JSON. Respond again with ONLY a si
       }
     }
 
-    XLSX.utils.book_append_sheet(wb, wsRecon, 'Reconciliation');
+    XLSX.utils.book_append_sheet(wb, wsRecon, 'Clean & Match');
 
     // ── Summary sheet ─────────────────────────────────────────────────
     const summaryRows = [
-      ['Reconciliation Summary', ''],
+      ['Clean & Match Summary', ''],
       [],
       ['Prior Year File', prevFile],
       ['Current Year File', currFile],
@@ -1585,7 +1665,7 @@ Your previous response could not be parsed as JSON. Respond again with ONLY a si
 
     XLSX.utils.book_append_sheet(wb, wsChanges, 'Added & Removed');
 
-    XLSX.writeFile(wb, 'reconciliation_results.xlsx');
+    XLSX.writeFile(wb, 'clean_match_results.xlsx');
   }
 
   // Opens the browser's print dialog scoped to the results (via @media print rules
