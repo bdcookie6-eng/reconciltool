@@ -228,6 +228,7 @@
     .legend-swatch.dr-s      { background: var(--green-bg); border: 1px solid rgba(34,197,94,.3); }
     .legend-swatch.cr-s      { background: var(--red-bg);   border: 1px solid rgba(239,68,68,.3); }
     .num-inherited { color: var(--teal-mid); font-weight: 700; cursor: help; }
+    .num-generated { color: var(--green); }
 
     /* ── Ledger ── */
     .ledger-wrap { border-radius: 8px; border: 1px solid var(--border); background: var(--surface); }
@@ -781,6 +782,76 @@
     return { pairs, usedPrev, usedCurr };
   }
 
+  // Standard chart-of-accounts ranges, used to seed generated numbers when a
+  // category has no existing numbers to anchor to.
+  const CATEGORY_BASE = {
+    'Assets': 1000, 'Liabilities': 2000, 'Equity': 3000,
+    'Revenue': 4000, 'Cost of Revenue': 5000,
+    'Operating Expenses': 6000, 'Other Income/Expense': 7000
+  };
+
+  // When the prior year uses account numbers but the current year has accounts
+  // without them (brand-new accounts, or a current file that arrived with no
+  // numbering at all), generate fresh numbers so EVERY current-side account is
+  // numbered. Matched pairs whose prior side already has a number are left for
+  // the carry-forward pass; a matched pair with no number on either side gets a
+  // single shared number so the two sides stay identical. New numbers are drawn
+  // from each account's category range and never collide with an existing one.
+  // Mutates the category rows in place.
+  function assignMissingAccountNumbers(categories, priorUsesNumbers) {
+    if (!priorUsesNumbers) return;
+    const hasNum = v => String(v || '').trim() !== '';
+    const toInt = v => { const n = parseInt(String(v).replace(/[^0-9]/g, ''), 10); return Number.isNaN(n) ? null : n; };
+
+    // Every number already in play (both sides, all categories) and, per
+    // category, the highest existing number so new ones sort after it.
+    const usedNumbers = new Set();
+    const maxByCat = new Map();
+    for (const cat of categories) {
+      for (const row of cat.rows) {
+        for (const side of [row.prev, row.curr]) {
+          if (!side || !hasNum(side.num)) continue;
+          usedNumbers.add(String(side.num).trim());
+          const n = toInt(side.num);
+          if (n !== null && (!maxByCat.has(cat.name) || n > maxByCat.get(cat.name))) {
+            maxByCat.set(cat.name, n);
+          }
+        }
+      }
+    }
+
+    const catCursor = new Map();
+    const nextNumber = (catName) => {
+      if (!catCursor.has(catName)) {
+        catCursor.set(catName, maxByCat.has(catName) ? maxByCat.get(catName) : (CATEGORY_BASE[catName] ?? 9000));
+      }
+      let cursor = catCursor.get(catName);
+      do { cursor += 10; } while (usedNumbers.has(String(cursor)));
+      catCursor.set(catName, cursor);
+      usedNumbers.add(String(cursor));
+      return String(cursor);
+    };
+
+    for (const cat of categories) {
+      for (const row of cat.rows) {
+        if (!row.curr || hasNum(row.curr.num)) continue; // current side already numbered
+        // A matched pair whose prior side has a number is a carry-forward case,
+        // not a new assignment — leave it so we don't invent a competing number.
+        if (row.status === 'matched' && row.prev && hasNum(row.prev.num)) continue;
+
+        const num = nextNumber(cat.name);
+        row.curr.num = num;
+        row.curr.numGenerated = true;
+        // Matched pair with no number on either side → share one number so both
+        // sides carry identical name AND number.
+        if (row.status === 'matched' && row.prev && !hasNum(row.prev.num)) {
+          row.prev.num = num;
+          row.prev.numGenerated = true;
+        }
+      }
+    }
+  }
+
   /* ── AI run ─────────────────────────────────────────────────────── */
 
   const STEPS = [
@@ -1168,6 +1239,14 @@ Your previous response could not be parsed as JSON. Respond again with ONLY a si
         }
       }
 
+      // ── POST-PROCESSING PASS 3b: number the remaining new accounts ───────────
+      // After carry-forward, any current-side account still without a number is
+      // genuinely new (or came from an unnumbered current file). If the prior
+      // year uses account numbers, assign fresh ones so the whole new side is
+      // numbered and matched pairs share the same number on both sides.
+      const priorUsesNumbers = prevRows.some(r => String(r.num || '').trim() !== '');
+      assignMissingAccountNumbers(mergedCategories, priorUsesNumbers);
+
       // ── POST-PROCESSING PASS 4: canonical category ordering ──────────────────
       const CAT_ORDER = ['Assets','Liabilities','Equity','Revenue','Cost of Revenue','Operating Expenses','Other Income/Expense'];
       mergedCategories.sort((a, b) => {
@@ -1403,13 +1482,24 @@ Your previous response could not be parsed as JSON. Respond again with ONLY a si
         const rowId = (isAdded || isRemoved)
           ? `acct-row-${((isRemoved ? (p?.num||p?.name) : (c?.num||c?.name))||'').replace(/[^a-z0-9]/gi,'-').toLowerCase()}`
           : '';
+
+        // Account-number markers: * = carried forward from prior year,
+        // † = newly assigned to an account that had no number in the file.
+        const pNumMark = p && p.numGenerated ? ' <span class="num-inherited num-generated">†</span>' : '';
+        const cNumMark = c && c.numGenerated
+          ? ' <span class="num-inherited num-generated">†</span>'
+          : (c && c.numInherited ? ' <span class="num-inherited">*</span>' : '');
+        const cNumTitle = c && c.numGenerated
+          ? `title="Newly assigned account number — this account had none in the original file"`
+          : (c && c.numInherited ? `title="Carried forward from prior year — not present in the original file"` : '');
+
         ledgerHTML += `<div class="acct-row"${rowId ? ` id="${rowId}"` : ''}>
-          <div class="acct-num prev-num ${pCls}${!p?' empty-cell':''}">${p ? escHtml(p.num||'') : ''}</div>
+          <div class="acct-num prev-num ${pCls}${!p?' empty-cell':''}">${p ? escHtml(p.num||'') + pNumMark : ''}</div>
           <div class="acct-name prev-name ${pCls}${!p?' empty-cell':''}">${p ? prevBadge+escHtml(p.name||'') : ''}</div>
           <div class="acct-dr prev-dr ${pCls}${!p?' empty-cell':''}">${pDr}</div>
           <div class="acct-cr prev-cr ${pCls}${!p?' empty-cell':''}">${pCr}</div>
           <div class="acct-div"></div>
-          <div class="acct-num curr-num ${cCls}${!c?' empty-cell':''}" ${c && c.numInherited ? `title="Carried forward from prior year — not present in the original file"` : ''}>${c ? escHtml(c.num||'') + (c.numInherited ? ' <span class="num-inherited">*</span>' : '') : ''}</div>
+          <div class="acct-num curr-num ${cCls}${!c?' empty-cell':''}" ${cNumTitle}>${c ? escHtml(c.num||'') + cNumMark : ''}</div>
           <div class="acct-name curr-name ${cCls}${!c?' empty-cell':''}">${c ? currBadge+escHtml(c.name||'') : ''}</div>
           <div class="acct-dr curr-dr ${cCls}${!c?' empty-cell':''}">${cDr}</div>
           <div class="acct-cr curr-cr ${cCls}${!c?' empty-cell':''}">${cCr}</div>
@@ -1463,6 +1553,7 @@ Your previous response could not be parsed as JSON. Respond again with ONLY a si
         <div class="legend-item"><div class="legend-swatch added-s"></div>New account</div>
         <div class="legend-item"><div class="legend-swatch removed-s"></div>Removed account</div>
         <div class="legend-item"><span class="num-inherited">*</span>&nbsp;Account number carried forward from prior year</div>
+        <div class="legend-item"><span class="num-inherited num-generated">†</span>&nbsp;Account number newly assigned to a new account</div>
       </div>
 
       <div class="ledger-wrap">

@@ -213,6 +213,59 @@ function fuzzyMatchAccounts(prevPool, currPool) {
   return { pairs, usedPrev, usedCurr };
 }
 
+const CATEGORY_BASE = {
+  'Assets': 1000, 'Liabilities': 2000, 'Equity': 3000,
+  'Revenue': 4000, 'Cost of Revenue': 5000,
+  'Operating Expenses': 6000, 'Other Income/Expense': 7000
+};
+
+function assignMissingAccountNumbers(categories, priorUsesNumbers) {
+  if (!priorUsesNumbers) return;
+  const hasNum = v => String(v || '').trim() !== '';
+  const toInt = v => { const n = parseInt(String(v).replace(/[^0-9]/g, ''), 10); return Number.isNaN(n) ? null : n; };
+
+  const usedNumbers = new Set();
+  const maxByCat = new Map();
+  for (const cat of categories) {
+    for (const row of cat.rows) {
+      for (const side of [row.prev, row.curr]) {
+        if (!side || !hasNum(side.num)) continue;
+        usedNumbers.add(String(side.num).trim());
+        const n = toInt(side.num);
+        if (n !== null && (!maxByCat.has(cat.name) || n > maxByCat.get(cat.name))) {
+          maxByCat.set(cat.name, n);
+        }
+      }
+    }
+  }
+
+  const catCursor = new Map();
+  const nextNumber = (catName) => {
+    if (!catCursor.has(catName)) {
+      catCursor.set(catName, maxByCat.has(catName) ? maxByCat.get(catName) : (CATEGORY_BASE[catName] ?? 9000));
+    }
+    let cursor = catCursor.get(catName);
+    do { cursor += 10; } while (usedNumbers.has(String(cursor)));
+    catCursor.set(catName, cursor);
+    usedNumbers.add(String(cursor));
+    return String(cursor);
+  };
+
+  for (const cat of categories) {
+    for (const row of cat.rows) {
+      if (!row.curr || hasNum(row.curr.num)) continue;
+      if (row.status === 'matched' && row.prev && hasNum(row.prev.num)) continue;
+      const num = nextNumber(cat.name);
+      row.curr.num = num;
+      row.curr.numGenerated = true;
+      if (row.status === 'matched' && row.prev && !hasNum(row.prev.num)) {
+        row.prev.num = num;
+        row.prev.numGenerated = true;
+      }
+    }
+  }
+}
+
 /* ══════════════════════════════════════════════════════════════════════════
    Tests
    ══════════════════════════════════════════════════════════════════════════ */
@@ -571,7 +624,92 @@ assert(nameSimilarity('', '') === 0, 'both empty → 0, not a match');
   assert(pairs.length === 0, 'empty pools — no crash, no pairs');
 })();
 
-section('11. End-to-End CSV → Extraction → Trial Balance');
+section('11. Account Number Generation');
+
+(() => {
+  // Prior year numbered; current year has a brand-new account with no number
+  const categories = [{
+    name: 'Operating Expenses',
+    rows: [
+      { status: 'matched', prev: { num: '6010', name: 'Rent', dr: 1000, cr: '' }, curr: { num: '6010', name: 'Rent', dr: 1100, cr: '' } },
+      { status: 'added',   prev: null, curr: { num: '', name: 'Software Subscriptions', dr: 500, cr: '' } },
+    ],
+  }];
+  assignMissingAccountNumbers(categories, true);
+  const added = categories[0].rows[1].curr;
+  assert(added.num !== '' && added.num != null, 'new account received a number');
+  assert(added.numGenerated === true, 'generated number flagged');
+  assert(Number(added.num) > 6010, 'number placed after existing category numbers');
+})();
+
+(() => {
+  // No numbering anywhere in the prior year → nothing is invented
+  const categories = [{
+    name: 'Assets',
+    rows: [{ status: 'added', prev: null, curr: { num: '', name: 'New Asset', dr: 1, cr: '' } }],
+  }];
+  assignMissingAccountNumbers(categories, false);
+  assert(categories[0].rows[0].curr.num === '', 'no numbers generated when prior year is unnumbered');
+})();
+
+(() => {
+  // Matched pair with no number on either side → one shared number on both
+  const categories = [{
+    name: 'Revenue',
+    rows: [{ status: 'matched', prev: { num: '', name: 'Consulting', dr: '', cr: 9000 }, curr: { num: '', name: 'Consulting', dr: '', cr: 9500 } }],
+  }];
+  assignMissingAccountNumbers(categories, true);
+  const { prev, curr } = categories[0].rows[0];
+  assert(curr.num !== '', 'matched pair current side numbered');
+  assert(prev.num === curr.num, 'both sides share the same number');
+  assert(prev.numGenerated && curr.numGenerated, 'both sides flagged as generated');
+})();
+
+(() => {
+  // A matched pair whose prior side is numbered is left for the carry-forward
+  // pass — the generator does not invent a competing number.
+  const categories = [{
+    name: 'Liabilities',
+    rows: [{ status: 'matched', prev: { num: '2010', name: 'AP', dr: '', cr: 500 }, curr: { num: '', name: 'AP', dr: '', cr: 600 } }],
+  }];
+  assignMissingAccountNumbers(categories, true);
+  assert(categories[0].rows[0].curr.num === '', 'numbered-prev matched pair left for carry-forward');
+})();
+
+(() => {
+  // Generated numbers are unique and never collide with existing ones
+  const categories = [{
+    name: 'Assets',
+    rows: [
+      { status: 'matched', prev: { num: '1010', name: 'Cash', dr: 1, cr: '' }, curr: { num: '1010', name: 'Cash', dr: 1, cr: '' } },
+      { status: 'matched', prev: { num: '1020', name: 'AR',   dr: 1, cr: '' }, curr: { num: '1020', name: 'AR',   dr: 1, cr: '' } },
+      { status: 'added',   prev: null, curr: { num: '', name: 'New A', dr: 1, cr: '' } },
+      { status: 'added',   prev: null, curr: { num: '', name: 'New B', dr: 1, cr: '' } },
+    ],
+  }];
+  assignMissingAccountNumbers(categories, true);
+  const nums = categories[0].rows.map(r => r.curr.num);
+  assert(nums.every(n => n !== ''), 'every current account is numbered');
+  assert(new Set(nums).size === nums.length, 'all current-side numbers are unique');
+  assert(!nums.includes('1010') || nums.filter(n => n === '1010').length === 1, 'generated numbers do not reuse existing ones');
+})();
+
+(() => {
+  // Current file with NO numbers at all, prior fully numbered (via fuzzy match):
+  // matched pairs carry forward, new accounts get fresh numbers → whole side numbered
+  const categories = [{
+    name: 'Assets',
+    rows: [
+      // carry-forward already applied here (curr inherited prior number)
+      { status: 'matched', prev: { num: '1010', name: 'Cash', dr: 1, cr: '' }, curr: { num: '1010', name: 'Cash', numInherited: true, dr: 1, cr: '' } },
+      { status: 'added',   prev: null, curr: { num: '', name: 'Crypto Wallet', dr: 1, cr: '' } },
+    ],
+  }];
+  assignMissingAccountNumbers(categories, true);
+  assert(categories[0].rows.every(r => r.curr.num !== ''), 'entire new side ends up numbered');
+})();
+
+section('12. End-to-End CSV → Extraction → Trial Balance');
 
 (() => {
   const csv = [
