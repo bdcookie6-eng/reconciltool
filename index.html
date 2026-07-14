@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Reconcile Tool</title>
-  <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+  <script src="/vendor/xlsx.full.min.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
@@ -473,6 +473,7 @@
     </svg>
     Run with AI
   </button>
+  <button class="btn-reset" id="btn-noai" onclick="runWithAI(false)" disabled title="Exact-name matching and keyword categorization only — nothing leaves your browser">Run without AI</button>
   <button class="btn-reset" onclick="resetAll()">Reset</button>
 </div>
 
@@ -509,6 +510,7 @@
     .gaap-report .gaap-note{font-size:.76rem;color:var(--text3);padding:12px 16px}
     .gaap-report .gaap-actions{display:flex;gap:8px}
     @media print { .gaap-report{display:block !important;padding:0} .gaap-report .gaap-actions,.gaap-report .thresholds{display:none} }
+    @media print { body.print-gaap .results, body.print-gaap .user-guide{display:none !important} }
   </style>
   <div class="panel">
     <div class="panel-head">
@@ -520,6 +522,7 @@
       <div class="gaap-actions">
         <button class="export-btn" onclick="draftGaapNarratives()" id="gaap-ai-btn">Draft explanations (AI)</button>
         <button class="export-btn" onclick="exportGaapExcel()">Excel</button>
+        <button class="export-btn" onclick="printGaap()">Print / PDF</button>
       </div>
     </div>
     <div id="gaap-body"></div>
@@ -551,7 +554,7 @@
       <h3>Steps</h3>
       <ol>
         <li>Drop the prior-period file in the left card and the current-period file in the right card. The detected column mapping appears as pills under each file — check it before running.</li>
-        <li>Click <b>Run with AI</b>. Accounts are matched in code (exact names first, fuzzy for the rest); AI cleans names and assigns financial-statement categories. Large ledgers run in batches — the progress panel shows where it is.</li>
+        <li>Click <b>Run with AI</b> (accounts matched in code, AI cleans names, fuzzy-pairs renamed accounts, and assigns categories — large ledgers run in batches) or <b>Run without AI</b> (exact-name matching and keyword categories only; nothing leaves your browser, and renamed accounts show as added + removed).</li>
         <li>Review the results: the chips at the top count added, removed, and matched accounts; the table shows both years side by side with the change per account, grouped by category. Click an added/removed item in the summary to jump to its row. Large swings get a dismissible anomaly badge.</li>
       </ol>
       <h3>Export</h3>
@@ -562,7 +565,9 @@
       <ul>
         <li>Duplicate account names in a file are skipped and flagged in a warning — fix the export and rerun if they matter.</li>
         <li>AI requests are rate-limited (10 per 10 minutes per device); very large ledgers can take a few minutes.</li>
+        <li>Duplicate account names are aggregated into one row and flagged in a warning.</li>
         <li>Nothing you upload is stored — files are parsed in your browser.</li>
+        <li><b>Data flow:</b> <i>Run with AI</i> sends the account list (names and amounts) to the AI provider through this server for categorization; nothing is stored. <i>Run without AI</i> keeps everything in your browser.</li>
       </ul>
     </div>
   </details>
@@ -639,7 +644,14 @@
         if (ext === 'csv') { rows = parseCSV(e.target.result); }
         else {
           const wb = XLSX.read(e.target.result, { type: 'array' });
-          rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1, defval: '' });
+          // The ledger isn't always on the first sheet — pick the fullest one.
+          let best = null, bestCount = -1;
+          for (const sn of wb.SheetNames) {
+            const r = XLSX.utils.sheet_to_json(wb.Sheets[sn], { header: 1, defval: '' });
+            const count = r.filter(x => x.some(c => String(c).trim() !== '')).length;
+            if (count > bestCount) { bestCount = count; best = r; }
+          }
+          rows = best || [];
         }
         rows = rows.filter(r => r.some(c => String(c).trim() !== ''));
         if (rows.length < 2) { showError('File appears empty.'); return; }
@@ -703,13 +715,14 @@
   function checkReady() {
     const ok = state.prev.rows && state.curr.rows;
     document.getElementById('btn-ai').disabled = !ok;
+    document.getElementById('btn-noai').disabled = !ok;
   }
 
   /* ── Extract rows ───────────────────────────────────────────────── */
 
   function extractRows(side) {
     const { rows, cols } = state[side];
-    const seen = new Set();
+    const seen = new Map();
     const out  = [];
     const dupes = [];
 
@@ -717,8 +730,6 @@
       const name = String(r[cols.name] ?? '').trim();
       if (!name) continue;
       const key = name.toLowerCase();
-      if (seen.has(key)) { dupes.push(name); continue; }
-      seen.add(key);
 
       let dr = '', cr = '';
 
@@ -739,6 +750,16 @@
         else if (bal < 0) cr = Math.abs(bal);
       }
 
+      if (seen.has(key)) {
+        // Same account name appearing again — aggregate the balances rather
+        // than dropping the row (real exports legitimately repeat names).
+        const prev = out[seen.get(key)];
+        prev.dr = ((prev.dr || 0) + (dr || 0)) || '';
+        prev.cr = ((prev.cr || 0) + (cr || 0)) || '';
+        dupes.push(name);
+        continue;
+      }
+      seen.set(key, out.length);
       out.push({
         num:  cols.num >= 0 ? String(r[cols.num] ?? '').trim() : '',
         name,
@@ -858,15 +879,16 @@
     throw lastErr;
   }
 
-  async function runWithAI() {
+  async function runWithAI(useAI = true) {
     const { rows: prevRows, dupes: prevDupes } = extractRows('prev');
     const { rows: currRows, dupes: currDupes } = extractRows('curr');
 
     const progEl = document.getElementById('ai-progress');
     const elapsedEl = document.getElementById('prog-elapsed');
-    progEl.style.display = 'block';
+    progEl.style.display = useAI ? 'block' : 'none';
     document.getElementById('results').style.display = 'none';
     document.getElementById('btn-ai').disabled = true;
+    document.getElementById('btn-noai').disabled = true;
 
     const startedAt = Date.now();
     const elapsedTimer = setInterval(() => {
@@ -900,7 +922,7 @@
         const parts = [];
         if (prevDupes.length) parts.push(`Prior year: ${prevDupes.map(escHtml).join(', ')}`);
         if (currDupes.length) parts.push(`Current year: ${currDupes.map(escHtml).join(', ')}`);
-        showWarning(`Duplicate account names were found and skipped — ${parts.join(' · ')}`);
+        showWarning(`Duplicate account names were aggregated into a single row — ${parts.join(' · ')}`);
       }
 
       const currByName = new Map();
@@ -980,7 +1002,21 @@ Rules:
       const categoryIndex = new Map();
       const mergedCategories = [];
 
-      for (let b = 0; b < numBatches; b++) {
+      if (!useAI) {
+        // Privacy mode: nothing leaves the browser. Statuses come from the
+        // deterministic pre-match; categories from keyword rules. Renamed
+        // accounts appear as added + removed instead of fuzzy-matched.
+        const push = (status, prev, curr) => {
+          const cname = heuristicCategory((curr || prev).name);
+          let entry = categoryIndex.get(cname);
+          if (!entry) { entry = { name: cname, rows: [] }; categoryIndex.set(cname, entry); mergedCategories.push(entry); }
+          entry.rows.push({ status, prev, curr });
+        };
+        preMatchedSorted.forEach(m => push('matched', m.prev, m.curr));
+        unmatchedPrevSorted.forEach(p => push('removed', p, null));
+        unmatchedCurrSorted.forEach(c => push('added', null, c));
+      }
+      for (let b = 0; useAI && b < numBatches; b++) {
         const mSlice = preMatchedSorted.slice(b * mChunk, (b + 1) * mChunk);
         const pSlice = unmatchedPrevSorted.slice(b * pChunk, (b + 1) * pChunk);
         const cSlice = unmatchedCurrSorted.slice(b * cChunk, (b + 1) * cChunk);
@@ -1201,6 +1237,22 @@ Your previous response could not be parsed as JSON. Respond again with ONLY a si
   }
 
   function sleep(ms) { return new Promise(r=>setTimeout(r,ms)); }
+
+  // Keyword categorization for the no-AI mode.
+  function heuristicCategory(name) {
+    const n = String(name || '').toLowerCase();
+    if (n.includes('deferred revenue')) return 'Liabilities';
+    if (/revenue|income|sales|donation|contribution|grant/.test(n) && !/interest expense|tax expense/.test(n)) {
+      if (/interest income|dividend/.test(n)) return 'Revenue';
+      return /expense/.test(n) ? 'Operating Expenses' : 'Revenue';
+    }
+    if (/cost of (goods|revenue|sales)|cogs/.test(n)) return 'Cost of Revenue';
+    if (/interest expense|income tax|tax expense/.test(n)) return 'Other Income/Expense';
+    if (/payable|accrued|deferred|loan|note|credit card|visa|amex|liabilit/.test(n)) return 'Liabilities';
+    if (/common stock|retained|equity|fund balance|net assets|opening balance/.test(n)) return 'Equity';
+    if (/expense|salaries|wages|payroll|rent|utilities|supplies|marketing|travel|insurance|depreciation|fees|subscription|postage|advertis/.test(n)) return 'Operating Expenses';
+    return 'Assets';
+  }
 
   // Robustly extract JSON from an LLM response that may include markdown fences
   // and/or stray prose before/after the JSON object.
@@ -1792,6 +1844,12 @@ Output format — strictly valid JSON, nothing else:
     } finally {
       btn.disabled = false; btn.textContent = 'Draft explanations (AI)';
     }
+  }
+
+  function printGaap() {
+    document.body.classList.add('print-gaap');
+    window.print();
+    setTimeout(() => document.body.classList.remove('print-gaap'), 500);
   }
 
   function exportGaapExcel() {

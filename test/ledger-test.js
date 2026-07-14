@@ -72,15 +72,13 @@ function parseNum(v) {
 }
 
 function extractRows(rows, cols) {
-  const seen = new Set();
+  const seen = new Map();
   const out  = [];
   const dupes = [];
   for (const r of rows) {
     const name = String(r[cols.name] ?? '').trim();
     if (!name) continue;
     const key = name.toLowerCase();
-    if (seen.has(key)) { dupes.push(name); continue; }
-    seen.add(key);
     let dr = '', cr = '';
     if (cols.dr >= 0 || cols.cr >= 0) {
       let rawDr = parseNum(r[cols.dr]);
@@ -94,6 +92,16 @@ function extractRows(rows, cols) {
       if (bal > 0)      dr = bal;
       else if (bal < 0) cr = Math.abs(bal);
     }
+    if (seen.has(key)) {
+      // Same account name appearing again — aggregate the balances rather
+      // than dropping the row (real exports legitimately repeat names).
+      const prev = out[seen.get(key)];
+      prev.dr = ((prev.dr || 0) + (dr || 0)) || '';
+      prev.cr = ((prev.cr || 0) + (cr || 0)) || '';
+      dupes.push(name);
+      continue;
+    }
+    seen.set(key, out.length);
     out.push({
       num:  cols.num >= 0 ? String(r[cols.num] ?? '').trim() : '',
       name,
@@ -275,6 +283,21 @@ section('4. Row Extraction — Debit/Credit columns');
   const { rows: out } = extractRows(rows, cols);
   assert(out[0].dr === '',    'negative debit moved: dr is empty');
   assert(out[0].cr === 5000, 'negative debit moved: cr gets the value');
+})();
+
+(() => {
+  // Duplicate account names are aggregated into one row, not dropped
+  const cols = { num: -1, name: 0, dr: 1, cr: 2, bal: -1 };
+  const rows = [
+    ['Office Supplies', '100.00', ''],
+    ['Office Supplies', '250.00', ''],
+    ['Office Supplies', '', '50.00'],
+  ];
+  const { rows: out, dupes } = extractRows(rows, cols);
+  assert(out.length === 1, 'duplicates collapse to one row');
+  assert(dupes.length === 2, 'both repeats are flagged');
+  assert(out[0].dr === 350, 'debits aggregated across duplicates');
+  assert(out[0].cr === 50,  'credits aggregated across duplicates');
 })();
 
 (() => {

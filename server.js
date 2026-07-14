@@ -1,20 +1,46 @@
 const express = require('express');
 const rateLimit = require('express-rate-limit');
+const crypto = require('crypto');
 const path = require('path');
 
 const PORT = process.env.PORT || 80;
-const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
+const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY; // optional — enables "Run with AI"
+const ACCESS_CODE = process.env.ACCESS_CODE; // optional — set to require a shared access code
 const ANTHROPIC_MODEL = 'claude-sonnet-4-6';
 const MAX_TOKENS_CAP = 64000;
 
 if (!ANTHROPIC_API_KEY) {
-  console.error('FATAL: ANTHROPIC_API_KEY environment variable is not set.');
-  process.exit(1);
+  console.warn('ANTHROPIC_API_KEY is not set — "Run with AI" will be unavailable; "Run without AI" still works.');
 }
 
 const app = express();
+
+// Behind Render's proxy the client IP arrives in X-Forwarded-For; without this
+// the rate limiter would key every user on the proxy's IP (one shared bucket).
+app.set('trust proxy', 1);
+
+// Optional shared access code (HTTP Basic: user "sst", password = ACCESS_CODE).
+if (ACCESS_CODE) {
+  const expected = Buffer.from('Basic ' + Buffer.from('sst:' + ACCESS_CODE).toString('base64'));
+  app.use((req, res, next) => {
+    const got = Buffer.from(String(req.headers.authorization || ''));
+    if (got.length === expected.length && crypto.timingSafeEqual(got, expected)) return next();
+    res.set('WWW-Authenticate', 'Basic realm="SST Tools"');
+    return res.status(401).send('Access code required — user "sst", password is the office access code.');
+  });
+}
+
 app.use(express.json({ limit: '10mb' }));
-app.use(express.static(path.join(__dirname), { index: 'index.html' }));
+
+// Serve an explicit allowlist — not the whole directory.
+const FILES = {
+  '/': 'index.html',
+  '/index.html': 'index.html',
+  '/vendor/xlsx.full.min.js': 'node_modules/xlsx/dist/xlsx.full.min.js',
+};
+Object.entries(FILES).forEach(([route, file]) => {
+  app.get(route, (req, res) => res.sendFile(path.join(__dirname, file)));
+});
 
 // Cap AI proxy usage per IP to control cost and abuse: 10 requests per 10 minutes.
 const claudeLimiter = rateLimit({
@@ -27,6 +53,9 @@ const claudeLimiter = rateLimit({
 
 // Server-side proxy: the API key lives only here and is never sent to the browser.
 app.post('/api/claude', claudeLimiter, async (req, res) => {
+  if (!ANTHROPIC_API_KEY) {
+    return res.status(503).json({ error: 'AI is not configured on this server — use "Run without AI".' });
+  }
   const { prompt, maxTokens } = req.body || {};
 
   if (typeof prompt !== 'string' || !prompt.trim()) {
