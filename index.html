@@ -485,6 +485,48 @@
 
 <div class="results" id="results" style="display:none"></div>
 
+<section class="gaap-report" id="gaap-report" style="display:none">
+  <style>
+    .gaap-report{padding:8px 40px 0;max-width:1100px}
+    .gaap-report .panel{background:var(--surface);border:1px solid var(--border);border-radius:8px;overflow:hidden}
+    .gaap-report .panel-head{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+    .gaap-report .panel-head h2{font-size:.85rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;font-family:var(--mono);color:var(--teal-mid);margin-right:auto}
+    .gaap-report .thresholds{display:flex;align-items:center;gap:6px;font-size:.74rem;color:var(--text3);font-family:var(--mono)}
+    .gaap-report .thresholds input{width:80px;padding:4px 6px;border:1px solid var(--border);border-radius:5px;font-size:.78rem;font-family:var(--mono)}
+    .gaap-report table{width:100%;border-collapse:collapse;font-size:.84rem}
+    .gaap-report th{font-size:.66rem;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--text3);font-family:var(--mono);text-align:left;padding:8px 14px;background:var(--surface2);border-bottom:1px solid var(--border)}
+    .gaap-report td{padding:7px 14px;border-bottom:1px solid var(--surface3);vertical-align:top}
+    .gaap-report td.num{text-align:right;font-family:var(--mono);white-space:nowrap}
+    .gaap-report tr.cat-row td{font-weight:700;background:var(--surface2)}
+    .gaap-report tr.total-row td{font-weight:700;border-top:2px solid var(--border2)}
+    .gaap-report .driver{color:var(--text2)}
+    .gaap-report .driver .why{font-size:.7rem;font-family:var(--mono);padding:1px 6px;border-radius:4px;margin-left:6px}
+    .gaap-report .why.added{background:var(--green-bg);color:var(--green)}
+    .gaap-report .why.removed{background:var(--red-bg);color:var(--red)}
+    .gaap-report .why.moved{background:var(--teal-dim);color:var(--teal-mid)}
+    .gaap-report .narrative{font-size:.86rem;color:var(--text2);padding:6px 14px 10px;border-bottom:1px solid var(--surface3);background:rgba(10,61,50,.03)}
+    .gaap-report .narrative b{color:var(--teal-mid);font-size:.7rem;font-family:var(--mono);letter-spacing:.5px;text-transform:uppercase}
+    .gaap-report .gaap-note{font-size:.76rem;color:var(--text3);padding:12px 16px}
+    .gaap-report .gaap-actions{display:flex;gap:8px}
+    @media print { .gaap-report{display:block !important;padding:0} .gaap-report .gaap-actions,.gaap-report .thresholds{display:none} }
+  </style>
+  <div class="panel">
+    <div class="panel-head">
+      <h2>Change Report — by GAAP classification</h2>
+      <div class="thresholds">
+        significant if ≥ $<input type="number" id="gaap-dollar" value="10000" oninput="renderGaapReport()" />
+        or <input type="number" id="gaap-pct" value="10" style="width:56px" oninput="renderGaapReport()" />%
+      </div>
+      <div class="gaap-actions">
+        <button class="export-btn" onclick="draftGaapNarratives()" id="gaap-ai-btn">Draft explanations (AI)</button>
+        <button class="export-btn" onclick="exportGaapExcel()">Excel</button>
+      </div>
+    </div>
+    <div id="gaap-body"></div>
+    <div class="gaap-note">Categories are the financial-statement classifications assigned during this run. Amounts are net balances (debits positive, credits in parentheses). Drafted explanations describe the account movements only — they are a starting point for the preparer and must be reviewed before use in any deliverable.</div>
+  </div>
+</section>
+
 <section class="user-guide">
   <style>
     .user-guide{padding:24px 40px 48px;max-width:960px}
@@ -514,6 +556,8 @@
       </ol>
       <h3>Export</h3>
       <p>Export the full Excel work paper (summary, categorized comparison, added &amp; removed sheet) — or just the current-year ledger with account numbers carried forward from the prior year, useful as a clean starting file.</p>
+      <h3>GAAP change report</h3>
+      <p>Click <b>GAAP Report</b> after a run for a change report grouped by financial-statement classification: prior vs current totals per category with $ and % change, the significant account-level drivers under each (new and removed accounts always shown), and adjustable significance thresholds. <b>Draft explanations (AI)</b> writes one factual sentence per category describing the movements — clearly marked as a draft for preparer review. The report exports to Excel.</p>
       <h3>Troubleshooting</h3>
       <ul>
         <li>Duplicate account names in a file are skipped and flagged in a warning — fix the export and rerun if they matter.</li>
@@ -1405,6 +1449,12 @@ Your previous response could not be parsed as JSON. Respond again with ONLY a si
               <polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
             </svg>Current Ledger
           </button>
+          <button class="export-btn" onclick="showGaapReport()" title="Change report grouped by GAAP financial-statement classification, with significant drivers per category">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>
+              <line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+            </svg>GAAP Report
+          </button>
         </div>
       </div>
 
@@ -1630,6 +1680,150 @@ Your previous response could not be parsed as JSON. Respond again with ONLY a si
   function exportPDF() {
     if (!lastResults) return;
     window.print();
+  }
+
+  /* ── GAAP change report ─────────────────────────────────────────── */
+  // Changes grouped by the GAAP financial-statement classification assigned
+  // during the run, with the significant account-level drivers per category.
+
+  let gaapNarratives = null; // { [categoryName]: text } once drafted
+
+  function net(a) { return a ? (a.dr || 0) - (a.cr || 0) : 0; }
+  function fmtSigned(v) {
+    const abs = Math.abs(v).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    return v < 0 ? `(${abs})` : abs;
+  }
+
+  function computeGaapReport() {
+    const dollar = Math.abs(parseFloat(document.getElementById('gaap-dollar').value)) || 0;
+    const pct = Math.abs(parseFloat(document.getElementById('gaap-pct').value)) || 0;
+    return lastResults.categories.map(cat => {
+      let prevTotal = 0, currTotal = 0;
+      const drivers = [];
+      for (const row of cat.rows) {
+        const p = net(row.prev), c = net(row.curr);
+        prevTotal += p; currTotal += c;
+        const change = c - p;
+        if (Math.abs(change) < 0.005) continue;
+        const base = Math.abs(p);
+        const pctChange = base > 0.005 ? (change / base) * 100 : null;
+        const significant = Math.abs(change) >= dollar || (pctChange !== null && Math.abs(pctChange) >= pct) || row.status !== 'matched';
+        drivers.push({
+          name: (row.curr || row.prev).name,
+          num: (row.curr || row.prev).num || '',
+          change, pctChange, status: row.status, significant,
+        });
+      }
+      drivers.sort((a, b) => Math.abs(b.change) - Math.abs(a.change));
+      const change = currTotal - prevTotal;
+      const base = Math.abs(prevTotal);
+      return {
+        name: cat.name, prevTotal, currTotal, change,
+        pctChange: base > 0.005 ? (change / base) * 100 : null,
+        drivers: drivers.filter(d => d.significant),
+        minorCount: drivers.filter(d => !d.significant).length,
+      };
+    });
+  }
+
+  function showGaapReport() {
+    if (!lastResults) return;
+    document.getElementById('gaap-report').style.display = 'block';
+    renderGaapReport();
+    document.getElementById('gaap-report').scrollIntoView({ behavior: 'smooth' });
+  }
+
+  function renderGaapReport() {
+    if (!lastResults) return;
+    const cats = computeGaapReport();
+    const whyBadge = s => s === 'added' ? '<span class="why added">new account</span>'
+      : s === 'removed' ? '<span class="why removed">account removed</span>' : '<span class="why moved">movement</span>';
+    const pctTxt = p => p === null ? 'n/m' : `${p > 0 ? '+' : ''}${p.toFixed(1)}%`;
+    let totPrev = 0, totCurr = 0;
+    let html = `<table>
+      <tr><th>Classification / significant drivers</th><th style="text-align:right">Prior</th><th style="text-align:right">Current</th><th style="text-align:right">$ Change</th><th style="text-align:right">% Change</th></tr>`;
+    for (const c of cats) {
+      totPrev += c.prevTotal; totCurr += c.currTotal;
+      html += `<tr class="cat-row"><td>${escHtml(c.name)}</td>
+        <td class="num">${fmtSigned(c.prevTotal)}</td><td class="num">${fmtSigned(c.currTotal)}</td>
+        <td class="num">${fmtSigned(c.change)}</td><td class="num">${pctTxt(c.pctChange)}</td></tr>`;
+      if (gaapNarratives && gaapNarratives[c.name]) {
+        html += `<tr><td colspan="5" class="narrative"><b>Draft explanation</b> — ${escHtml(gaapNarratives[c.name])}</td></tr>`;
+      }
+      for (const d of c.drivers) {
+        html += `<tr class="driver"><td style="padding-left:2rem">${escHtml((d.num ? d.num + ' ' : '') + d.name)}${whyBadge(d.status)}</td>
+          <td class="num"></td><td class="num"></td>
+          <td class="num">${fmtSigned(d.change)}</td><td class="num">${pctTxt(d.pctChange)}</td></tr>`;
+      }
+      if (c.minorCount) {
+        html += `<tr class="driver"><td style="padding-left:2rem;color:var(--text3)">+ ${c.minorCount} account${c.minorCount > 1 ? 's' : ''} below the significance thresholds</td><td></td><td></td><td></td><td></td></tr>`;
+      }
+    }
+    html += `<tr class="total-row"><td>Net (a balanced ledger nets to 0.00)</td>
+      <td class="num">${fmtSigned(totPrev)}</td><td class="num">${fmtSigned(totCurr)}</td>
+      <td class="num">${fmtSigned(totCurr - totPrev)}</td><td class="num"></td></tr></table>`;
+    document.getElementById('gaap-body').innerHTML = html;
+  }
+
+  async function draftGaapNarratives() {
+    if (!lastResults) return;
+    const btn = document.getElementById('gaap-ai-btn');
+    btn.disabled = true; btn.textContent = 'Drafting…';
+    try {
+      const cats = computeGaapReport();
+      const lines = cats.map(c =>
+        `${c.name}: prior ${c.prevTotal.toFixed(0)}, current ${c.currTotal.toFixed(0)}, change ${c.change.toFixed(0)}` +
+        (c.drivers.length ? ` | drivers: ${c.drivers.slice(0, 6).map(d =>
+          `${d.name} ${d.change.toFixed(0)}${d.status !== 'matched' ? ' (' + d.status + ')' : ''}`).join('; ')}` : ' | no significant drivers')
+      ).join('\n');
+      const prompt = `You are drafting workpaper notes for an accountant. For each financial-statement classification below, write ONE factual sentence describing the year-over-year change and its main account drivers. Describe only the movements given — do not speculate about causes, do not give opinions on GAAP compliance.
+
+${lines}
+
+Output format — strictly valid JSON, nothing else:
+{"narratives":[{"category":"<name exactly as given>","text":"<one sentence>"}]}`;
+      const raw = await callClaude(prompt, 4000, { timeoutMs: 120000 });
+      const parsed = parseAIJson(raw);
+      gaapNarratives = {};
+      (parsed.narratives || []).forEach(n => { if (n.category && n.text) gaapNarratives[n.category] = n.text; });
+      renderGaapReport();
+    } catch (err) {
+      showError('Could not draft explanations: ' + err.message);
+    } finally {
+      btn.disabled = false; btn.textContent = 'Draft explanations (AI)';
+    }
+  }
+
+  function exportGaapExcel() {
+    if (!lastResults) return;
+    const cats = computeGaapReport();
+    const pctTxt = p => p === null ? 'n/m' : `${p > 0 ? '+' : ''}${p.toFixed(1)}%`;
+    const rows = [
+      ['Change Report — by GAAP classification'],
+      [`Prior: ${lastResults.prevFile}`, '', `Current: ${lastResults.currFile}`],
+      [],
+      ['Classification / drivers', 'Prior', 'Current', '$ Change', '% Change', 'Note'],
+    ];
+    let totPrev = 0, totCurr = 0;
+    for (const c of cats) {
+      totPrev += c.prevTotal; totCurr += c.currTotal;
+      rows.push([c.name, c.prevTotal, c.currTotal, c.change, pctTxt(c.pctChange),
+        (gaapNarratives && gaapNarratives[c.name]) ? 'DRAFT — review: ' + gaapNarratives[c.name] : '']);
+      for (const d of c.drivers) {
+        rows.push(['    ' + (d.num ? d.num + ' ' : '') + d.name, '', '', d.change, pctTxt(d.pctChange),
+          d.status !== 'matched' ? d.status : '']);
+      }
+      if (c.minorCount) rows.push([`    + ${c.minorCount} accounts below thresholds`]);
+    }
+    rows.push([]);
+    rows.push(['Net (a balanced ledger nets to 0.00)', totPrev, totCurr, totCurr - totPrev]);
+    rows.push([]);
+    rows.push(['Amounts are net balances (debits positive, credits negative). Draft explanations describe account movements only and must be reviewed by the preparer.']);
+    const ws = XLSX.utils.aoa_to_sheet(rows);
+    ws['!cols'] = [{ wch: 52 }, { wch: 14 }, { wch: 14 }, { wch: 14 }, { wch: 10 }, { wch: 70 }];
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'GAAP Change Report');
+    XLSX.writeFile(wb, 'gaap_change_report.xlsx');
   }
 
   function scrollToAcct(rowId) {
