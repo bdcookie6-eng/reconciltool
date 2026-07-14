@@ -485,6 +485,45 @@
 
 <div class="results" id="results" style="display:none"></div>
 
+<section class="user-guide">
+  <style>
+    .user-guide{padding:24px 40px 48px;max-width:960px}
+    .user-guide details{background:var(--surface);border:1px solid var(--border);border-radius:8px}
+    .user-guide summary{cursor:pointer;padding:14px 16px;font-size:.8rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;font-family:var(--mono);color:var(--teal-mid)}
+    .user-guide .guide-body{padding:0 20px 18px;font-size:.88rem;color:var(--text2);line-height:1.6}
+    .user-guide h3{font-size:.82rem;color:var(--text);margin:14px 0 4px;text-transform:uppercase;letter-spacing:.5px;font-family:var(--mono)}
+    .user-guide ol,.user-guide ul{padding-left:1.3rem}
+    .user-guide li{margin:.2rem 0}
+    .user-guide code{font-family:var(--mono);font-size:.8rem;background:var(--surface2);padding:1px 5px;border-radius:4px}
+  </style>
+  <details>
+    <summary>User guide — how to use this tool</summary>
+    <div class="guide-body">
+      <h3>What this tool does</h3>
+      <p>An account matcher: it pairs every account across two ledgers — exact name matches first, fuzzy matching for renamed accounts — and lines the two periods up side by side, grouped into financial-statement categories, with the change per account and added or removed accounts flagged. The result exports as a formatted Excel work paper.</p>
+      <h3>Inputs needed</h3>
+      <ul>
+        <li>Two ledger exports for the same client — typically prior period and current period — as CSV, XLSX, or XLS.</li>
+        <li>Each file needs a header row with an account name column and either debit/credit columns or a single balance/amount column. Account numbers help but aren't required.</li>
+      </ul>
+      <h3>Steps</h3>
+      <ol>
+        <li>Drop the prior-period file in the left card and the current-period file in the right card. The detected column mapping appears as pills under each file — check it before running.</li>
+        <li>Click <b>Run with AI</b>. Accounts are matched in code (exact names first, fuzzy for the rest); AI cleans names and assigns financial-statement categories. Large ledgers run in batches — the progress panel shows where it is.</li>
+        <li>Review the results: the chips at the top count added, removed, and matched accounts; the table shows both years side by side with the change per account, grouped by category. Click an added/removed item in the summary to jump to its row. Large swings get a dismissible anomaly badge.</li>
+      </ol>
+      <h3>Export</h3>
+      <p>Export the full Excel work paper (summary, categorized comparison, added &amp; removed sheet) — or just the current-year ledger with account numbers carried forward from the prior year, useful as a clean starting file.</p>
+      <h3>Troubleshooting</h3>
+      <ul>
+        <li>Duplicate account names in a file are skipped and flagged in a warning — fix the export and rerun if they matter.</li>
+        <li>AI requests are rate-limited (10 per 10 minutes per device); very large ledgers can take a few minutes.</li>
+        <li>Nothing you upload is stored — files are parsed in your browser.</li>
+      </ul>
+    </div>
+  </details>
+</section>
+
 <script>
   const state = {
     prev: { rows: null, headers: [], cols: null, fileName: '' },
